@@ -14,8 +14,9 @@ experience pillars and the bar. This file only says how to work in this reposito
   verified by clicking it in the Vercel preview.
 - **The bar is the golden path.** `tests/e2e/golden-path.e2e.ts` encodes the script in
   the brief and fails at the first unbuilt step. Each session moves that point.
-- **One pass per screen.** Reference, tokens, real data, wire it, ship. Polish once,
-  against the whole journey, when the journey works.
+- **One pass per screen.** The owner's reference screens are inspiration, never a bar:
+  look once, build, ship. Tokens, real data, wire it. Polish once, against the whole
+  journey, when the journey works.
 - **Decisions are the human's.** At a fork, ask with `AskUserQuestion`, record the
   answer in one line in `docs/SESSION-CONTEXT.md`, continue. Never write a spec to
   avoid asking.
@@ -42,8 +43,10 @@ Update `docs/SESSION-CONTEXT.md` (under 60 lines) and write `docs/HANDOFF-N.md`
 - Anthropic SDK: `output_config.format`, not `response_format`; every JSON schema
   object carries `additionalProperties: false`; 90s SDK timeout, 300s route
   `maxDuration`.
-- Design tokens live in `src/styles/tokens.ts` and `src/app/globals.css`, kept in
-  parity by `tests/unit/styles/tokens.test.ts`. Never inline a colour or font.
+- The previous prototype's visual design is not used. Create design tokens from the
+  product owner's reference screens at the first screen build, in
+  `src/styles/tokens.ts` and `src/app/globals.css`, with a parity test. Never inline
+  a colour or font after that.
 - Effects (storage, network, time) sit behind interfaces so logic is testable
   without mocking the world. Tests where there is logic; not for pure-visual UI.
 - Comments say why, never what, and never carry session provenance.

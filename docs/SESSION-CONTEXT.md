@@ -3,9 +3,9 @@
 ## Journey and state
 
 Five phases (Start · Build · Reconcile · Settle · Finalise), per `docs/BRIEF.md`; detail
-in `docs/JOURNEY.md`. Repository seeded with the brief, the journey detail (condensed
-from the previous prototype's 99 specs), the engine, the tokens and the golden-path
-test. No screens built. The golden path fails at step 1. Current phase: **Start**.
+in `docs/JOURNEY.md`. Seeded with the brief, the journey detail (condensed from the
+previous prototype's 99 specs), the engine and the golden-path test. No screens, no
+design system yet. The golden path fails at step 1. Current phase: **Start**.
 
 ## Outcomes, one per session, fresh session each time
 
@@ -23,7 +23,7 @@ test. No screens built. The golden path fails at step 1. Current phase: **Start*
 6. Finalise: "Pre-flight passes and the print-and-post pack renders."
 
 Kill criterion: by the sixth merged outcome, two parties reach an agreed schedule and
-one signed version. If not, the brief is at fault.
+one signed version; if not, the brief is at fault.
 
 **Next: outcome 1.** Landing page, the eight interview screens with their exact option
 sets, plan generation, sign-up, the safety branch, the acknowledgement, the tour.
@@ -37,7 +37,9 @@ only. Env vars `TINK_CLIENT_ID`, `TINK_CLIENT_SECRET`, `ANTHROPIC_API_KEY` are i
 ## Decisions on record
 
 - Name: Decouple, tagline "the complete picture". Print-and-post pack; no e-filing.
-- Juro is the negotiation bar. Landing page and interview public; app behind sign-up
+- Previous visual design discarded; the design system starts from the owner's new
+  reference screens at the first screen build, inspiration not bar. Juro is the
+  negotiation bar. Landing page and interview public; app behind sign-up
   from Build; auth stubbed behind one session interface until Reconcile; the stub
   never reaches production.
 - Spec mining, 11 Sept: five phases; ES2-style shared picture with Form E as the

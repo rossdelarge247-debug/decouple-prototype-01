@@ -197,8 +197,10 @@ for the pack. Playwright for the golden path and the accessibility floor.
   breadth. Screens outside the current phase wait.
 - Definition of done per session: one sentence, "a user can now … in the preview",
   verified by clicking it.
-- One pass per screen. Reference, tokens, real data, wire it, ship. Polish once,
-  against the whole journey, when the journey works.
+- One pass per screen. The product owner's reference screens are inspiration for
+  structure, tone, spacing and colour, never a bar: look once, build, ship; no
+  comparison, no rounds. Tokens, real data, wire it. Polish once, against the whole
+  journey, when the journey works.
 - Decisions are the human's. At a fork, ask; record the answer in one line; continue.
   JOURNEY marks what is already LOCKED; do not reopen it without asking.
 - No specs, hooks, personas, workflows or review loops. Lint, typecheck, unit tests

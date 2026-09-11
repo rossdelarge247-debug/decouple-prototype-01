@@ -549,13 +549,14 @@ affected party, never in the shared space.
   disclosure tool".
 
 ### Visual
-Per-phase colour arc: Build indigo #4338CA · Reconcile pink #9D174D · Settle blue
-#0369A1 · Finalise green #166534, each with a soft variant. Connected-source cards show
-masked accounts (`20-00-00 ****4821`), "auto-syncs daily · read-only". Time-estimate
-affordance on any step with a knowable duration ("~60s"). Colour is never the only
-indicator. Mobile-first for Start and Build; Reconcile onward responsive with a
-"works best on a larger screen" nudge. WCAG 2.1 AA, keyboard reachable, screen-reader
-tested on the document view.
+The previous prototype's visual design is discarded. The design system is created
+from the product owner's reference screens when the first screen is built, as tokens
+in `src/styles/tokens.ts` and `src/app/globals.css`, and never inlined. Rules that
+survive regardless of look: colour is never the only indicator; connected-source
+cards show masked accounts (`20-00-00 ****4821`), "auto-syncs daily · read-only"; a
+time estimate on any step with a knowable duration ("~60s"); mobile-first for Start
+and Build, responsive after with a "works best on a larger screen" nudge; WCAG 2.1
+AA, keyboard reachable, screen-reader tested on the document view.
 
 ### Account and notifications
 - Roles: party_a / party_b / solo. Link states: not_invited / invitation_pending /
