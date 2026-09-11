@@ -72,7 +72,7 @@ export function journeySteps(): PlanStep[] {
 }
 
 export function whatNeedsToHappen(a: StartAnswers): string[] {
-  const out = [t.needs.facts, t.needs.picture]
+  const out: string[] = [t.needs.facts, t.needs.picture]
   if (a.children) out.push(t.needs.children)
   if (a.home === 'mortgage') out.push(t.needs.mortgage)
   if (a.home === 'outright') out.push(t.needs.outright)
