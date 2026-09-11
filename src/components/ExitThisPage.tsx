@@ -7,7 +7,7 @@ import { footer } from '@/copy/start'
 // The order matters (JOURNEY §Safety): clear storage, replace history, then redirect,
 // with the best-effort endpoint fired without waiting. Without JavaScript the form
 // posts to the endpoint, which clears the cookies and sends the browser on.
-export function ExitThisPage() {
+export function ExitThisPage({ label = footer.exitCta, variant = 'quiet' }: { label?: string; variant?: 'quiet' | 'primary' }) {
   function onClick(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
     try {
@@ -28,10 +28,14 @@ export function ExitThisPage() {
         type="submit"
         onClick={onClick}
         title={footer.exitHint}
-        className="inline-flex items-center gap-2 rounded-pill border border-danger bg-surface px-4 py-2 font-medium text-danger hover:bg-danger-tint"
+        className={
+          variant === 'primary'
+            ? 'inline-flex items-center gap-2 rounded-pill bg-danger px-6 py-3 font-medium text-surface hover:bg-ink'
+            : 'inline-flex items-center gap-2 rounded-pill border border-danger bg-surface px-4 py-2 font-medium text-danger hover:bg-danger-tint'
+        }
       >
         <span aria-hidden="true">×</span>
-        {footer.exitCta}
+        {label}
       </button>
     </form>
   )
