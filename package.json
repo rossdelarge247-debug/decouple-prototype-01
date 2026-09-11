@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "e2e:a11y": "playwright test tests/e2e/screens-a11y.e2e.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.85.0",

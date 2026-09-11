@@ -27,7 +27,8 @@ Update `docs/SESSION-CONTEXT.md` (under 60 lines) and write `docs/HANDOFF-N.md`
 
 ## Startup
 
-1. `npm ci`. Playwright's Chromium: `npx playwright install chromium` if missing.
+1. `npm ci`. For e2e in the Claude sandbox: `PW_CHROMIUM=/opt/pw-browsers/chromium npm run e2e:a11y`.
+   Elsewhere `npx playwright install chromium` once.
 2. Read `docs/SESSION-CONTEXT.md`.
 3. Confirm the session's one outcome with the user, then build.
 
