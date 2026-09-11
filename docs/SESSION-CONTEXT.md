@@ -24,9 +24,7 @@ design system yet. The golden path fails at step 1. Current phase: **Start**.
 
 Kill criterion: by the sixth merged outcome, two parties reach an agreed schedule and
 one signed version; if not, the brief is at fault.
-
-**Next: outcome 1.** Landing page, the eight interview screens with their exact option
-sets, plan generation, sign-up, the safety branch, the acknowledgement, the tour.
+**Next: outcome 1** (landing, interview, plan, sign-up, safety branch, acknowledgement, tour).
 
 ## Deployment
 
