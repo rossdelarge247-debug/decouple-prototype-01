@@ -9,8 +9,8 @@ Current phase: **Build**.
 
 ## Outcomes, one per session, fresh session each time
 
-1. Start: "A user can complete the interview, see their plan, sign up, and see the
-   acknowledgement and tour in the preview."
+1. Start: done. "A user can complete the interview, see their plan, sign up, and see
+   the acknowledgement and tour in the preview."
 2. Build: "A user can profile, connect the Tink demo bank or a test scenario, confirm
    by exception, and see Your Picture in the preview." Wires the signal engine to
    the question generator.
@@ -45,20 +45,19 @@ callback is registered for production only. Env vars `TINK_CLIENT_ID`,
   O3 and flags never reach the model. Production builds; the stub refuses there unless
   `AUTH_PROVIDER` is set. Answers and stub session are httpOnly session cookies; prose
   cached in sessionStorage. Exit this page: storage, history, beacon, redirect.
-- Where things live: tokens `src/styles/tokens.ts` + `globals.css` (parity test); every
-  string `src/copy/start.ts` (rules test); facts `src/lib/start/facts.ts`; session seam
-  `src/lib/session`; e2e seeding `tests/e2e/fixtures.ts`.
+- Where things live: tokens `src/styles/tokens.ts` + `globals.css`; strings
+  `src/copy/start.ts`; facts `src/lib/start/facts.ts`; session `src/lib/session`.
 
 ## CI
 
 Lint · typecheck · unit tests · build · Gitleaks · the accessibility floor
-(`tests/e2e/screens-a11y.e2e.ts`: axe WCAG AA on every route in `ROUTES`, production
-build). Add each new route the session it ships. Nothing else.
+(`tests/e2e/screens-a11y.e2e.ts`, axe WCAG AA on every route in `ROUTES`; cookies seeded
+from `tests/e2e/fixtures.ts`). Add each new route the session it ships. Nothing else.
 
 ## Lessons (one line each)
 
 - The inherited engine has no unit tests beyond the callback route; treat it as untested.
-- Playwright device presets default to WebKit; projects pin `browserName: 'chromium'`.
-- Sandbox e2e: `PW_CHROMIUM=/opt/pw-browsers/chromium`; wait for `load`, never `networkidle`.
+- Playwright presets default to WebKit; projects pin chromium. Sandbox e2e needs
+  `PW_CHROMIUM=/opt/pw-browsers/chromium`; wait for `load`, never `networkidle`.
 - Next's route announcer echoes the h1 after a client navigation and a strict locator
   polls from the click: keep golden-path phrases out of headlines and the screen being left.
