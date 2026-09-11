@@ -1,8 +1,18 @@
 # Design reference
 
-Screens the product owner shares as **inspiration, not a bar**. They may be attached to
-a session's kickoff message as images, or committed here as PNGs named
-`<phase>-<screen>.png` so later sessions can see them too.
+Screens the product owner shares as **inspiration, not a bar**, committed here as
+`<phase>-<nn>-<group>-<screen>.jpg`. A session opens only the files for its phase.
+
+| Phase | Files | Notes |
+|---|---|---|
+| Start | `start-01` to `start-16` | Landing (01), two value drill-ins (02, 03), interview intro, form, finances, safeguarding (04 to 07), situation playback (08), sign-up (09), welcome tour and its six panels (10 to 16; 16 is the first dashboard the tour lands on) |
+| Build | `build-17` to `build-28` | Three families for Your Picture that compete: tabbed paper (17 to 19), picture hub variants A to E plus two B-v2 states (20 to 26), paper dashboard split vs unified (27, 28). Pick a direction, say why |
+| Reconcile | `reconcile-29` to `reconcile-32` | Four competing treatments of the shared picture: reconcile thread, summary rail, popover thread, coexist |
+| Settle | `settle-33` to `settle-39` | Proposal builder (33) and the counter (34); five competing version treatments A to E (35 to 39) |
+| Finalise | `finalise-40`, `finalise-41` | Settlement agreement, finalisation |
+
+Where a phase has competing variants, the handoff says which one the build drew on
+and why, in one line. Keeping the others is fine; they may serve a later screen.
 
 The rule for using them:
 
