@@ -9,7 +9,7 @@ export { AuthUnavailable } from './types'
 // until Reconcile needs two real parties; a real provider replaces resolveProvider.
 
 /** The stub may run anywhere except production without a real provider configured. */
-export function stubAllowed(env: NodeJS.ProcessEnv = process.env): boolean {
+export function stubAllowed(env: Record<string, string | undefined> = process.env): boolean {
   return env.VERCEL_ENV !== 'production' || !!env.AUTH_PROVIDER
 }
 

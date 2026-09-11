@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
+import { EXIT_URL } from '@/constants'
 import { cookieOptions } from '@/lib/cookies'
 import { SESSION_COOKIE } from '@/lib/session/stub'
 import { START_COOKIE } from '@/lib/start/store'
 
 // The Exit-this-page endpoint: best effort, kills the session and the interview
 // answers. A form post (no JavaScript) is sent on to BBC News; the beacon gets 204.
-export const EXIT_URL = 'https://www.bbc.co.uk/news'
 
 function clearing(res: NextResponse): NextResponse {
   for (const name of [SESSION_COOKIE, START_COOKIE]) {
