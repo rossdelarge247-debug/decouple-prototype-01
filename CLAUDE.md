@@ -43,5 +43,6 @@ Update `docs/SESSION-CONTEXT.md` (under 60 lines) and write `docs/HANDOFF-N.md`
 - Effects (storage, network, time) sit behind interfaces so logic is testable
   without mocking the world. Tests where there is logic; not for pure-visual UI.
 - Comments say why, never what, and never carry session provenance.
-- Tink credentials are Vercel env vars; only the production callback is whitelisted.
+- Production is https://decouple-prototype-01.vercel.app. Tink credentials are Vercel
+  env vars and only the production callback is whitelisted in the Tink console.
 - Diagnose before fixing: read the error, the log, the live DOM. Don't guess.
