@@ -69,6 +69,16 @@ describe('Start copy', () => {
     expect(links.filter(l => /connect.*bank|build/i.test(l))).toHaveLength(1)
   })
 
+  // Next's route announcer repeats the current h1 in a hidden live region after a
+  // client-side navigation, so a headline must never carry a phrase the golden path
+  // asserts with a strict locator.
+  it('no headline carries a golden-path phrase', () => {
+    const phrases = /based on what you told us|your plan|here.s what happens|your next step|safe/i
+    for (const { keyPath, value } of all.filter(l => isHeadline(l.keyPath))) {
+      expect(value, keyPath).not.toMatch(phrases)
+    }
+  })
+
   it('no page sets its own tab title', () => {
     const appDir = path.resolve(__dirname, '../../src/app')
     const files: string[] = []

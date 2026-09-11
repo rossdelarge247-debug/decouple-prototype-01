@@ -40,7 +40,8 @@ export default async function Welcome() {
         <p className="max-w-2xl text-body-lg text-ink-muted">{copy.body}</p>
         {facts.length > 0 && (
           <Card>
-            <dl className="divide-y divide-border">
+            <p className="font-display text-display-sm">{copy.lead}</p>
+            <dl className="mt-2 divide-y divide-border">
               {facts.map(([label, value]) => (
                 <div key={label} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-3">
                   <dt className="text-ink-muted">{label}</dt>

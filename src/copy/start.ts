@@ -203,10 +203,12 @@ export const o6 = {
   cta: 'See my plan',
 } as const
 
-// The plan page. "Your plan" appears once, as the heading, and nowhere else on the page.
+// The plan page. "Your plan" appears once, as the eyebrow, and nowhere else on the
+// page. Never in the h1: after a client navigation Next's route announcer repeats the
+// h1 in a hidden live region, which would double any strict text locator.
 export const plan = {
-  eyebrow: "Here's what we heard",
-  headline: 'Your plan',
+  eyebrow: 'Your plan',
+  headline: "Here's what we heard",
   intro: 'Facts first, then a few notes written for you. Nothing here is advice.',
   sections: {
     situation: 'Your situation',
@@ -394,8 +396,9 @@ export const safety = {
 
 export const acknowledgement = {
   eyebrow: 'Welcome, {name}',
-  headline: 'Based on what you told us',
-  body: 'Here is what we heard. It shapes what we ask next and what we never ask again.',
+  headline: 'Your starting point',
+  lead: 'Based on what you told us:',
+  body: 'It shapes what we ask next and what we never ask again.',
   rows: {
     stage: 'Where you are',
     relationship: 'Relationship',

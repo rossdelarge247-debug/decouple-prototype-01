@@ -13,7 +13,7 @@ import { computePlan } from '@/lib/start/plan'
 import { cookieStartStore } from '@/lib/start/store'
 
 // O7. Facts computed here, prose fetched by PlanView; the phrase "Your plan" appears
-// once, as the heading, because the golden path counts it.
+// once, as the eyebrow, because the golden path counts it.
 export default async function Plan() {
   const answers = (await cookieStartStore().read()) ?? EMPTY_ANSWERS
   const plan = computePlan(answers)
