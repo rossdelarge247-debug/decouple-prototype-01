@@ -65,12 +65,33 @@ export interface TestScenario {
 
 // ═══ Helpers ═══
 
+// Scattered dates and varied amounts come from a seeded generator, not Math.random,
+// so a scenario renders the same picture on every request and in every snapshot.
+let seed = 1
+function random(): number {
+  seed = (seed * 1103515245 + 12345) & 0x7fffffff
+  return seed / 0x7fffffff
+}
+function resetSeed(n: number): void {
+  seed = n
+}
+
 function monthlyDates(startMonth: number, count: number, dayOfMonth: number): string[] {
   const dates: string[] = []
   for (let i = 0; i < count; i++) {
     const month = ((startMonth + i - 1) % 12) + 1
     const year = 2025 + Math.floor((startMonth + i - 1) / 12)
     dates.push(`${year}-${String(month).padStart(2, '0')}-${String(dayOfMonth).padStart(2, '0')}`)
+  }
+  return dates
+}
+
+function fourWeeklyDates(startDate: string, count: number): string[] {
+  const dates: string[] = []
+  const start = new Date(startDate)
+  for (let i = 0; i < count; i++) {
+    const d = new Date(start.getTime() + i * 28 * 24 * 60 * 60 * 1000)
+    dates.push(d.toISOString().slice(0, 10))
   }
   return dates
 }
@@ -100,7 +121,7 @@ function scatterDates(startDate: string, endDate: string, count: number): string
   const end = new Date(endDate).getTime()
   const dates: string[] = []
   for (let i = 0; i < count; i++) {
-    const t = start + Math.random() * (end - start)
+    const t = start + random() * (end - start)
     dates.push(new Date(t).toISOString().slice(0, 10))
   }
   return dates.sort()
@@ -108,12 +129,13 @@ function scatterDates(startDate: string, endDate: string, count: number): string
 
 function varyAmount(base: number, variationPct: number): number {
   const variation = base * variationPct
-  return Math.round(base + (Math.random() * 2 - 1) * variation)
+  return Math.round(base + (random() * 2 - 1) * variation)
 }
 
 // ═══ Scenario 1: Sarah — employed homeowner, 2 kids ═══
 
 function createSarahScenario(): TestScenario {
+  resetSeed(1)
   const txs: TestTransaction[] = []
 
   // Salary — consistent monthly credit, realistic BACS format
@@ -121,9 +143,9 @@ function createSarahScenario(): TestScenario {
     txs.push({ date, description: 'BGC ACME CORPORATION LTD SALARY', amount: 3218, expectedCategory: 'employment' })
   }
 
-  // Child benefit — HMRC, 4-weekly (not monthly)
-  for (const date of weeklyDates('2025-04-07', 13)) {
-    txs.push({ date, description: 'FPI HMRC CHILD BENEFIT', amount: 96.25, expectedCategory: 'benefits' })
+  // Child benefit — HMRC, 4-weekly (not monthly), at the 2025/26 rate for two children
+  for (const date of fourWeeklyDates('2025-04-07', 13)) {
+    txs.push({ date, description: 'FPI HMRC CHILD BENEFIT', amount: 173.2, expectedCategory: 'benefits' })
   }
 
   // Mortgage — Halifax DD
@@ -182,13 +204,13 @@ function createSarahScenario(): TestScenario {
   // Groceries — scattered, various amounts
   for (const date of scatterDates('2025-04-01', '2026-03-31', 48)) {
     const shops = ['TESCO STORES 2341 EXETER GBR', 'SAINSBURYS S/MKTS EXETER', 'ALDI STORES LTD EXETER', 'CO-OP GROUP 4521 EXETER']
-    txs.push({ date, description: shops[Math.floor(Math.random() * shops.length)], amount: -varyAmount(45, 0.5), expectedCategory: 'groceries' })
+    txs.push({ date, description: shops[Math.floor(random() * shops.length)], amount: -varyAmount(45, 0.5), expectedCategory: 'groceries' })
   }
 
   // Dining out — scattered
   for (const date of scatterDates('2025-04-01', '2026-03-31', 18)) {
     const places = ['GREGGS 1234 EXETER', 'COSTA COFFEE EXETER', 'NANDOS EXETER', 'DELIVEROO.COM']
-    txs.push({ date, description: places[Math.floor(Math.random() * places.length)], amount: -varyAmount(15, 0.6), expectedCategory: 'dining' })
+    txs.push({ date, description: places[Math.floor(random() * places.length)], amount: -varyAmount(15, 0.6), expectedCategory: 'dining' })
   }
 
   // Fuel — scattered
@@ -211,7 +233,7 @@ function createSarahScenario(): TestScenario {
     isJoint: false,
     expectedIncomes: [
       { sourceSubstring: 'acme', expectedType: 'employment', minAmount: 3000, maxAmount: 3500 },
-      { sourceSubstring: 'hmrc', expectedType: 'benefits', minAmount: 80, maxAmount: 120 },
+      { sourceSubstring: 'hmrc', expectedType: 'benefits', minAmount: 160, maxAmount: 190 },
     ],
     expectedPayments: [
       { payeeSubstring: 'halifax', expectedCategory: 'mortgage', minAmount: 1100, maxAmount: 1200 },
@@ -241,6 +263,7 @@ function createSarahScenario(): TestScenario {
 // ═══ Scenario 2: Marcus — self-employed renter, crypto, HMRC SA ═══
 
 function createMarcusScenario(): TestScenario {
+  resetSeed(2)
   const txs: TestTransaction[] = []
 
   // Variable income — invoices from clients
@@ -289,13 +312,13 @@ function createMarcusScenario(): TestScenario {
   // Groceries
   for (const date of scatterDates('2025-04-01', '2026-03-31', 36)) {
     const shops = ['TESCO EXPRESS CAMDEN', 'WAITROSE 421 NW1', 'LIDL GB CAMDEN GBR']
-    txs.push({ date, description: shops[Math.floor(Math.random() * shops.length)], amount: -varyAmount(35, 0.5), expectedCategory: 'groceries' })
+    txs.push({ date, description: shops[Math.floor(random() * shops.length)], amount: -varyAmount(35, 0.5), expectedCategory: 'groceries' })
   }
 
   // Dining/entertainment — higher than average
   for (const date of scatterDates('2025-04-01', '2026-03-31', 42)) {
     const places = ['UBER EATS LONDON', 'DELIVEROO.COM', 'PRET A MANGER CAMDEN', 'THE COLONEL CAMDEN NW1']
-    txs.push({ date, description: places[Math.floor(Math.random() * places.length)], amount: -varyAmount(22, 0.5), expectedCategory: 'dining' })
+    txs.push({ date, description: places[Math.floor(random() * places.length)], amount: -varyAmount(22, 0.5), expectedCategory: 'dining' })
   }
 
   return {
@@ -331,6 +354,7 @@ function createMarcusScenario(): TestScenario {
 // ═══ Scenario 3: Jean — retired, multiple pensions, owns outright ═══
 
 function createJeanScenario(): TestScenario {
+  resetSeed(3)
   const txs: TestTransaction[] = []
 
   // State pension
@@ -381,7 +405,7 @@ function createJeanScenario(): TestScenario {
   // Groceries
   for (const date of scatterDates('2025-04-01', '2026-03-31', 36)) {
     const shops = ['MARKS SPENCER EXETER', 'WAITROSE 812 EXETER', 'TESCO STORES EXETER GBR']
-    txs.push({ date, description: shops[Math.floor(Math.random() * shops.length)], amount: -varyAmount(40, 0.4), expectedCategory: 'groceries' })
+    txs.push({ date, description: shops[Math.floor(random() * shops.length)], amount: -varyAmount(40, 0.4), expectedCategory: 'groceries' })
   }
 
   // Healthcare — GP, pharmacy, dentist
@@ -426,6 +450,7 @@ function createJeanScenario(): TestScenario {
 // ═══ Scenario 4: Aisha — part-time NHS, joint account, benefits, BNPL ═══
 
 function createAishaScenario(): TestScenario {
+  resetSeed(4)
   const txs: TestTransaction[] = []
 
   // NHS salary — part-time
@@ -486,7 +511,7 @@ function createAishaScenario(): TestScenario {
   // Groceries — budget, high frequency
   for (const date of scatterDates('2025-04-01', '2026-03-31', 52)) {
     const shops = ['ALDI STORES STRATFORD', 'LIDL GB STRATFORD GBR', 'ASDA STORES STRATFORD', 'ICELAND STRATFORD']
-    txs.push({ date, description: shops[Math.floor(Math.random() * shops.length)], amount: -varyAmount(32, 0.4), expectedCategory: 'groceries' })
+    txs.push({ date, description: shops[Math.floor(random() * shops.length)], amount: -varyAmount(32, 0.4), expectedCategory: 'groceries' })
   }
 
   return {
@@ -527,6 +552,7 @@ function createAishaScenario(): TestScenario {
 // ═══ Scenario 5: David — high earner, investments, gambling ═══
 
 function createDavidScenario(): TestScenario {
+  resetSeed(5)
   const txs: TestTransaction[] = []
 
   // High salary
@@ -588,13 +614,13 @@ function createDavidScenario(): TestScenario {
   // Groceries
   for (const date of scatterDates('2025-04-01', '2026-03-31', 36)) {
     const shops = ['WAITROSE 421 KENSINGTON', 'MARKS SPENCER KENSINGTON', 'OCADO.COM']
-    txs.push({ date, description: shops[Math.floor(Math.random() * shops.length)], amount: -varyAmount(65, 0.4), expectedCategory: 'groceries' })
+    txs.push({ date, description: shops[Math.floor(random() * shops.length)], amount: -varyAmount(65, 0.4), expectedCategory: 'groceries' })
   }
 
   // Dining — high frequency/value
   for (const date of scatterDates('2025-04-01', '2026-03-31', 30)) {
     const places = ['THE IVY KENSINGTON', 'DISHOOM KENSINGTON', 'UBER EATS LONDON', 'HAKKASAN MAYFAIR']
-    txs.push({ date, description: places[Math.floor(Math.random() * places.length)], amount: -varyAmount(55, 0.5), expectedCategory: 'dining' })
+    txs.push({ date, description: places[Math.floor(random() * places.length)], amount: -varyAmount(55, 0.5), expectedCategory: 'dining' })
   }
 
   return {
