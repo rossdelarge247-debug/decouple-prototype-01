@@ -41,8 +41,7 @@ callback is registered for production only. Env vars `TINK_CLIENT_ID`,
 - Session 1: landing shows the conventional £14,561 only. Golden path extended with
   Sarah's clicks, no assertion changed. Plan safety and privacy messages deterministic;
   O3 and flags never reach the model. Production builds; the stub refuses there unless
-  `AUTH_PROVIDER` is set. Answers and stub session are httpOnly session cookies; prose
-  cached in sessionStorage. Exit this page: storage, history, beacon, redirect.
+  `AUTH_PROVIDER` is set. Answers and stub session are httpOnly session cookies.
 - Where things live: tokens `src/styles/tokens.ts` + `globals.css`; strings
   `src/copy/start.ts`; facts `src/lib/start/facts.ts`; session `src/lib/session`.
 
@@ -55,7 +54,7 @@ from `tests/e2e/fixtures.ts`). Add each new route the session it ships. Nothing 
 ## Lessons (one line each)
 
 - The inherited engine has no unit tests beyond the callback route; treat it as untested.
-- Playwright presets default to WebKit; projects pin chromium. Sandbox e2e needs
+  Playwright presets default to WebKit; projects pin chromium. Sandbox e2e needs
   `PW_CHROMIUM=/opt/pw-browsers/chromium`; wait for `load`, never `networkidle`.
 - Next's route announcer echoes the h1 after a client navigation and a strict locator
   polls from the click: keep golden-path phrases out of headlines and the screen being left.
