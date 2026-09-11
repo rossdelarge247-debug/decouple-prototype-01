@@ -2,18 +2,20 @@
 
 ## Journey
 
-Seven phases, per `docs/BRIEF.md`. Current phase: **1, Orient**.
+Five phases, per `docs/BRIEF.md` (Start · Build · Reconcile · Settle · Finalise); the
+detail is in `docs/JOURNEY.md`. Current phase: **Start**.
 
 ## State
 
-Repository seeded with the brief, the bank and extraction engine, the design tokens
-and the golden-path test. No screens built. The golden path fails at step 1.
+Repository seeded with the brief, the journey detail (condensed from the previous
+prototype's 99 specs), the bank and extraction engine, the design tokens and the
+golden-path test. No screens built. The golden path fails at step 1.
 
 ## Next outcome (session 1)
 
-"A user can answer the interview, sign up, connect the Tink demo bank or a test
-scenario, and see Your Picture in the preview." Phases 1 to 3 by reuse of what the
-engine already provides; no new engine code unless a real gap appears.
+"A user can answer the interview, sign up, profile, connect the Tink demo bank or a
+test scenario, confirm by exception, and see Your Picture in the preview." Start and
+Build, by reuse of the engine; wire the signal engine to the question generator.
 
 ## Deployment
 
@@ -28,6 +30,10 @@ in the Tink console, so the real bank click works on production only. Env vars
 - Phase 6 is a print-and-post pack. Solicitor e-filing is out of scope for v1.
 - Bar for negotiation UX: Juro. Reference table in the brief.
 - Budget: five sessions to the kill criterion.
+- Spec mining (11 Sept): five phases, ES2-style shared picture with Form E as the capture
+  checklist, option-card negotiation, arithmetic only (no typical ranges, no AI coach),
+  invitee enters by magic link, selective sharing by section, behavioural coercive-control
+  detection deferred, honest pricing with nothing hardcoded. LOCKED items in JOURNEY.md.
 - Landing page and interview are public. The app is behind sign-up and sign-in from
   phase 2. Auth is stubbed behind one session interface until phase 4 needs real
   accounts; the stub never reaches production.
