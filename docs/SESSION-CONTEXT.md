@@ -20,7 +20,6 @@ Build scenario picker (`getByRole('button', { name: /sarah/i })`). Phase: **Buil
 5. Settle: "A party can propose with option cards, the other can counter, and version
    4 is accepted and signed."
 6. Finalise: "Pre-flight passes and the print-and-post pack renders."
-
 Kill criterion: by the sixth merged outcome, two parties reach an agreed schedule and
 one signed version; if not, the brief is at fault. **Next: outcome 2** (profile, bank or test scenario, confirm by exception, Your Picture).
 
