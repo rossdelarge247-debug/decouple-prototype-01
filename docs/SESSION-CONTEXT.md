@@ -1,25 +1,21 @@
 # Session context
 
-## Journey
+## Journey and state
 
-Five phases, per `docs/BRIEF.md` (Start · Build · Reconcile · Settle · Finalise); the
-detail is in `docs/JOURNEY.md`. Current phase: **Start**.
-
-## State
-
-Repository seeded with the brief, the journey detail (condensed from the previous
-prototype's 99 specs), the bank and extraction engine, the design tokens and the
-golden-path test. No screens built. The golden path fails at step 1.
+Five phases (Start · Build · Reconcile · Settle · Finalise), per `docs/BRIEF.md`; detail
+in `docs/JOURNEY.md`. Repository seeded with the brief, the journey detail (condensed
+from the previous prototype's 99 specs), the engine, the tokens and the golden-path
+test. No screens built. The golden path fails at step 1. Current phase: **Start**.
 
 ## Outcomes, one per session, fresh session each time
 
 1. Start: "A user can complete the interview, see their plan, sign up, and see the
    acknowledgement and tour in the preview."
 2. Build: "A user can profile, connect the Tink demo bank or a test scenario, confirm
-   by exception, and see Your Picture in the preview." Includes wiring the signal
-   engine to the question generator.
-3. Invite: "A user can share selected sections after a preview, and the other party
-   can enter by link, confirm or correct their facts, and sign up."
+   by exception, and see Your Picture in the preview." Wires the signal engine to
+   the question generator.
+3. Invite: "A user can share selected sections after a preview; the other party can
+   enter by link, confirm or correct their facts, and sign up."
 4. Reconcile: "Both parties see one household schedule with the status quad, triage
    items, raise and answer queries, and reach zero unresolved."
 5. Settle: "A party can propose with option cards, the other can counter, and version
@@ -29,43 +25,37 @@ golden-path test. No screens built. The golden path fails at step 1.
 Kill criterion: by the sixth merged outcome, two parties reach an agreed schedule and
 one signed version. If not, the brief is at fault.
 
-## Next outcome (session 1)
-
-Outcome 1, Start. Landing page, the eight interview screens with their exact option
+**Next: outcome 1.** Landing page, the eight interview screens with their exact option
 sets, plan generation, sign-up, the safety branch, the acknowledgement, the tour.
 
 ## Deployment
 
-Production: https://decouple-prototype-01.vercel.app. Vercel deploys every branch; the
-Tink callback `https://decouple-prototype-01.vercel.app/api/bank/callback` is registered
-in the Tink console, so the real bank click works on production only. Env vars
-`TINK_CLIENT_ID`, `TINK_CLIENT_SECRET`, `ANTHROPIC_API_KEY` are set in Vercel.
+Production https://decouple-prototype-01.vercel.app; every branch gets a preview. The
+Tink callback `/api/bank/callback` is registered for production only, so the real bank
+click works there only. Env vars `TINK_CLIENT_ID`, `TINK_CLIENT_SECRET`,
+`ANTHROPIC_API_KEY` are set in Vercel.
 
 ## Decisions on record
 
-- Name: Decouple, tagline "the complete picture".
-- Phase 6 is a print-and-post pack. Solicitor e-filing is out of scope for v1.
-- Bar for negotiation UX: Juro. Reference table in the brief.
-- Budget: five sessions to the kill criterion.
-- Spec mining (11 Sept): five phases, ES2-style shared picture with Form E as the capture
-  checklist, option-card negotiation, arithmetic only (no typical ranges, no AI coach),
-  invitee enters by magic link, selective sharing by section, behavioural coercive-control
-  detection deferred, honest pricing with nothing hardcoded. LOCKED items in JOURNEY.md.
-- Landing page and interview are public. The app is behind sign-up and sign-in from
-  phase 2. Auth is stubbed behind one session interface until phase 4 needs real
-  accounts; the stub never reaches production.
+- Name: Decouple, tagline "the complete picture". Print-and-post pack; no e-filing.
+- Juro is the negotiation bar. Landing page and interview public; app behind sign-up
+  from Build; auth stubbed behind one session interface until Reconcile; the stub
+  never reaches production.
+- Spec mining, 11 Sept: five phases; ES2-style shared picture with Form E as the
+  capture checklist; option-card negotiation; arithmetic only, no typical ranges, no
+  AI coach; invitee enters by magic link; selective sharing by section; behavioural
+  coercive-control detection deferred; honest pricing, nothing hardcoded. LOCKED
+  items are marked in JOURNEY.md.
 
 ## CI
 
-Floor: lint · typecheck · unit tests · build · Gitleaks · the accessibility floor
-(`tests/e2e/screens-a11y.e2e.ts`, axe WCAG AA on every route in its `ROUTES` list, on the
-production build). Add each new screen's route to that list the session it ships. Nothing
-else: no coverage gates, hooks, personas, review loops or audit checks.
+Lint · typecheck · unit tests · build · Gitleaks · the accessibility floor
+(`tests/e2e/screens-a11y.e2e.ts`: axe WCAG AA on every route in `ROUTES`, production
+build). Add each new route the session it ships. Nothing else.
 
 ## Lessons (one line each)
 
-- The previous prototype's engine has no dedicated unit tests beyond the callback
-  route; treat the signal rules as untested until a test says otherwise.
-- Playwright device presets default to WebKit; the projects pin `browserName: 'chromium'`.
-- In the Claude sandbox Playwright's own Chromium is absent: run e2e with
-  `PW_CHROMIUM=/opt/pw-browsers/chromium` (a symlink to the pinned build).
+- The inherited engine has no unit tests beyond the callback route; treat the signal
+  rules as untested until a test says otherwise.
+- Playwright device presets default to WebKit; projects pin `browserName: 'chromium'`.
+- In the Claude sandbox run e2e with `PW_CHROMIUM=/opt/pw-browsers/chromium`.
