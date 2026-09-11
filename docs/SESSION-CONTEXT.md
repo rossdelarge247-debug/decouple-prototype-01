@@ -3,9 +3,8 @@
 ## Journey and state
 
 Five phases (Start · Build · Reconcile · Settle · Finalise), per `docs/BRIEF.md`; detail
-in `docs/JOURNEY.md`. Start is built (session 1, `docs/HANDOFF-1.md`). The golden path
-fails at the Build scenario picker (`getByRole('button', { name: /sarah/i })`).
-Current phase: **Build**.
+in `docs/JOURNEY.md`. Start is built (`docs/HANDOFF-1.md`). The golden path fails at the
+Build scenario picker (`getByRole('button', { name: /sarah/i })`). Phase: **Build**.
 
 ## Outcomes, one per session, fresh session each time
 
@@ -34,12 +33,11 @@ callback is registered for production only. Env vars `TINK_CLIENT_ID`,
 ## Decisions on record
 
 - Name: Decouple, tagline "the complete picture". Print-and-post pack; no e-filing.
-- Design system from the owner's reference screens, inspiration not bar; Juro is the
-  negotiation bar. Public landing and interview; app behind sign-up from Build; auth
-  stubbed behind one session interface until Reconcile.
-- Spec mining, 11 Sept: five phases; ES2-style shared picture, Form E as the capture
-  checklist; option cards; arithmetic only, no typical ranges, no AI coach; invitee by
-  magic link; selective sharing; honest pricing, nothing hardcoded. LOCKED in JOURNEY.
+  Reference screens are inspiration not bar; Juro is the negotiation bar. Public landing
+  and interview; app behind sign-up from Build; auth stubbed until Reconcile.
+- Spec mining, 11 Sept: ES2-style shared picture, Form E as the capture checklist; option
+  cards; arithmetic only, no AI coach; invitee by magic link; selective sharing; honest
+  pricing, nothing hardcoded. LOCKED in JOURNEY.
 - Session 1: landing shows the conventional £14,561 only. Golden path extended with
   Sarah's clicks, no assertion changed. Plan safety and privacy messages deterministic;
   O3 and flags never reach the model. Production builds; the stub refuses there unless
