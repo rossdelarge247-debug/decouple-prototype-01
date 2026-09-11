@@ -7,6 +7,9 @@ experience pillars and the bar. This file only says how to work in this reposito
 
 - **Build vertically.** One journey a real person completes on real data before any
   breadth. The current phase and the next outcome are named in `docs/SESSION-CONTEXT.md`.
+- **One outcome per session, a fresh session each time.** The repository is the only
+  memory: git, SESSION-CONTEXT, the last handoff, the golden path's failing step. A
+  session that reaches context summarisation was too big; say so in the handoff.
 - **Definition of done per session:** one sentence, "a user can now … in the preview",
   verified by clicking it in the Vercel preview.
 - **The bar is the golden path.** `tests/e2e/golden-path.e2e.ts` encodes the script in

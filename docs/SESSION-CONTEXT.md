@@ -11,11 +11,28 @@ Repository seeded with the brief, the journey detail (condensed from the previou
 prototype's 99 specs), the bank and extraction engine, the design tokens and the
 golden-path test. No screens built. The golden path fails at step 1.
 
+## Outcomes, one per session, fresh session each time
+
+1. Start: "A user can complete the interview, see their plan, sign up, and see the
+   acknowledgement and tour in the preview."
+2. Build: "A user can profile, connect the Tink demo bank or a test scenario, confirm
+   by exception, and see Your Picture in the preview." Includes wiring the signal
+   engine to the question generator.
+3. Invite: "A user can share selected sections after a preview, and the other party
+   can enter by link, confirm or correct their facts, and sign up."
+4. Reconcile: "Both parties see one household schedule with the status quad, triage
+   items, raise and answer queries, and reach zero unresolved."
+5. Settle: "A party can propose with option cards, the other can counter, and version
+   4 is accepted and signed."
+6. Finalise: "Pre-flight passes and the print-and-post pack renders."
+
+Kill criterion: by the sixth merged outcome, two parties reach an agreed schedule and
+one signed version. If not, the brief is at fault.
+
 ## Next outcome (session 1)
 
-"A user can answer the interview, sign up, profile, connect the Tink demo bank or a
-test scenario, confirm by exception, and see Your Picture in the preview." Start and
-Build, by reuse of the engine; wire the signal engine to the question generator.
+Outcome 1, Start. Landing page, the eight interview screens with their exact option
+sets, plan generation, sign-up, the safety branch, the acknowledgement, the tour.
 
 ## Deployment
 
