@@ -77,7 +77,7 @@ export const o1 = {
   headline: 'Where are you now?',
   body: 'There are no wrong answers. This sets the pace of everything that follows.',
   why: 'It tells us whether to move at your pace or to get things moving.',
-  unlocks: 'The tone of your plan.',
+  unlocks: 'The tone of the plan we write for you.',
   legend: 'Where you are',
   options: {
     decided: { title: "We've decided to separate", body: 'I want to get the finances sorted' },
@@ -171,9 +171,9 @@ export const o5 = {
 export const o6 = {
   eyebrow: 'What matters',
   headline: 'What matters most to you?',
-  body: 'Pick up to three of each. They shape the notes in your plan.',
+  body: 'Pick up to three of each. They shape the notes we write for you.',
   why: 'Priorities and worries decide which notes we write for you.',
-  unlocks: 'The personal notes in your plan.',
+  unlocks: 'The personal notes in the plan.',
   priorities: {
     legend: 'What matters most',
     options: {

@@ -48,6 +48,15 @@ describe('Start copy', () => {
     expect(count(text, /safe/gi)).toBe(1)
   })
 
+  // A strict locator polls from the moment Continue is clicked, so the screen being
+  // left must not carry the phrase either.
+  it('no interview screen mentions the plan-page phrases', () => {
+    const text = joined(start.o1, start.o2, start.o3, start.o4, start.o5, start.o6, start.interview, start.footer, start.header)
+    expect(count(text, /your plan|here.s what happens|your next step|based on what you told us/gi)).toBe(0)
+    const signUp = joined(start.signUp, start.footer, start.header)
+    expect(count(signUp, /based on what you told us/gi)).toBe(0)
+  })
+
   it('"your plan" and "your next step" appear once each on the plan page', () => {
     const text = joined(start.plan, start.nextStep, start.footer, start.header)
     expect(count(text, /your plan|here.s what happens/gi)).toBe(1)
