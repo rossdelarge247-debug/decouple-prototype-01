@@ -4,14 +4,19 @@ interface Props {
   id: string
   name: string
   label: string
-  type?: 'text' | 'email' | 'password'
+  type?: 'text' | 'email' | 'password' | 'number'
+  inputMode?: 'numeric' | 'decimal'
+  defaultValue?: string
+  min?: number
+  max?: number
+  prefix?: string
   hint?: string
   error?: string
   autoComplete?: string
   minLength?: number
 }
 
-export function Field({ id, name, label, type = 'text', hint, error, autoComplete, minLength }: Props) {
+export function Field({ id, name, label, type = 'text', hint, error, autoComplete, minLength, inputMode, defaultValue, min, max, prefix }: Props) {
   const describedBy = [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') || undefined
   return (
     <div className={`flex flex-col gap-1 ${error ? 'border-l-4 border-danger pl-3' : ''}`}>
@@ -28,16 +33,23 @@ export function Field({ id, name, label, type = 'text', hint, error, autoComplet
           {error}
         </p>
       )}
-      <input
-        id={id}
-        name={name}
-        type={type}
-        autoComplete={autoComplete}
-        minLength={minLength}
-        aria-describedby={describedBy}
-        aria-invalid={error ? true : undefined}
-        className="w-full rounded-control border border-border bg-surface px-4 py-3 text-ink"
-      />
+      <div className="flex items-center gap-2">
+        {prefix && <span aria-hidden="true" className="text-ink-muted">{prefix}</span>}
+        <input
+          id={id}
+          name={name}
+          type={type}
+          autoComplete={autoComplete}
+          minLength={minLength}
+          inputMode={inputMode}
+          defaultValue={defaultValue}
+          min={min}
+          max={max}
+          aria-describedby={describedBy}
+          aria-invalid={error ? true : undefined}
+          className="w-full rounded-control border border-border bg-surface px-4 py-3 text-ink"
+        />
+      </div>
     </div>
   )
 }
