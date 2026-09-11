@@ -1,3 +1,4 @@
+import type { MessageCreateParamsNonStreaming } from '@anthropic-ai/sdk/resources/messages'
 import { checkCopy } from '@/copy/rules'
 import type { StartAnswers } from './answers'
 import { JOURNEY_STEP_KEYS, type JourneyStepKey } from './facts'
@@ -93,9 +94,10 @@ export interface ProseResponse {
   content: Array<{ type: string; text?: string }>
 }
 
+// Structural, so tests inject a fake and the real SDK client fits without a cast.
 export interface ProseClient {
   messages: {
-    create(params: Record<string, unknown>): Promise<ProseResponse>
+    create(params: MessageCreateParamsNonStreaming): Promise<ProseResponse>
   }
 }
 

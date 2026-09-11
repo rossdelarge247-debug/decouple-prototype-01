@@ -68,6 +68,8 @@ export const interview = {
   chooseOne: 'Choose one option to continue.',
   chooseUpToThree: 'Choose up to three.',
   summaryTitle: 'A few things to check',
+  answered: 'Answered',
+  chosen: '{n} chosen',
 } as const
 
 export const o1 = {
@@ -224,6 +226,12 @@ export const plan = {
     body: 'This is yours to keep. There is no account yet and nothing is shared with anyone.',
   },
   notesWriting: 'Writing a few notes for you.',
+  termsTitle: 'Three terms, explained',
+  terms: [
+    { term: 'Conditional order', explain: 'The first of the two court orders in a divorce. It confirms you are entitled to divorce; the marriage is not over yet.' },
+    { term: 'Consent order', explain: 'A court order that makes the financial agreement you both signed legally binding. Applied for after the conditional order.' },
+    { term: 'MIAM', explain: 'A first meeting with a mediator to see whether mediation could help. The consent route does not go through one.' },
+  ],
   unanswered: 'Answer the interview first and this page fills in.',
   unansweredCta: 'Start the interview',
   pricingLink: 'See pricing',

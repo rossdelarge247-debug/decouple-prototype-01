@@ -121,3 +121,9 @@
   .no-print { display: none !important; }
   .ground { background: var(--color-surface); }
 }
+
+/* O2: the children count appears once "Yes" is chosen, with no JavaScript. */
+@layer components {
+  .reveal-on-yes { display: none; }
+  .reveal-wrap:has(input[name="children"][value="yes"]:checked) .reveal-on-yes { display: block; }
+}
