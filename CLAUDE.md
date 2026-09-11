@@ -14,9 +14,10 @@ experience pillars and the bar. This file only says how to work in this reposito
   verified by clicking it in the Vercel preview.
 - **The bar is the golden path.** `tests/e2e/golden-path.e2e.ts` encodes the script in
   the brief and fails at the first unbuilt step. Each session moves that point.
-- **One pass per screen.** The owner's reference screens are inspiration, never a bar:
-  look once, build, ship. Tokens, real data, wire it. Polish once, against the whole
-  journey, when the journey works.
+- **One pass per screen.** The owner's reference screens (`docs/design-reference/`)
+  are inspiration, never a bar: look once, compare and contrast, build, ship, and
+  record in the handoff what was taken and what was changed. Tokens, real data, wire
+  it. Polish once, against the whole journey, when the journey works.
 - **Decisions are the human's.** At a fork, ask with `AskUserQuestion`, record the
   answer in one line in `docs/SESSION-CONTEXT.md`, continue. Never write a spec to
   avoid asking.
