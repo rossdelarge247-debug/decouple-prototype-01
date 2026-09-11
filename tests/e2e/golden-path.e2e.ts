@@ -74,7 +74,31 @@ test('Sarah and Mark reach a court-ready pack', async ({ page }) => {
 
   // Build — profile, then bank, then confirm by exception. No banned words anywhere.
   await page.getByRole('link', { name: /connect.*bank|build/i }).click()
+  await page.getByRole('link', { name: /start your profile/i }).click()
+  await page.getByLabel(/who is your mortgage with/i).selectOption('Halifax') // P1
+  await next()
+  await group(/how many vehicles/i).getByLabel(/^one$/i).check() // P3
+  await group(/on finance/i).getByLabel(/^no$/i).check()
+  await next()
+  await group(/do you have a pension/i).getByLabel(/^yes, one$/i).check() // P4, the pension clock starts
+  await page.getByLabel(/who is it with/i).fill('Aviva')
+  await group(/do any of these apply/i).getByLabel(/none of these/i).check()
+  await next()
+  await group(/is that right/i).getByLabel(/^yes, 2$/i).check() // P5
+  await next()
+  await page.getByLabel(/^savings$/i).check() // P6
+  await next()
+  await next() // P7, the accounts heads-up
+  await expect(page.getByText(/read-only, we cannot move money/i)).toBeVisible() // the trust band
   await page.getByRole('button', { name: /sarah/i }).click() // test scenario stands in for the Tink demo bank
+  await expect(page.getByText(/transactions read/i)).toBeVisible() // the reveal
+  await page.getByRole('link', { name: /check these with me/i }).click()
+  await expect(page.getByText(/salary: £3,218 a month/i)).toBeVisible() // tier 1, taken as read
+  await next()
+  await page.getByLabel(/an isa/i).check() // tier 2, the one quick check
+  await next()
+  await expect(page.getByText(/cash equivalent transfer value/i).first()).toBeVisible() // tier 4, the gaps
+  await page.getByRole('button', { name: /skip for now/i }).click()
   await expect(page.getByRole('heading', { name: /your picture/i })).toBeVisible({ timeout: 60_000 })
   await expect(page.getByText(/your income/i)).toBeVisible()
   await expect(page.getByText(/private/i).first()).toBeVisible() // the space is named on every screen
