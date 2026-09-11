@@ -28,6 +28,9 @@ in the Tink console, so the real bank click works on production only. Env vars
 - Phase 6 is a print-and-post pack. Solicitor e-filing is out of scope for v1.
 - Bar for negotiation UX: Juro. Reference table in the brief.
 - Budget: five sessions to the kill criterion.
+- Landing page and interview are public. The app is behind sign-up and sign-in from
+  phase 2. Auth is stubbed behind one session interface until phase 4 needs real
+  accounts; the stub never reaches production.
 
 ## CI
 

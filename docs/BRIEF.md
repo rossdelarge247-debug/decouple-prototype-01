@@ -86,6 +86,25 @@ fill gaps.
   safeguarding exit applies on every screen regardless.
 - Unverified: whether the court accepts an electronically signed D81. Ink is baseline.
 
+## Public site and signed-in app
+
+Two surfaces, one codebase.
+
+- **The public site** needs no account: a landing page (the name, the promise, the
+  price, one "Start" button) and the whole of the phase 1 interview. Anyone can
+  arrive from a search or a shared link, answer the interview, and see their plan
+  before being asked for anything. The landing page is one screen in v1; it exists
+  because the interview needs a front door, not as a marketing site.
+- **The app** sits behind sign-up and sign-in from phase 2 onwards. Everything a
+  party discloses, shares or negotiates is theirs alone and their ex's only when
+  sent, so the app requires a real, secure account per party in production.
+- **Auth can be deferred; the boundary cannot.** Real accounts are needed by phase 4,
+  when two parties act on one case. Until then a stub session (a fixed local user,
+  no password check) is acceptable, provided every screen and route reads the user
+  through one interface (`getSession`, `requireSession`) with the stub behind it. A
+  later swap to a real provider must not touch a screen. Never let the stub reach
+  production: the production build fails if the real provider is not configured.
+
 ## Non-negotiables
 
 - A warm hand on a cold day. Compassionate, professional, never patronising, never
@@ -243,7 +262,7 @@ whitelisted redirect. Playwright for the golden-path test. PDF generation for th
 
 ## Out of scope for v1
 
-Scotland and Northern Ireland · pension sharing valuations (take the CE value the user
+A marketing site beyond the one landing page · Scotland and Northern Ireland · pension sharing valuations (take the CE value the user
 uploads) · unmarried cohabitants · contested proceedings · solicitor e-filing · payments
 (stub the price).
 
