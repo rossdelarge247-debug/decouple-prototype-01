@@ -31,9 +31,8 @@ sets, plan generation, sign-up, the safety branch, the acknowledgement, the tour
 ## Deployment
 
 Production https://decouple-prototype-01.vercel.app; every branch gets a preview. The
-Tink callback `/api/bank/callback` is registered for production only, so the real bank
-click works there only. Env vars `TINK_CLIENT_ID`, `TINK_CLIENT_SECRET`,
-`ANTHROPIC_API_KEY` are set in Vercel.
+Tink callback is registered for production only, so the real bank click works there
+only. Env vars `TINK_CLIENT_ID`, `TINK_CLIENT_SECRET`, `ANTHROPIC_API_KEY` are in Vercel.
 
 ## Decisions on record
 
