@@ -31,8 +31,33 @@ test('Sarah and Mark reach a court-ready pack', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await accessible(page, 'interview start')
 
+  // Sarah's answers, one topic per screen. Radios are scoped by their group.
+  const group = (name: RegExp) => page.getByRole('group', { name })
+  const next = () => page.getByRole('button', { name: /continue/i }).click()
+  await page.getByLabel(/decided to separate/i).check()
+  await next()
+  await group(/your relationship/i).getByLabel(/^married/i).check()
+  await group(/living together/i).getByLabel(/^yes$/i).check()
+  await group(/children under 18/i).getByLabel(/^yes$/i).check()
+  await group(/how many/i).getByLabel(/^2$/i).check()
+  await group(/your home/i).getByLabel(/own with mortgage/i).check()
+  await next()
+
   // The interview asks about safety early, gently, privately.
   await expect(page.getByText(/feel unsafe|safe/i)).toBeVisible({ timeout: 60_000 })
+  await page.getByLabel(/^amicable/i).check()
+  await group(/device private/i).getByLabel(/^yes$/i).check()
+  await next()
+  await page.getByLabel(/^no/i).check()
+  await next()
+  await page.getByLabel(/some things but not all/i).check()
+  await next()
+  await page.getByLabel(/keeping the family home/i).check()
+  await page.getByLabel(/stability for the children/i).check()
+  await page.getByLabel(/protecting my pension/i).check()
+  await page.getByLabel(/afford the mortgage/i).check()
+  await page.getByLabel(/knowing what.s fair/i).check()
+  await page.getByRole('button', { name: /see my plan/i }).click()
 
   // It ends with a plan and a price, and one next step.
   await expect(page.getByText(/your plan|here.s what happens/i)).toBeVisible({ timeout: 120_000 })
@@ -40,8 +65,10 @@ test('Sarah and Mark reach a court-ready pack', async ({ page }) => {
 
   // Start — sign up, acknowledgement, tour.
   await page.getByRole('link', { name: /sign up|create.*account/i }).click()
+  await page.getByLabel(/full name/i).fill('Sarah Jones')
   await page.getByLabel(/email/i).fill('sarah@example.com')
   await page.getByLabel(/password/i).first().fill('correct-horse-battery-staple')
+  await page.getByLabel(/agree to the terms/i).check()
   await page.getByRole('button', { name: /create|sign up|continue/i }).click()
   await expect(page.getByText(/based on what you told us/i)).toBeVisible()
 

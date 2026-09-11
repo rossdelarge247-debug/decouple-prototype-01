@@ -1,4 +1,129 @@
 @import "tailwindcss";
 
-/* The design system is created from the product owner's reference screens at the
-   first screen build, as tokens here and in src/styles/tokens.ts, and never inlined. */
+/* The design system. src/styles/tokens.ts is the source of truth; the parity test keeps
+   this block identical to it. The default Tailwind palette is switched off so that only
+   named tokens exist as colour utilities. */
+@theme {
+  --color-*: initial;
+  --color-ink: #1a1523;
+  --color-ink-muted: #5c5566;
+  --color-accent: #5b21b6;
+  --color-accent-strong: #4c1d95;
+  --color-accent-tint: #efe8fb;
+  --color-lavender: #e6dafa;
+  --color-cream: #f7f3ee;
+  --color-surface: #ffffff;
+  --color-border: #e4deea;
+  --color-phase-build: #5b21b6;
+  --color-phase-reconcile: #a3164f;
+  --color-phase-settle: #1f5fa8;
+  --color-phase-finalise: #166e3f;
+  --color-success: #166e3f;
+  --color-success-tint: #ddf3e6;
+  --color-attention: #8a5200;
+  --color-attention-tint: #fff1d6;
+  --color-danger: #b42318;
+  --color-danger-tint: #fde8e6;
+  --color-focus: #5b21b6;
+
+  --font-display: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --text-display-xl: 3.5rem;
+  --text-display-lg: 2.5rem;
+  --text-display-md: 2rem;
+  --text-display-sm: 1.5rem;
+  --text-body-lg: 1.0625rem;
+  --text-body: 0.9375rem;
+  --text-body-sm: 0.8125rem;
+  --text-eyebrow: 0.75rem;
+
+  --spacing-gutter: 1.25rem;
+  --spacing-card: 1.5rem;
+  --spacing-section: 3rem;
+
+  --radius-card: 1.25rem;
+  --radius-control: 0.75rem;
+  --radius-pill: 9999px;
+
+  --shadow-soft: 0 8px 30px rgba(38, 24, 72, 0.08);
+  --shadow-card: 0 1px 2px rgba(26, 21, 35, 0.06), 0 12px 32px rgba(38, 24, 72, 0.08);
+
+  --ease-soft: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --motion-micro: 120ms;
+  --motion-swap: 200ms;
+  --motion-structural: 300ms;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+    color: var(--color-ink);
+    background: var(--color-cream);
+    -webkit-font-smoothing: antialiased;
+    text-size-adjust: 100%;
+  }
+  body {
+    min-height: 100dvh;
+    font-size: var(--text-body-lg);
+    line-height: 1.55;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  a { text-underline-offset: 0.15em; }
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+    border-radius: var(--radius-control);
+  }
+  button, input, select, textarea { font: inherit; }
+  progress { accent-color: var(--color-accent); }
+}
+
+/* The soft lavender-to-cream ground with a faint dot grid, from the reference screens. */
+@utility ground {
+  background-color: var(--color-cream);
+  background-image:
+    radial-gradient(color-mix(in srgb, var(--color-border) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, var(--color-lavender) 0%, var(--color-cream) 55%);
+  background-size: 22px 22px, 100% 100%;
+}
+
+/* The italic purple phrase inside a serif headline. */
+@utility accent-italic {
+  font-style: italic;
+  color: var(--color-accent);
+}
+
+/* Transitions honour the timing budget and vanish under reduced motion. */
+@utility motion-swap {
+  transition-duration: var(--motion-swap);
+  transition-timing-function: var(--ease-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  html { background: var(--color-surface); }
+  .no-print { display: none !important; }
+  .ground { background: var(--color-surface); }
+}
+
+/* O2: the children count appears once "Yes" is chosen, with no JavaScript. */
+@layer components {
+  .reveal-on-yes { display: none; }
+  .reveal-wrap:has(input[name="children"][value="yes"]:checked) .reveal-on-yes { display: block; }
+}
