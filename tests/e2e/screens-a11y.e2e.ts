@@ -30,6 +30,19 @@ export const ROUTES = [
   '/welcome/tour',
   '/welcome/tour?panel=4',
   '/build',
+  '/build/profile/home',
+  '/build/profile/vehicles',
+  '/build/profile/pensions',
+  '/build/profile/children',
+  '/build/profile/other-assets',
+  '/build/profile/accounts',
+  '/build/connect',
+  '/build/connect?state=failed&ref=a1b2',
+  '/build/reveal',
+  '/build/confirm',
+  '/build/confirm/investment-hl-savings',
+  '/build/confirm/gaps',
+  '/build/picture',
 ]
 
 // Every route is seeded with Sarah's answers and a stub session, so the screens

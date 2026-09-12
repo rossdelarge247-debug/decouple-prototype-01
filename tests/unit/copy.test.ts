@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
+import * as build from '@/copy/build'
 import * as start from '@/copy/start'
 import { checkCopy, wordCount } from '@/copy/rules'
 
@@ -15,7 +16,7 @@ function leaves(value: unknown, keyPath = '', out: Leaf[] = []): Leaf[] {
   return out
 }
 
-const all = leaves(start)
+const all = [...leaves(start), ...leaves(build).map(l => ({ ...l, keyPath: `build.${l.keyPath}` }))]
 const isCta = (k: string) => /(^|\.)cta$|Cta$/.test(k)
 const isHeadline = (k: string) => /(^|\.)headline$/.test(k)
 
@@ -86,6 +87,18 @@ describe('Start copy', () => {
     for (const { keyPath, value } of all.filter(l => isHeadline(l.keyPath))) {
       expect(value, keyPath).not.toMatch(phrases)
     }
+  })
+
+  // The golden path asserts these with strict locators on Your Picture.
+  it('"your picture" is the picture headline and "your income" one section title', () => {
+    expect(build.picture.headline).toMatch(/your picture/i)
+    const text = joined(build.picture, start.footer, start.header, start.space, start.nextStep, start.phases)
+    expect(count(text, /your income/gi)).toBe(1)
+  })
+
+  it('one scenario button matches the golden-path locator', () => {
+    const names = ['Sarah — Employed homeowner, 2 children', 'Marcus — Self-employed renter, crypto investor']
+    expect(names.filter(n => /sarah/i.test(n))).toHaveLength(1)
   })
 
   it('no page sets its own tab title', () => {

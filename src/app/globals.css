@@ -126,4 +126,20 @@
 @layer components {
   .reveal-on-yes { display: none; }
   .reveal-wrap:has(input[name="children"][value="yes"]:checked) .reveal-on-yes { display: block; }
+
+  /* Build profile: follow-up fields appear from the answer above them, with no JavaScript. */
+  .disclose { display: none; }
+  .disclose-wrap:has(input[name="vehicles"][value="one"]:checked) .disclose-vehicle,
+  .disclose-wrap:has(input[name="vehicles"][value="more"]:checked) .disclose-vehicle { display: block; }
+  .disclose-wrap:has(input[name="vehicleFinance"][value="yes"]:checked) .disclose-finance { display: block; }
+  .disclose-wrap:has(input[name="pensions"]:checked):not(:has(input[name="pensions"][value="no"]:checked)) .disclose-pension { display: block; }
+  .disclose-wrap:has(input[name="children"][value="no"]:checked) .disclose-children { display: block; }
+
+  /* The reveal: items fade in one by one within the timing budget; values never bounce. */
+  .reveal-item {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity var(--motion-swap) var(--ease-soft), transform var(--motion-structural) var(--ease-soft);
+  }
+  .reveal-item.is-shown { opacity: 1; transform: none; }
 }
