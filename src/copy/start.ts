@@ -19,6 +19,11 @@ export const header = {
   homeLabel: 'Decouple home',
 } as const
 
+export const devMode = {
+  label: 'Dev mode',
+  body: 'Accounts here are a stand-in: any email signs in and nothing is stored beyond this browser. Switched off before real users.',
+} as const
+
 export const space = {
   private: 'Private · only you can see this',
 } as const
