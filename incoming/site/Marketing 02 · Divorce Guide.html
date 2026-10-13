@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your free divorce guide — Decouple</title>
+<meta name="description" content="A free, private guide for anyone separating in England and Wales: what to do, in what order, and what to expect.">
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="proto/playback/pb.css">
+<link rel="stylesheet" href="m02/guide/g.css">
+<style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="shared/dc-site.js"></script>
+<script src="proto/interview/iv-data.js"></script>
+<script src="proto/playback/pb-engine.js"></script>
+<script src="m02/guide/g-store.js"></script>
+<script src="m02/guide/g-data.js"></script>
+<script src="m02/guide/g-sheet.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-ui.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-screens.jsx"></script>
+<script type="text/babel" src="proto/playback/pb-blocks.jsx"></script>
+<script type="text/babel" src="m02/guide/g-intake.jsx"></script>
+<script type="text/babel" src="m02/guide/g-landings.jsx"></script>
+<script type="text/babel" src="m02/guide/g-gate.jsx"></script>
+<script type="text/babel" src="m02/guide/tweaks-panel.jsx"></script>
+<script type="text/babel" src="m02/guide/g-chapters.jsx"></script>
+<script type="text/babel" src="m02/guide/g-guide.jsx"></script>
+<script type="text/babel">
+/* M02 · Your personalised divorce guide. State in decouple.m02.v2; unsent batches in decouple.outbox.v1 (shared/dc-site.js).
+   ?pid=NAME tags a participant · ?v=A|B forces the price set · ?landing=a–e|random picks the landing ·
+   ?demo=1[&phase=landing|guide|full] shows Sarah's example (owner only on the site; never saved or sent).
+   Nothing is sent without consent. Safety answers, names and emails are never sent. */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "landing": "e",
+  "rotate": false
+}/*EDITMODE-END*/;
+const { useState, useEffect, useRef } = React;
+const Ic = window.DIc, G = window.G, GS = window.GS, IV = window.IV, DC = window.DC;
+const exit = () => location.replace("https://www.bbc.co.uk/weather");
+const NOPOST = ["safe", "safe2", "name_me", "name_them"];
+
+function App() {
+  const [s, setS] = useState(GS.load);
+  const [site, setSite] = useState(undefined);
+  const [testing, setTesting] = useState(false);
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const ref = useRef(s); ref.current = s;
+  const up = (p) => setS((o) => { const n = typeof p === "function" ? p(o) : { ...o, ...p }; GS.save(n); return n; });
+  const setA = (f) => up((o) => ({ ...o, a: typeof f === "function" ? f(o.a) : f }));
+  const setX = (k, v) => up((o) => ({ ...o, x: { ...o.x, [k]: v } }));
+  useEffect(() => { window.scrollTo(0, 0); }, [s.phase, s.pos, s.ch]);
+  useEffect(() => { DC.session().then((x) => { if (x && GS.DEMO && !x.owner) return location.replace(location.pathname); setSite(x); }); DC.testing().then(setTesting); }, []);
+  const refreshSite = () => DC.session(true).then((x) => { DC.testing().then(setTesting); setSite(x); return x; });
+  const footWm = useRef(null);
+  useEffect(() => { if (footWm.current && !footWm.current.dataset.sec) { footWm.current.dataset.sec = 1; DC.secret(footWm.current); } });
+  const testPill = testing && !GS.DEMO ? <span className="g-test" title="Set in Site settings. Nothing you do is sent.">Test mode · nothing is sent</span> : null;
+
+  /* consent-aware sending; before anyone is asked, events wait on this device */
+  const track = (step, rows, lvx) => { const c = ref.current; if (GS.DEMO) return; if (c.consent === "yes") GS.post(c, step, rows, lvx); else if (c.consent == null) up((o) => ({ ...o, held: [...(o.held || []), { step, rows, lv: lvx }].slice(-10) })); };
+  const postSec = (sec, qs) => { const c = ref.current; track("Interview", qs.filter((q) => q.type !== "note" && !NOPOST.includes(q.id) && c.a[q.id] != null).map((q) => [q.id, G.qText(q), q.type, G.labelOf(q, c.a[q.id])])); };
+  const postCh = (ch) => {
+    const c = ref.current, x = c.x, rows = [], P = G.PRICES[c.ver];
+    (ch.feats || []).forEach((id) => x.feat && x.feat[id] && rows.push(["feat." + id, "Feature: " + G.FEAT[id][0], "feature", { must: "Must have", nice: "Nice to have", no: "Not for me" }[x.feat[id]]]));
+    const qs = ch.id === "service" ? G.SERVICE_Q : ch.id === "last" ? G.LAST_Q : ch.qs || [];
+    qs.forEach((q) => x[q.id] != null && x[q.id] !== "" && rows.push([q.id, G.qText(q), q.type, q.type === "long" ? x[q.id] : G.labelOf(q, x[q.id])]));
+    if (ch.id === "service") {
+      if (x.tier) { const i = G.TIERS.findIndex((t) => t.id === x.tier); rows.push(["tier", "Package choice", "tiers", i < 0 ? "None of these" : `${G.TIERS[i].name} £${P[i]}`]); }
+      G.VW.forEach(([k, l]) => x.vw && x.vw[k] && rows.push(["vw." + k, `Price (${x.tier || "guided"}): ${l}`, "vw", "£" + x.vw[k]]));
+    }
+    if (ch.id === "last") {
+      Object.entries(x.spend || {}).forEach(([id, v]) => v && rows.push(["spend." + id, "£100 spend: " + G.FEAT[id][0], "spend", "£" + v]));
+      const o = x.optin || {}, picks = ["launch", "chat", "pilot"].filter((k) => o[k]);
+      if (picks.length) {
+        rows.push(["optin", "Stay involved", "optin", picks.join("; ")]);
+        if (o.email && !c.optinSent && !GS.DEMO) { DC.signup({ email: o.email.trim(), stage: picks.join(";"), source: "guide-optin", sid: c.sid, hp: "" }); up({ optinSent: true }); }
+      }
+    }
+    track("Guide · " + ch.n, rows.concat([["ch_done", "Finished chapter", "event", ch.id]]));
+  };
+
+  const secs = G.activeSections(s.a), list = G.chapters(s.a);
+  const phase = s.phase;
+  let pct = 0;
+  if (phase === "iv") pct = (Math.max(0, secs.findIndex((x) => x.id === s.pos)) / secs.length) * 100;
+  else if (phase === "build" || phase === "stop") pct = 100;
+  else if (phase === "guide") pct = ((Math.min(s.ch, list.length - 1) + 1) / list.length) * 100;
+  else if (phase === "full") pct = 100;
+  const LANDS = window.GLANDS, lv = s.lvFixed || ((s.lvRotate || t.rotate) ? s.lvRand : t.landing) || "a", L = LANDS[lv] || LANDS.a;
+  useEffect(() => { if (phase === "landing" && !s.viewed) { track("Landing", [["landing_view", "Saw the landing page", "event", L.name]], lv); up({ viewed: true }); } }, [phase]);
+  const needCode = (x) => !!(x && x.requireCode && !x.tester && !x.owner);
+  const gateNext = (o, x) => (needCode(x) ? "code" : o.consent == null ? "consent" : "iv");
+  const start = (pre) => {
+    if (!s.a.stage) track("Landing", [["landing_start", "Started from the landing page", "event", L.name]], lv);
+    up((o) => ({ ...o, lv: o.lv || lv, phase: gateNext(o, site), pos: o.pos || "about", a: pre ? { ...o.a, ...pre } : o.a }));
+  };
+  const consentDone = (c, h) => {
+    const n = { ...ref.current, consent: c, health: h };
+    if (c === "yes") (n.held || []).forEach((e) => GS.post(n, e.step, e.rows, e.lv));
+    up({ consent: c, health: h, held: [], phase: "iv" });
+  };
+  const onEmail = async (email) => {
+    if (GS.DEMO) return { ok: true };
+    if (!site) return { ok: true };
+    if (!site.owner && !site.tester) await DC.human();
+    const r = await DC.email({ email, link: GS.link(ref.current), sid: ref.current.sid });
+    if (r.ok) { track("Guide · Email", [["guide_email", "Emailed themselves the guide", "event", "sent"]]); up({ emailed: true }); }
+    return r;
+  };
+  const tweaks = (
+    <TweaksPanel title="Tweaks · M02">
+      <TweakSection label="Landing screen"/>
+      <TweakSelect label="Design" value={t.landing} options={Object.entries(LANDS).map(([k, v]) => ({ value: k, label: v.name }))} onChange={(v) => { setTweak("landing", v); if (phase !== "landing") up({ phase: "landing" }); }}/>
+      <TweakToggle label="Rotate at random for visitors" value={t.rotate} onChange={(v) => setTweak("rotate", v)}/>
+      {s.lvFixed && <div style={{ fontSize: 11.5, color: "#78716C", lineHeight: 1.4 }}>The link sets ?landing={s.lvFixed}, which overrides this.</div>}
+      <TweakSection label="Before the interview"/>
+      <TweakButton label="Show the tester-code screen" onClick={() => up({ phase: "code" })}/>
+      <TweakButton label="Show the consent screen" onClick={() => up({ phase: "consent" })}/>
+      {phase !== "landing" && <TweakButton label="Show the landing" onClick={() => up({ phase: "landing" })}/>}
+    </TweaksPanel>
+  );
+  const label = { landing: "Landing", code: "Tester code", consent: "Consent", iv: "Interview · " + s.pos, build: "Building guide", stop: "Safety stop", guide: "Guide · " + ((list[s.ch] || {}).id || ""), full: "Full guide" }[phase];
+
+  if (phase === "landing") return (
+    <div className={"site " + L.bg} data-screen-label={"M02 · Landing " + L.name}>
+      <header className="nav"><span className="wm" style={{ cursor: "default" }}>Decouple<i>.</i></span><div className="nav-right" style={{ display: "flex" }}>{testPill}<button className="pillbtn exit" onClick={exit}><Ic.X s={12} c="#B91C1C"/> Quick exit</button><button className="btn g-navcta" onClick={() => start()}>Get my free guide <Ic.Arrow s={14}/></button></div></header>
+      <L.C onStart={start} resume={!!s.a.stage}/>
+      <footer className="foot"><div className="wrap"><span className="wm" ref={footWm} style={{ cursor: "default", userSelect: "none" }}>Decouple<i>.</i></span><nav><a href="privacy.html">Privacy</a><a href="mailto:hello@decouple.uk">hello@decouple.uk</a></nav><small>Decouple is not a law firm and this guide is not legal advice. If you’re worried about your safety, call the National Domestic Abuse Helpline free on 0808 2000 247, any time.</small></div></footer>
+      <div className="mcta"><button className="btn lg full" onClick={() => start()}>Get my free guide <Ic.Arrow s={16}/></button></div>
+      {tweaks}
+    </div>
+  );
+  return (
+    <div className="site iv bg-paper" data-screen-label={"M02 · " + label}>
+      <header className="iv-top">
+        <div className="l"><button className="wm" onClick={() => up({ phase: "landing" })} aria-label="Back to the start">Decouple<i>.</i></button><small>{["iv", "build", "stop", "code", "consent"].includes(phase) ? "Your free guide · about 6 minutes" : "Your personalised guide · private to you"}</small></div>
+        <div className="r">{testPill}<button className="pillbtn exit" onClick={exit}><Ic.X s={12} c="#B91C1C"/> Quick exit</button></div>
+      </header>
+      <div className="iv-prog"><div className="track"><i style={{ width: pct + "%", background: phase === "stop" ? "#B91C1C" : undefined }}></i></div></div>
+      {phase === "code" && <main className="iv-body"><GCode sid={s.sid} stage={s.a.stage} codeError={GS.qp.get("code_error") === "1"} onBack={() => up({ phase: "landing" })} onDone={() => refreshSite().then((x) => up((o) => ({ ...o, phase: o.consent == null ? "consent" : "iv" })))}/></main>}
+      {phase === "consent" && <main className="iv-body"><GConsent consent={s.consent} health={s.health} needHuman={!!(site && !site.owner && !site.tester)} onBack={() => up({ phase: "landing" })} onDone={consentDone}/></main>}
+      {phase === "iv" && <main className="iv-body"><GInterview a={s.a} setA={setA} pos={s.pos || "about"} setPos={(p) => up({ pos: p })} onBack={() => up({ phase: "landing" })} onStop={() => up({ phase: "stop" })} onDone={() => { track("Interview", [["done", "Finished interview", "event", "yes"]]); up({ phase: "build" }); }} post={postSec}/></main>}
+      {phase === "stop" && <main className="iv-body"><IVStop onBack={() => up((o) => ({ ...o, phase: "iv", pos: "safety", a: { ...o.a, safe: undefined, safe2: undefined } }))}/></main>}
+      {phase === "build" && <main className="iv-body"><GBuild a={s.a} onOpen={() => up({ phase: "guide", ch: 0 })}/></main>}
+      {phase === "guide" && <GWalk a={s.a} x={s.x} setX={setX} ch={s.ch} maxCh={Math.max(s.maxCh, s.ch)} ver={s.ver} post={postCh}
+        setCh={(n) => up((o) => ({ ...o, ch: n, maxCh: Math.max(o.maxCh || 0, n) }))} onBack={() => up({ phase: "iv", pos: secs[secs.length - 1].id })} onFull={() => { track("Guide · Full", [["full", "Opened the full guide", "event", "yes"]]); up({ phase: "full" }); }}/>}
+      {phase === "full" && <GFull a={s.a} emailed={!!s.emailed} onEdit={(id, v) => setA((p) => ({ ...p, [id]: v }))} onEmail={onEmail}
+        privacy={GS.DEMO ? null : <GPrivacy consent={s.consent} health={s.health} sid={s.sid} onChange={(c, h) => up({ consent: c, health: h })}/>}
+        onRestart={() => up({ a: {}, x: {}, phase: "landing", pos: "about", ch: 0, maxCh: 0, emailed: false, viewed: false, lv: null, held: [], optinSent: false, sid: GS.rid() })}/>}
+      {tweaks}
+    </div>
+  );
+}
+G.ready.finally(() => ReactDOM.createRoot(document.getElementById("root")).render(<App/>));
+</script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" data-stage="finalise">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Decouple — Proto 09 · Finalise</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@500&family=Mrs+Saint+Delafield&family=Homemade+Apple&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="proto/signup/su.css">
+<link rel="stylesheet" href="proto/onboard/ob.css">
+<link rel="stylesheet" href="proto/prepare/pp.css">
+<link rel="stylesheet" href="proto/reconcile/rc.css">
+<link rel="stylesheet" href="proto/settle/st.css">
+<link rel="stylesheet" href="proto/finalise/fn.css">
+<style>html,body{margin:0;background:#EEF2FA}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="proto/journey-store.js"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="proto/interview/iv-data.js"></script>
+<script src="proto/playback/pb-engine.js"></script>
+<script src="proto/reconcile/rc-data.js"></script>
+<script src="proto/settle/st-data.js"></script>
+<script src="proto/finalise/fn-data.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-ui.jsx"></script>
+<script type="text/babel" src="proto/onboard/ob-cards.jsx"></script>
+<script type="text/babel" src="proto/reconcile/rc-ui.jsx"></script>
+<script type="text/babel" src="proto/finalise/fn-docs.jsx"></script>
+<script type="text/babel" src="proto/finalise/fn-ui.jsx"></script>
+<script type="text/babel" src="proto/finalise/fn-editor.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+const J = window.Journey, PB = window.PB, Ic = window.DIc, ST = window.ST, FN = window.FN;
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "wash": "sky",
+  "docMode": "one",
+  "editAll": true,
+  "viewAs": "a"
+}/*EDITMODE-END*/;
+const PAGES = ["hub", "det", "docs", "why", "pre", "file", "track"];
+const now = () => new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const hhmm = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+const BLANK = { example: false, det: null, detDone: false, gen: false, page: "hub", doc: "order", edits: {}, rev: 0, comments: [], reviewed: false, pre: null, share: { st: "none" }, sign: {}, path: null, posted: false, filed: null, track: 0, sugs: [], terms: {}, tv: 0, resign: [], mk: false };
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const s0 = J.get(), a = ((s0.interview || {}).answers) || PB.EXAMPLE;
+  const N0 = PB.names(a), N = { ...N0, Me: N0.hasMe ? N0.Me : "Sarah", Them: N0.hasThem ? N0.Them : "Mark" };
+  window.__N = N;
+  const kids = a.kids !== "none" && a.kids !== "grown";
+  const S = useMemo(() => ST.secs(N, kids), [N.Me, N.Them, kids]);
+  const [plan, setPlan] = useState(((s0.household || {}).plan) || "guided");
+  const [fin, setFin] = useState(() => { const f = { ...BLANK, ...(s0.finalise || {}) }; const h = location.hash.slice(1); if (PAGES.includes(h)) f.page = h; return f; });
+  const up = (p) => setFin((f) => ({ ...f, ...(typeof p === "function" ? p(f) : p) }));
+  useEffect(() => { J.set("finalise", fin); }, [fin]);
+  const [toast, setToast] = useState(null), [edit, setEdit] = useState(false), [markup, setMarkup] = useState(true), [editing, setEditing] = useState(null), [focus, setFocus] = useState(null), [signM, setSignM] = useState(null), [payM, setPayM] = useState(null), [exit, setExit] = useState(false), [qv, setQv] = useState(null);
+  const say = (x, y, l) => { setToast([x, y, l]); clearTimeout(window.__fnT); window.__fnT = setTimeout(() => setToast(null), l ? 6000 : 3200); };
+  const st0 = s0.settle || {}, real = st0.locked && st0.agreed;
+  const agreed = real ? st0.agreed : fin.example ? FN.EXAMPLE : null;
+  const custom = real ? st0.custom || {} : {}, rounds = real ? st0.rounds || [] : [];
+  const finalN = real && rounds.length ? rounds[rounds.length - 1].n + 1 : 5;
+  const signedOn = (real && st0.sign && (st0.sign.bd || st0.sign.ad)) || "2 October 2026";
+  const det = useMemo(() => ({ ...FN.det0(N), ...(fin.det || {}) }), [fin.det, N.Me, N.Them]);
+  const m = useMemo(() => (agreed ? FN.build({ N, S, agreed, custom, rounds, det, kids, finalN, signedOn }) : null), [agreed, det, S]);
+  const VB = t.viewAs === "b" && !!fin.gen && !!fin.detDone, ME = VB ? "b" : "a", OTK = VB ? "a" : "b", O = VB ? N.Me : N.Them, sign = fin.sign, share = fin.share;
+  const markOk = share.st === "approved" && share.rev === fin.rev, changed = share.st === "approved" && share.rev !== fin.rev, signed = sign.a && sign.b;
+  const go = (p) => { if (p === "pre") { up({ page: "hub" }); setEditing(null); setTimeout(() => { const el = document.getElementById("fn-st-pre"); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 100, behavior: "smooth" }); }, 120); return; } up({ page: p }); setEditing(null); scrollTo({ top: 0 }); };
+
+  const baseOf = (id) => { if (!m) return ""; const r = m.R.find((x) => x.id === id); if (r) return r.t; if (id === "co.trig") return m.trig0; if (id === "d.q7") return m.q7; if (id === "d.q14") return m.q14; if (id === "d.q12") return det.otherTxt || "—"; const q = m.q13.find((x) => x.id === id); return q ? q.t : ""; };
+  const advFor = (sec) => { const o = ST.opt(sec, agreed[sec.id]), ot = o ? o.t.replace(/\s+—\s+/g, ", ").replace(/\.$/, "") : "", MAP = { home: "d.q13h", pensions: "d.q13p", savings: "d.q13c", vehicles: "d.q13c", debts: "d.q13c", spousal: "d.q13s", children: "d.q13a" };
+    const line = /clean break/i.test(ot) ? "Both parties chose a clean break knowingly, so neither can make a maintenance claim against the other in future." : `The parties agreed on ${sec.t.toLowerCase()} (${ot.charAt(0).toLowerCase() + ot.slice(1)}) knowingly, after full disclosure, because it meets both parties’ needs.`;
+    const covers = /clean break/i.test(ot) ? /clean break[^.]*\.[^.]*(own needs|own income|support themselves)/i : null;
+    const t0 = MAP[sec.id] || "d.q13a", at = m && m.q13.some((p) => p.id === t0) ? t0 : m ? m.q13[0].id : t0; return { at, line, covers }; };
+  const setEditOf = (id, to, via) => up((f) => { const e = { ...f.edits }, from = baseOf(id); if (to === from) delete e[id]; else e[id] = { from, to, at: hhmm(), via: !!via || !!(e[id] && e[id].via), r: f.rev + 1 }; return { edits: e, rev: f.rev + 1 }; });
+  const syncFacts = (nd, via) => up((f) => { const e = { ...f.edits }, g = f.detGen || {}; let ch = 0; Object.keys(g).forEach((k) => { const a0 = String(g[k] == null ? "" : g[k]), b0 = String(nd[k] == null ? "" : nd[k]), key = "f." + k; if (a0 !== b0) { if (!e[key] || e[key].to !== b0) { e[key] = { from: a0, to: b0, at: hhmm(), r: f.rev + 1, via: !!via }; ch++; } } else if (e[key]) { delete e[key]; ch++; } }); return ch ? { edits: e, rev: f.rev + 1 } : {}; });
+  useEffect(() => { if (fin.gen && !fin.detGen) up({ detGen: det }); }, [fin.gen]);
+  const SIGD = { order: ["a", "b"], a: ["a"], d81: ["a", "b"] };
+  const sOf = (d, k) => !!((fin.dsig || {})[d] || {})[k] || (!!sign[k] && (!!(fin.filed || fin.posted) || !(fin.resign || []).includes(d)));
+  const docSt = (id) => { if (SIGD[id]) return SIGD[id].every((k) => sOf(id, k)) ? "done" : "prog"; const o = (fin.dok || {})[id] || {}; return (o.a && o.b) || (signed && !(fin.resign || []).includes(id)) ? "done" : "prog"; };
+  const ver = finalN + (fin.tv || 0);
+  const docOf = (id) => (id.startsWith("co.") ? "order" : "d81");
+  const act = {
+    go, say,
+    openDoc: (d) => { up({ doc: d, page: "docs" }); scrollTo({ top: 0 }); },
+    focus: (c) => { up({ doc: docOf(c.at), page: "docs" }); setFocus(c.at); setTimeout(() => { const el = document.getElementById("fe-" + c.at); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 140, behavior: "smooth" }); }, 80); setTimeout(() => setFocus(null), 2600); },
+    openC: (cid) => { const c = fin.comments.find((x) => x.id === cid); if (c) act.focus(c); },
+    undo: (id) => up((f) => { const e = { ...f.edits }, x = e[id]; delete e[id]; const extra = id.startsWith("f.") && x ? { det: { ...(f.det || {}), [id.slice(2)]: x.from } } : {}; return { edits: e, rev: f.rev + 1, ...extra }; }),
+    acceptC: (c) => { setEditOf(c.at, c.sug, true); up((f) => ({ comments: f.comments.map((x) => (x.id === c.id ? { ...x, st: "done" } : x)) })); say("Change made", `${O} will see it marked up.`); },
+    replyC: (c, txt) => { up((f) => ({ comments: f.comments.map((x) => (x.id === c.id ? { ...x, st: "replied", reply: txt } : x)) })); say(`Reply sent to ${O}`); },
+    share: () => { up((f) => ({ share: { st: "sent", sent: f.rev } })); say(`Shared with ${O}`, "He's had an email and an in-app notice."); },
+    resend: () => { up((f) => ({ share: { st: "resent", sent: f.rev } })); say(`Sent to ${O} for approval`, "Your changes are marked up for him."); },
+    simMark: () => {
+      if (share.st === "sent") { const nb = "Tenant · 12-month assured shorthold (two-bedroom flat)", nd = { ...det, bBasis: nb }; up((f) => ({ det: { ...(f.det || {}), bBasis: nb } })); syncFacts(nd, true);
+        const c = [{ id: "c1", kind: "fact", at: "f.bBasis", st: "done", res: `${O} corrected his details · D81 Q15 redrafted`, t: "My tenancy is a 12-month assured shorthold, and it's a two-bedroom flat so the children can stay. I've corrected it in my details." }]; c.push({ id: "c2", kind: "why", at: "d.q14", st: "open", t: "It says I can support myself from my income. Can it also say I'm renting a two-bedroom flat so the children can stay over? That's why I need what I've got.", sug: baseOf("d.q14") + " The Respondent rents a two-bedroom flat close to the children’s school so that they can stay with him." });
+        up({ share: { st: "commented" }, comments: c }); say(`${O} corrected one of his details and flagged one passage`, "Accept his wording for the reasons, or reply."); return; }
+      if (share.st === "resent") { up((f) => ({ share: { st: "approved", rev: f.rev } })); say(`${O} approved the bundle`, "You can both sign now."); return; }
+      say(fin.comments.some((c) => c.st === "open") ? `${O} is waiting for you to answer his comments` : `${O} is waiting for you`);
+    },
+    sug: (id, from, to, x = {}) => { if (fin.filed || fin.posted) return; up((f) => { const L = f.sugs || [], cur = L.find((q) => q.at === id && q.st === "open" && q.by === (x.by || "a")); if (cur) return to === from ? { sugs: L.filter((q) => q !== cur) } : { sugs: L.map((q) => (q === cur ? { ...q, to, t: hhmm() } : q)) }; if (to === from) return {}; return { sugs: [...L, { id: "s" + Date.now(), by: x.by || "a", kind: x.kind || "edit", at: id, doc: x.doc || (id.startsWith("d.") ? "d81" : "order"), from, to, why: x.why, lbl: x.lbl || FN.label(id, N)[1], tick: x.tick, st: "open", t: hhmm() }] }; }); },
+    signDoc: (doc, k, g) => up((f) => { const ds = { ...(f.dsig || {}) }; ds[doc] = { ...(ds[doc] || {}), [k]: g }; const rs = (f.resign || []).filter((x) => !(x === doc && SIGD[doc].every((w) => ds[doc][w]))); const need = k === "a" ? ["order", "a", "d81"] : ["order", "d81"]; const all = need.every((d) => (ds[d] || {})[k]); return { dsig: ds, resign: rs, ...(k === "a" ? { mysig: g } : { mysigB: g }), ...(all && !f.sign[k] ? { sign: { ...f.sign, [k]: true, [k + "d"]: g.at } } : {}) }; }),
+    okDoc: (doc, k) => up((f) => ({ dok: { ...(f.dok || {}), [doc]: { ...((f.dok || {})[doc] || {}), [k]: now() } } })),
+    markSignDoc: (doc) => { const D = docs.find((d) => d.id === doc) || {}; if (SIGD[doc]) { act.signDoc(doc, OTK, { kind: "type", txt: OTK === "b" ? det.bFull : det.aFull, font: OTK === "b" ? "f1" : "f2", at: now() }); say(`${O} has signed ${D.t}`, "It's now Agreed & signed."); } else { act.okDoc(doc, OTK); say(`${O} is happy with ${D.t}`); } },
+    withdraw: (id) => up((f) => ({ sugs: f.sugs.filter((q) => q.id !== id) })),
+    markSuggest: () => { if (fin.mk) return; up((f) => { const e = f.edits["d.q14"], from = e ? e.to : baseOf("d.q14"); return { mk: true, sugs: [...(f.sugs || []), { id: "sm" + Date.now(), by: "b", kind: "edit", at: "d.q14", doc: "d81", from, to: from + " Both parties have checked their monthly budgets against their incomes after the order.", lbl: "Q14 · How each of you will manage", st: "open", t: hhmm() }] }; }); say(`${O} suggested a change`, "Form D81 · Q14. Accept or reject it in Changes."); },
+    resolveSug: (id, ok, rb) => { if (fin.filed || fin.posted) return; const q = (fin.sugs || []).find((x) => x.id === id); if (!q || q.st !== "open") return; const v = ver + 1;
+      up((f) => ({ sugs: f.sugs.map((x) => (x.id === id ? { ...x, st: ok ? "acc" : "rej", rb, rt: hhmm(), v: q.kind === "term" && ok ? v : undefined } : x)), ...(ok && q.kind === "term" ? { terms: { ...(f.terms || {}), [q.at]: q.to }, tv: (f.tv || 0) + 1 } : {}), ...(ok && (f.sign.a || (f.dsig || {})[q.doc]) ? (() => { const ds = { ...(f.dsig || {}) }, aff = q.kind === "term" ? ["order", "d81"] : [q.doc]; aff.forEach((d) => { delete ds[d]; }); return { resign: [...new Set([...(f.resign || []), ...aff])], pre: null, dsig: ds }; })() : {}), ...(ok ? { dok: { ...(f.dok || {}), [q.doc]: undefined } } : {}) }));
+      if (ok && q.kind !== "term") { if (q.at.startsWith("x.") || q.at.startsWith("k.")) up((f) => ({ edits: { ...f.edits, [q.at]: { from: q.from, to: q.to, at: hhmm(), r: f.rev + 1, via: rb === "a" } }, rev: f.rev + 1 })); else setEditOf(q.at, q.to, rb === "a"); if (rb === "b") up((f) => (f.share.st === "approved" ? { share: { ...f.share, rev: f.rev } } : {})); }
+      const re = sign.a || (fin.dsig || {})[q.doc] ? `${(docs.find((d) => d.id === q.doc) || {}).t} needs signing again.` : null;
+      if (!ok) say(q.by === "sys" ? "You rejected our suggested wording" : rb === ME ? `You rejected ${O}'s suggestion` : `${O} rejected your suggestion`);
+      else if (q.kind === "term") say(rb === ME ? `You agreed to ${O}'s change` : `${O} agreed to your change`, `Your agreement is now v${v}. We've updated it in Proposals.${re ? " " + re : ""}`, ["View in Proposals", () => J.goStage("settle")]);
+      else say(q.by === "sys" ? "You accepted our suggested wording" : rb === ME ? `You accepted ${O}'s suggestion` : `${O} accepted your suggestion`, re || `${q.lbl} updated.`); },
+    resign: () => { up({ resign: [] }); say("Signed again by you both", "Everything is back to Agreed & signed."); },
+    resolveAdv: (sec) => { const T = [advFor(sec).at, advFor(sec).line];
+      const at = T[0], e0 = fin.edits[at], from = e0 ? e0.to : baseOf(at);
+      up((f) => ({ sugs: [...(f.sugs || []), { id: "sy" + Date.now(), by: "sys", kind: "edit", at, doc: "d81", from, to: from + " " + T[1], lbl: FN.label(at, N)[1], why: `Pre-flight: ${sec.t} was marked “a stretch”. This sentence explains it to the judge.`, adv: sec.id, st: "open", t: hhmm() }] }));
+      act.focus({ at }); say("Suggested wording added to Form D81", "Accept it, change it, or reject it."); },
+    openSign: () => setSignM({ read: false, truth: false }),
+    markSign: () => { up((f) => ({ sign: { ...f.sign, b: true, bd: now() } })); say(`${O} has signed`, "Everything is signed and locked."); },
+    setPath: (p) => { up({ path: p, page: "file" }); scrollTo({ top: 0 }); },
+    posted: () => { up({ posted: true }); say("Marked as posted", `We've told ${O}.`); },
+    openPay: () => setPayM({ ok: false, hwf: "", busy: false }),
+    advance: () => up((f) => ({ track: Math.min(f.track + 1, FN.TRACK.length - 1) })),
+  };
+  useEffect(() => { if (fin.page === "track" && fin.track === 2) {} }, [fin.track]);
+
+  if (exit) return <IVNeutral onBack={() => setExit(false)}/>;
+
+  /* gate */
+  let gate = null;
+  if (plan === "picture") gate = <FNNeedSign N={N} picture onSettle={() => J.goStage("settle")} onExample={() => {}}/>;
+  else if (!agreed) gate = <FNNeedSign N={N} onSettle={() => J.goStage("settle")} onExample={() => up({ example: true })}/>;
+  else if (plan !== "complete") gate = <FNUpsell plan={plan} N={N} onUpgrade={() => { J.set("household", { plan: "complete" }); setPlan("complete"); say("Upgraded to Complete & filed", "£500 paid · receipt emailed"); }} onAgreement={() => say("Signed agreement downloaded", "PDF · prototype")}/>;
+  const pre = !gate && (!fin.detDone || fin.page === "det" ? "det" : !fin.gen ? "gen" : null);
+
+  const docsA = window.FN_DOCS.filter((d) => !d.pen || (m && m.pct)), nSigned = docsA.filter((d) => docSt(d.id) === "done").length, allDone = !!m && nSigned === docsA.length;
+  const steps = m ? [
+    { k: "det", t: "Your details & reasons", s: fin.detDone ? `Case ${det.caseNo} · D81 reasons checked` : "The facts the court needs, and your reasons", done: fin.detDone, cta: "Check details" },
+    { k: "docs", t: "Your documents", s: allDone ? `All ${docsA.length} agreed & signed` : `${nSigned} of ${docsA.length} agreed & signed`, p: `Read each document with ${O}, suggest any changes, then sign or approve it. Tap one for a quick look.`, done: allDone, cta: "Go to your document area" },
+    { k: "pre", t: "Pre-flight checks", s: fin.pre === "pass" ? "All checks passed" : allDone ? `${FN.CHECKS(m, det).length} checks · about a minute` : "Unlocks when every document is signed", p: "We check the signed bundle the way a judge will.", done: fin.pre === "pass", lock: !allDone, cta: "Run pre-flight" },
+    { k: "file", t: "File with the court", s: fin.filed ? `Filed · ${fin.filed.at}` : fin.posted ? "Posted to the court" : fin.pre === "pass" ? `File it yourself, or we file it for £${FN.FILE_FEE}` : "Unlocks after the pre-flight checks", p: `Choose how to file. The £${FN.FEE} court fee is the same either way.`, done: !!(fin.filed || fin.posted), lock: fin.pre !== "pass", cta: "Choose how to file" },
+    ...(fin.path === "file" || fin.filed ? [{ k: "track", t: "Track", s: fin.filed ? FN.TRACK[fin.track][0] : "After filing", p: "Follow it through to the sealed order.", done: fin.track >= FN.TRACK.length - 1, lock: !fin.filed, cta: "Track" }] : []),
+  ] : [];
+  const page = gate ? "gate" : pre || (VB ? "docs" : fin.page);
+
+  const K = (s) => <span className={"k " + s}>{s === "dn" ? <Ic.Check s={9} w={3.2} c="#FFF"/> : s === "lk" ? <Ic.Lock s={8}/> : null}</span>;
+  const docs = window.FN_DOCS.filter((d) => !d.pen || (m && m.pct));
+  const nav = m && plan === "complete" && fin.gen ? <>
+    <button className={"ph-grp" + (page === "hub" ? " on" : "")} onClick={() => go("hub")}><span className="gt">{K(signed ? "dn" : "pt")}Overview</span><small>{`v${finalN} · court bundle`}</small></button>
+    {steps.map((s) => <React.Fragment key={s.k}><button className={"ph-grp" + (page === s.k ? " on" : "") + (s.lock ? " soft" : "")} onClick={() => !s.lock && go(s.k)}><span className="gt">{K(s.done ? "dn" : s.lock ? "lk" : "pt")}{s.t}</span><small>{s.lock ? "Locked" : s.s.length > 34 ? s.s.slice(0, 32) + "…" : s.s}</small></button>
+      {s.k === "docs" && page === "docs" && <div className="ph-nest">{docs.map((d) => <button key={d.id} className={fin.doc === d.id ? "dn" : ""} onClick={() => { up({ doc: d.id }); scrollTo({ top: 0 }); }}><span className="k">{fin.doc === d.id && <Ic.Check s={9} w={3.2} c="#FFF"/>}</span>{d.t}</button>)}</div>}</React.Fragment>)}
+  </> : null;
+
+  const ctx = { terms: fin.terms || {}, dsig: fin.dsig || {}, resign: fin.resign || [], edits: fin.edits, markup, canEdit: false, editing, setEditing, save: (id, base, v) => { setEditOf(id, v.trim()); setEditing(null); say("Change saved", `Tracked for ${O}.`); }, comments: fin.comments, openC: act.openC, focus, A: N.Me, B: N.Them };
+  let body;
+  if (gate) body = gate;
+  else if (page === "det") body = <FNWizard det={det} N={N} kids={kids} whyEl={m && <FNWhyList m={m} N={N} S={S} agreed={agreed} edits={fin.edits} setEditOf={setEditOf} locked={!!sign.a} advFor={advFor} advOk={fin.advOk || {}} onAdv={(id) => up((f) => ({ advOk: { ...(f.advOk || {}), [id]: true } }))}/>} set={(p) => up((f) => ({ det: { ...(f.det || {}), ...p } }))} onDone={() => { if (fin.gen) syncFacts(det); up({ detDone: true, why: true, page: "hub" }); scrollTo({ top: 0 }); }}/>;
+  else if (page === "gen") body = <FNGen pen={!!m.pct} onDone={() => { up({ gen: true, page: "hub", detGen: det }); say("Your court bundle is ready", `${docs.length} documents drafted from v${finalN}.`); }}/>;
+  else if (page === "docs") body = <FNDocArea N={N} m={m} det={det} sign={sign} S={S} agreed={agreed} docs={docs} doc={fin.doc} setDoc={(d) => up({ doc: d })} ctx={ctx} fin={fin} act={act} st={docSt} markup={markup} setMarkup={setMarkup} mode={t.docMode} editAll={t.editAll} me={ME} bConf={!!fin.bConf} setDet={(p) => up((f) => ({ det: { ...(f.det || {}), ...p } }))} onConf={(n) => { up({ bConf: true }); say(n ? `${n} correction${n > 1 ? "s" : ""} saved` : "Details confirmed", n ? `${N.Me} can see what you changed. You can now sign.` : "You can now sign."); }} locked={!!(fin.filed || fin.posted)} reviewed={allDone} onDone={() => go("pre")} say={say} ver={ver} renderThumb={(id) => <FNDoc id={id} ctx={{ ...ctx, markup: false, editing: null, comments: [], focus: null }} m={m} det={det} sign={sign} S={S} agreed={agreed} N={N}/>}/>;
+  else if (page === "why") body = <FNWhy m={m} N={N} S={S} agreed={agreed} edits={fin.edits} setEditOf={setEditOf} advFor={advFor} advOk={fin.advOk || {}} onAdv={(id) => up((f) => ({ advOk: { ...(f.advOk || {}), [id]: true } }))} locked={!!sign.a} seen={share.st !== "none"} done={!!fin.why} onDone={() => { up({ why: true }); go("docs"); }}/>;
+  else if (page === "pre") body = <FNPre m={m} det={det} N={N} S={S} agreed={agreed} state={fin.pre} run={() => up({ pre: "pass" })} next={() => { go("hub"); setTimeout(() => { const el = document.getElementById("fn-st-file"); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 100, behavior: "smooth" }); }, 120); }}/>;
+  else if (page === "file") body = <FNFile N={N} path={fin.path} posted={fin.posted} act={act} say={say}/>;
+  else if (page === "track" && fin.filed) body = <FNTrack N={N} det={det} filed={fin.filed} stage={fin.track} act={act} say={say}/>;
+  else body = <FNHub N={N} steps={steps} m={m} det={det} go={go} fileOpts={<FNFileOpts act={act}/>} preEl={<FNPreIn m={m} det={det} S={S} agreed={agreed} state={fin.pre} explained={(s) => { const a = advFor(s), e = fin.edits[a.at]; return (e ? e.to : baseOf(a.at)).includes(a.line) || (a.covers && a.covers.test(e ? e.to : baseOf(a.at))); }} sugs={fin.sugs || []} onResolve={act.resolveAdv} openAt={(at) => act.focus({ at })} run={() => { up({ pre: "pass" }); say("All checks passed", "Your filing options are unlocked."); }}/>} thumbs={<FNThumbs docs={docs} st={docSt} open={setQv} render={(id) => <FNDoc id={id} ctx={{ ...ctx, canEdit: false, markup: false, editing: null, comments: [], focus: null }} m={m} det={det} sign={sign} S={S} agreed={agreed} N={N}/>}/>}/>;
+  const showRail = !gate && page !== "det" && page !== "gen" && page !== "hub" && page !== "docs" && page !== "track" && page !== "why";
+
+  return (
+    <div className={"site ob rc st fn " + (t.wash === "sky" ? "st-wash" : "bg-paper")} data-screen-label={"Finalise · " + page}>
+      <OBTop N={N} onExit={() => setExit(true)}/>
+      <div className="ob-shell two wide">
+        <OBRail plan={plan} active="finalise" full sub={nav || <span></span>}/>
+        <main className="pp-stage rc-stage">
+          <div className={"rc-wrap" + (showRail ? "" : " fn-solo") + (page === "docs" ? " fn-wide" : "")}>
+            {body}
+            {showRail && <aside className="rc-rail"><FNRail page={page} N={N} m={m} edits={fin.edits} comments={fin.comments} act={act} share={share} changed={changed} sign={sign} path={fin.path} filed={fin.filed}/></aside>}
+          </div>
+        </main>
+      </div>
+      {signM && (() => { const ok = signM.read && signM.truth, u = (x) => setSignM((v) => ({ ...v, ...x }));
+        return <div className="mscrim" onClick={(e) => e.target === e.currentTarget && setSignM(null)}><div className="mbox wide st-signm" role="dialog" aria-modal="true" aria-label="Sign the court documents">
+          <button className="mx" aria-label="Close" onClick={() => setSignM(null)}><Ic.X s={16}/></button>
+          <div className="pq-k" style={{ color: "#047857" }}>Court documents · statements of truth</div>
+          <h3>Sign as applicant</h3>
+          <p>Your signature goes on the consent order, Form A, and the D81 (questions 23 and the applicant's statement of truth).</p>
+          <div className="la-note"><b>Statement of truth</b><span>Proceedings for contempt of court may be brought against anyone who makes, or causes to be made, a false statement in a document verified by a statement of truth without an honest belief in its truth.</span></div>
+          <label className={"rc-sign" + (signM.read ? " on" : "")}><input type="checkbox" checked={signM.read} onChange={(e) => u({ read: e.target.checked })}/><span>I've read all the documents, including {`${O}'s`} details</span></label>
+          <label className={"rc-sign" + (signM.truth ? " on" : "")}><input type="checkbox" checked={signM.truth} onChange={(e) => u({ truth: e.target.checked })}/><span>I believe the facts in Form A and the D81 are true, and I have made full disclosure of all relevant facts</span></label>
+          <div className="fn-sigprev"><small>Your signature</small><i>{det.aFull}</i></div>
+          <div className="mrow"><button className="btn lg go" disabled={!ok} onClick={() => { up((f) => ({ sign: { ...f.sign, a: true, ad: now() } })); setSignM(null); setEdit(false); say("You've signed", `We've asked ${O} to sign.`); }}>Sign the documents<Ic.Arrow s={14}/></button><button className="btn lg ghost" onClick={() => setSignM(null)}>Not yet</button></div>
+        </div></div>; })()}
+      {payM && (() => { const u = (x) => setPayM((v) => ({ ...v, ...x }));
+        return <div className="mscrim" onClick={(e) => e.target === e.currentTarget && !payM.busy && setPayM(null)}><div className="mbox wide st-signm fn-pay" role="dialog" aria-modal="true" aria-label="We file it for you">
+          <button className="mx" aria-label="Close" onClick={() => setPayM(null)}><Ic.X s={16}/></button>
+          <div className="pq-k" style={{ color: "#047857" }}>We file it for you</div>
+          <h3>{`Filed by our partner firm, ${FN.FIRM}`}</h3>
+          <p>{`A solicitor from ${FN.FIRM} files your application online through the court's professional service, usually the same working day. They act for you as applicant, for filing only. ${O} is told he can take his own advice.`}</p>
+          <div className="fn-cost lg"><span>Filing by our partner solicitor</span><b>{`£${FN.FILE_FEE - FN.FEE}`}</b><span>Court fee · we pay HMCTS for you</span><b>{payM.hwf ? "£0" : `£${FN.FEE}`}</b><span className="t">Total today · all in</span><b className="t">{`£${FN.FILE_FEE - (payM.hwf ? FN.FEE : 0)}`}</b></div>
+          <label className="fn-f"><span className="l">Help with Fees reference<em>optional</em></span><input className="mono" value={payM.hwf} placeholder="HWF-A1B-2CD" onChange={(e) => u({ hwf: e.target.value })}/><small>If you've been approved for Help with Fees, the court fee is reduced or waived.</small></label>
+          <div className="fn-card"><Ic.Lock s={13}/><span>Visa ending 4242</span><small>Saved from sign-up</small></div>
+          <label className={"rc-sign" + (payM.ok ? " on" : "")}><input type="checkbox" checked={payM.ok} onChange={(e) => u({ ok: e.target.checked })}/><span>{`I authorise ${FN.FIRM} to file this application with the court on my behalf`}</span></label>
+          <div className="mrow"><button className="btn lg go" disabled={!payM.ok || payM.busy} onClick={() => { u({ busy: true }); setTimeout(() => { up({ path: "file", filed: { ref: `FR-${det.caseNo.replace(/\s/g, "").slice(-8)}`, at: now() }, track: 0, page: "track" }); setPayM(null); scrollTo({ top: 0 }); say("Filed with the court", `We've told ${O}.`); }, 1600); }}>{payM.busy ? <><span className="spin"></span>Filing with the court…</> : <>{`Pay £${FN.FILE_FEE - (payM.hwf ? FN.FEE : 0)} and file`}<Ic.Arrow s={14}/></>}</button><button className="btn lg ghost" disabled={payM.busy} onClick={() => setPayM(null)}>Cancel</button></div>
+        </div></div>; })()}
+      {qv && m && <FNQuick docs={docs} id={qv} setId={setQv} close={() => setQv(null)} st={docSt} say={say} onOpen={(id) => { setQv(null); act.openDoc(id); }} render={(id) => <FNDoc id={id} ctx={{ ...ctx, canEdit: false, editing: null, focus: null }} m={m} det={det} sign={sign} S={S} agreed={agreed} N={N}/>}/>}
+      {toast && <div className="pp-toast" role="status"><b>{toast[0]}</b>{toast[1] && <span>{toast[1]}</span>}{toast[2] && <button className="lnk fn-tlk" onClick={() => { setToast(null); toast[2][1](); }}>{toast[2][0]}</button>}</div>}
+      <TweaksPanel>
+        <TweakSection label="Simulate"/>
+        <TweakButton label={`Simulate ${O}`} onClick={act.simMark}/>
+        <TweakButton label="Simulate the court" onClick={act.advance}/>
+        <TweakSection label="Plan"/>
+        <TweakRadio label="Plan" value={plan} options={[{ value: "guided", label: "Guided" }, { value: "complete", label: "Complete" }]} onChange={(x) => { J.set("household", { plan: x }); setPlan(x); }}/>
+        <TweakSection label="Jump to"/>
+        <TweakButton label="Bundle generated" onClick={() => setFin({ ...BLANK, example: fin.example || !real, detDone: true, gen: true, detGen: det })}/>
+        <TweakButton label="Ready to sign documents" onClick={() => setFin({ ...BLANK, example: fin.example || !real, detDone: true, gen: true, detGen: det, why: true, mk: true, page: "docs", doc: "order" })}/>
+        <TweakButton label="All signed — run pre-flight" onClick={() => setFin({ ...BLANK, example: fin.example || !real, detDone: true, gen: true, detGen: det, reviewed: true, why: true, share: { st: "approved", rev: 0, sent: 0 }, sign: { a: true, ad: now(), b: true, bd: now() }, page: "hub" })}/>
+        <TweakButton label="Signed — ready to file" onClick={() => setFin({ ...BLANK, example: fin.example || !real, detDone: true, gen: true, detGen: det, reviewed: true, why: true, pre: "pass", share: { st: "approved", rev: 0, sent: 0 }, sign: { a: true, ad: now(), b: true, bd: now() }, page: "hub" })}/>
+        <TweakButton label="Reset Finalise" onClick={() => { setFin({ ...BLANK, example: fin.example }); setEdit(false); }}/>
+        <TweakSection label="Your documents"/>
+        <TweakRadio label="Editor" value={t.docMode} options={[{ value: "one", label: "One at a time" }, { value: "chain", label: "All in one" }]} onChange={(x) => setTweak("docMode", x)}/>
+        <TweakRadio label="View as" value={t.viewAs} options={[{ value: "a", label: N.Me }, { value: "b", label: N.Them }]} onChange={(x) => setTweak("viewAs", x)}/>
+        <TweakRadio label="Editing" value={t.editAll ? "all" : "lim"} options={[{ value: "lim", label: "Restricted" }, { value: "all", label: "Everything" }]} onChange={(x) => setTweak("editAll", x === "all")}/>
+        <TweakSection label="Look"/>
+        <TweakRadio label="Background" value={t.wash} options={[{ value: "sky", label: "Wash" }, { value: "paper", label: "Paper" }]} onChange={(x) => setTweak("wash", x)}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

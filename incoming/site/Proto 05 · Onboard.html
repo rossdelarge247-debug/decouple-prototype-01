@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-stage="onboard">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Decouple — Proto 05 · Onboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/discover/how.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="proto/playback/pb.css">
+<link rel="stylesheet" href="proto/signup/su.css">
+<link rel="stylesheet" href="proto/onboard/ob.css">
+<style>html,body{margin:0;background:#EFEAF6}a{color:#5B21B6}a:hover{color:#7C3AED}
+.unified-home{padding:0;overflow:hidden}.unified-home>*{border:0!important;box-shadow:none!important;border-radius:0!important}.unified-home>*+*{border-top:1px solid #E5E3DC!important}.unified-home .home-w{padding:28px 34px 6px}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="proto/journey-store.js"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="proto/interview/iv-data.js"></script>
+<script src="proto/playback/pb-engine.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="proto/discover/how.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-ui.jsx"></script>
+<script type="text/babel" src="proto/playback/pb-blocks.jsx"></script>
+<script type="text/babel" src="proto/onboard/ob-bank.jsx"></script>
+<script type="text/babel" src="proto/onboard/ob-cards.jsx"></script>
+<script type="text/babel" src="proto/onboard/ob-tour.jsx"></script>
+<script type="text/babel" src="proto/onboard/ob-home.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const J = window.Journey, PB = window.PB, Ic = window.DIc;
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "shape": "split",
+  "bg": "lilac"
+}/*EDITMODE-END*/;
+const TKEY = "decouple.proto.obTweaks";
+const PLAN_NAME = { picture: "Your picture", guided: "Guided settlement", complete: "Complete & filed" };
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [mirror, setMirror] = useState(() => { try { return JSON.parse(localStorage.getItem(TKEY)); } catch (e) { return null; } });
+  useEffect(() => { if (!J.embedded) localStorage.setItem(TKEY, JSON.stringify(t)); }, [t]);
+  useEffect(() => { const f = (e) => { if (e.key === TKEY) try { setMirror(JSON.parse(e.newValue)); } catch (x) {} }; addEventListener("storage", f); return () => removeEventListener("storage", f); }, []);
+  const tw = J.embedded && mirror ? mirror : t;
+
+  const s0 = J.get();
+  const [a, setA] = useState(((s0.interview || {}).answers) || PB.EXAMPLE);
+  const su = s0.signup || {};
+  const [plan, setPlan] = useState(su.paid ? (su.tier === "free" ? "picture" : su.tier) : (su.tier && su.tier !== "free" ? su.tier : "guided"));
+  const ob0 = s0.onboard || {};
+  const [tour, setTour] = useState(!ob0.tourDone);
+  const [done, setDone] = useState(ob0.done || {});
+  const [banks, setBanks] = useState(ob0.banks || []);
+  const [snoozed, setSnoozed] = useState(!!ob0.snoozed);
+  const [modal, setModal] = useState(null), [exit, setExit] = useState(false);
+  const [invited, setInvited] = useState(!!su.invited);
+  useEffect(() => { J.set("onboard", { done, banks, snoozed, tourDone: !tour, complete: banks.length > 0 }); }, [done, banks, snoozed, tour]);
+  useEffect(() => { scrollTo(0, 0); }, [tour]);
+  const N = PB.names(a);
+  const mark = (k, v = true) => setDone((d) => ({ ...d, [k]: v }));
+  const solo = plan === "picture";
+  const civil = a.status === "civil";
+
+  const items = [
+    { k: "cetv", l: "Request your pension valuations", out: true, d: "Ask each pension provider for a CETV. They can take up to three months — so ask now.", btn: "How to",
+      help: <><b>How to request a CETV</b><ol><li>Find each pension — workplace, personal and any old ones.</li><li>Contact the provider and ask for a "Cash Equivalent Transfer Value for divorce".</li><li>It's usually free once a year. Upload it here when it arrives.</li></ol></> },
+    { k: "confirm", l: "Confirm what we heard", d: "Check your interview answers and change anything that's moved on.", btn: "Review", act: () => setModal("confirm") },
+    { k: "homepens", l: "Add the home and pensions", d: "Rough figures for now — you'll firm them up as evidence comes in.", btn: "Add", act: () => setModal("homepens") },
+    a.status !== "cohab" && a.stage !== "filed" && a.stage !== "considering" && { k: "divorce", l: civil ? "Apply to end your civil partnership" : "Apply for your divorce", out: true, d: "Online on GOV.UK. It runs alongside your finances — there's a 20-week wait built in.", btn: "How to",
+      help: <><b>Two things to know</b><ol><li>Apply online on GOV.UK. You can apply jointly, or on your own.</li><li>Don't apply for the final order until your financial order is approved — it can cost you pension rights.</li></ol><a href="https://www.gov.uk/divorce" target="_blank" rel="noopener">Open GOV.UK ↗</a></> },
+    solo && { k: "miam", l: "Book a mediation meeting (MIAM)", out: true, d: "When your statement is ready, a mediator can work straight from it.", btn: "Find a mediator", act: () => window.open("https://www.familymediationcouncil.org.uk/find-local-mediator/", "_blank") },
+    !solo && !invited && { k: "headsup", l: `Give ${N.them} a heads-up`, optional: true, d: "A short, neutral email. They see nothing of yours until you share.", btn: "Send", act: () => setModal("headsup") },
+  ].filter(Boolean);
+
+  const welcome = (
+    <div className="home-w">
+      <div>
+        <div className="kick">{solo ? "Your picture" : `${N.Me}'s case`} · day 1</div>
+        <h1>{N.hasMe ? `Welcome, ${N.Me}.` : "Welcome."}</h1>
+        <p>{solo ? "Let's get your evidence and numbers in a row, ready for mediation." : `Let's start with your side. When you're ready, ${N.them} joins — and Decouple takes the place of mediation.`}</p>
+      </div>
+      <div className="side"><span className="planchip"><Ic.Check s={11} w={2.6}/><span>{PLAN_NAME[plan]}</span></span><button className="replay" onClick={() => setTour(true)}>Replay the tour</button></div>
+    </div>
+  );
+  const hero = <OBBankHero banks={banks} them={N.them} snoozed={snoozed} setSnoozed={setSnoozed} onOpen={(id) => setModal({ bank: id })}/>;
+  const steps = <OBNextSteps items={items} done={done} mark={mark}/>;
+  const nDone = items.filter((x) => done[x.k]).length;
+  const jump = (id) => { const el = document.getElementById(id); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 84, behavior: "smooth" }); };
+
+  if (exit) return <IVNeutral onBack={() => setExit(false)}/>;
+  return (
+    <div className={"site ob " + (tw.bg === "paper" ? "bg-paper" : "bg-lilac")} data-screen-label={"Onboard · " + (tour ? "tour" : "dashboard")}>
+      <OBTop N={N} onExit={() => setExit(true)}/>
+      {tour ? <OBTour N={N} plan={plan} onDone={() => setTour(false)}/> : (
+        <div className="ob-shell two">
+          <OBRail plan={plan} full sub={<>
+            <button className="ph-grp on" onClick={() => scrollTo({ top: 0, behavior: "smooth" })}><span className="gt"><span className="k pt"></span>Welcome</span><small>{`Day 1 · ${PLAN_NAME[plan]}`}</small></button>
+            <button className="ph-grp" onClick={() => jump("ob-bank")}><span className="gt"><span className={"k" + (banks.length ? " dn" : "")}>{banks.length > 0 && <Ic.Check s={9} w={3} c="#FFF"/>}</span>Connect your bank</span><small>{banks.length ? `${banks.length} connected` : "Not connected yet"}</small></button>
+            <button className="ph-grp" onClick={() => jump("ob-steps")}><span className="gt"><span className={"k" + (nDone === items.length ? " dn" : nDone ? " pt" : "")}>{nDone === items.length && <Ic.Check s={9} w={3} c="#FFF"/>}</span>First steps</span><small>{`${nDone} of ${items.length} done`}</small></button>
+            <button className="ph-grp" onClick={() => setTour(true)}><span className="gt"><span className="k"></span>Welcome tour</span><small>Replay</small></button>
+          </>}/>
+          <main className="home">
+            {tw.shape === "unified"
+              ? <div className="paper unified-home">{welcome}{hero}{steps}</div>
+              : <>{welcome}<div id="ob-bank">{hero}</div><div id="ob-steps">{steps}</div></>}
+            <div className="home-foot"><Ic.Lock s={12}/><span>{`Private until shared — nothing here is visible to ${N.them}.`}</span></div>
+          </main>
+        </div>
+      )}
+      {modal && modal.bank !== undefined && <OBBankFlow initial={modal.bank} connected={banks} them={N.them} onConnected={(b) => { setBanks((x) => [...x.filter((y) => y.id !== b.id), b]); setSnoozed(false); }} onClose={() => setModal(null)}/>}
+      {modal === "confirm" && <OBModal label="Confirm what we heard" wide onClose={() => setModal(null)}>
+        <div className="kick">From your interview</div><h3>Is this still right?</h3><p>Change anything that's moved on.</p>
+        <div style={{ marginTop: 14 }}><PBHeard a={a} onChange={(id, v) => { const n2 = { ...a, [id]: v }; setA(n2); J.set("interview", { answers: n2 }); }}/></div>
+        <div className="mrow"><button className="btn lg" onClick={() => { mark("confirm"); setModal(null); }}>Looks right <Ic.Check s={14} w={2.4}/></button></div>
+      </OBModal>}
+      {modal === "homepens" && <OBHomePensions a={a} N={N} onSave={() => { mark("homepens"); setModal(null); }} onClose={() => setModal(null)}/>}
+      {modal === "headsup" && <OBHeadsup N={N} onSave={() => { mark("headsup"); setInvited(true); setModal(null); }} onClose={() => setModal(null)}/>}
+      <TweaksPanel>
+        <TweakSection label="Look & feel"/>
+        <TweakRadio label="Dashboard" value={t.shape} options={[{ value: "split", label: "Separate cards" }, { value: "unified", label: "One paper" }]} onChange={(v) => setTweak("shape", v)}/>
+        <TweakRadio label="Background" value={t.bg} options={[{ value: "lilac", label: "Lilac" }, { value: "paper", label: "Paper" }]} onChange={(v) => setTweak("bg", v)}/>
+        <TweakSection label="Plan"/>
+        <TweakRadio label="Plan" value={plan} options={[{ value: "picture", label: "£99" }, { value: "guided", label: "£499" }, { value: "complete", label: "£999" }]} onChange={setPlan}/>
+        <TweakSection label="Jump to"/>
+        <TweakButton label="Welcome tour" onClick={() => setTour(true)}/>
+        <TweakSection label="Bank state"/>
+        <TweakButton label={banks.length ? "Disconnect banks (zero-data state)" : "Simulate bank connected"} onClick={() => { if (banks.length) { setBanks([]); setSnoozed(false); } else setBanks([{ id: "monzo", name: "Monzo", color: "#0F172A", accounts: 3, tx: 1284, list: ["cur", "joint", "sav"] }]); }}/>
+        <TweakButton label="Reset onboarding" onClick={() => { setDone({}); setBanks([]); setSnoozed(false); setTour(true); }}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

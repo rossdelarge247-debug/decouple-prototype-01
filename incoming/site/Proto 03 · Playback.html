@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-stage="playback">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Decouple — Proto 03 · Playback</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="proto/playback/pb.css">
+<style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="proto/journey-store.js"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="proto/interview/iv-data.js"></script>
+<script src="proto/playback/pb-engine.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-ui.jsx"></script>
+<script type="text/babel" src="proto/playback/pb-blocks.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const J = window.Journey, PB = window.PB, Ic = window.DIc;
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "paper"
+}/*EDITMODE-END*/;
+const TKEY = "decouple.proto.pbTheme";
+
+function headline(a, N) {
+  const rel = a.status === "cohab" ? "relationship" : a.status === "civil" ? "civil partnership" : "marriage";
+  const yrs = { u5: "A short", "5_10": "A 5–10 year", "10_20": "A 10–20 year", "20": "A 20-year-plus" }[a.years] || "A";
+  const kids = a.kids === "with" ? ((a.ages || []).length > 1 ? "children at home" : "a child at home") : a.kids === "grown" ? "grown-up children" : "no children together";
+  const q = a.stage === "considering" ? "a decision still to make" : a.stage === "agreed" ? "most of it already agreed" : "one big question";
+  return <>{yrs} {rel}, {kids}, and {q}{a.stage === "considering" || a.stage === "agreed" ? "." : <>: <span className="em">what's fair?</span></>}</>;
+}
+
+function EmailRead({ name, onClose }) {
+  const saved = (J.get().interview || {}).email || "";
+  const [email, setEmail] = useState(saved), [sent, setSent] = useState(false), [err, setErr] = useState("");
+  const send = () => { if (!/^\S+@\S+\.\S+$/.test(email)) return setErr("That doesn't look like an email address"); J.set("interview", { email }); J.set("playback", { emailed: true }); setSent(true); };
+  return (
+    <div className="mscrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="mbox" role="dialog" aria-modal="true" aria-label="Email me this read">
+        <button className="mx" aria-label="Close" onClick={onClose}><Ic.X s={16}/></button>
+        {!sent ? <>
+          <div className="kick">Email me this read</div>
+          <h3>Keep it for later.</h3>
+          <p>We'll send a private link to this read. The subject line just says "Your Decouple read" — nothing about separation.</p>
+          <label className="field">Email address<input type="email" autoFocus value={email} placeholder="you@example.com" onChange={(e) => { setEmail(e.target.value); setErr(""); }} onKeyDown={(e) => e.key === "Enter" && send()}/>{err && <span className="err">{err}</span>}</label>
+          <div className="mwarn"><Ic.Shield s={14} style={{ flexShrink: 0, marginTop: 2 }}/><span>Use an email address your partner can't see.</span></div>
+          <div style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}><button className="btn lg" onClick={send}>Send it <Ic.Arrow s={15}/></button><button className="btn lg ghost" onClick={onClose}>Not now</button></div>
+        </> : <>
+          <div className="safe-ic"><Ic.Check s={22} w={2.4} c="#166534"/></div>
+          <h3>Sent{name ? ", " + name : ""}.</h3>
+          <p>Check <b style={{ color: "#1A1A1A" }}>{email}</b>. The link stays live for 30 days.</p>
+          <div style={{ marginTop: 20 }}><button className="btn lg" onClick={onClose}>Back to my read</button></div>
+        </>}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [mirror, setMirror] = useState(localStorage.getItem(TKEY));
+  useEffect(() => { if (!J.embedded) localStorage.setItem(TKEY, t.theme); }, [t.theme]);
+  const [a, setA] = useState(() => (J.get().interview || {}).answers || null);
+  useEffect(() => J.subscribe((s) => { const n = (s.interview || {}).answers; if (n) setA(n); }), []);
+  useEffect(() => { const f = (e) => e.key === TKEY && setMirror(e.newValue); addEventListener("storage", f); return () => removeEventListener("storage", f); }, []);
+  const theme = J.embedded ? (mirror || t.theme) : t.theme;
+  const [w, setW] = useState((J.get().playback || {}).whatif || {});
+  useEffect(() => { J.set("playback", { whatif: w }); }, [w]);
+  const [mail, setMail] = useState(false), [exit, setExit] = useState(false);
+  const bg = theme === "wash" ? "bg-wash" : "bg-paper";
+  const load = (x) => { J.set("interview", { answers: x, complete: true, outcome: "complete" }); setA(x); setW({}); };
+  const change = (id, v) => { const n = { ...a, [id]: v }; setA(n); J.set("interview", { answers: n }); };
+
+  const tweaks = (
+    <TweaksPanel>
+      <TweakSection label="Look & feel"/>
+      <TweakRadio label="Background" value={t.theme} options={[{ value: "paper", label: "Paper" }, { value: "wash", label: "Lilac" }]} onChange={(v) => setTweak("theme", v)}/>
+      <TweakSection label="Try another situation"/>
+      <TweakButton label="Sarah · typical" onClick={() => load(PB.EXAMPLE)}/>
+      <TweakButton label="Exploring" onClick={() => load({ ...PB.EXAMPLE, stage: "considering", help_now: "options" })}/>
+      <TweakButton label="Mostly agreed" onClick={() => load({ ...PB.EXAMPLE, stage: "agreed", agreed_on: ["home", "children", "pensions"], pen_them: "__skip" })}/>
+      <TweakButton label="Very hard communication" onClick={() => load({ ...PB.EXAMPLE, comms: "hard" })}/>
+      <TweakButton label="Divorce already filed" onClick={() => load({ ...PB.EXAMPLE, stage: "filed" })}/>
+    </TweaksPanel>
+  );
+
+  if (exit) return <IVNeutral onBack={() => setExit(false)}/>;
+  const header = (
+    <header className="iv-top">
+      <div className="l"><span className="wm" style={{ cursor: "default" }}>Decouple<i>.</i></span><small>Your free read · private to you</small></div>
+      <div className="r"><button className="pillbtn exit" onClick={() => setExit(true)}><Ic.X s={12} c="#B91C1C"/> Quick exit</button></div>
+    </header>
+  );
+  if (!a || !a.status) return (
+    <div className={"site iv " + bg} data-screen-label="Playback · empty">
+      {header}
+      <div className="empty">
+        <div className="kick">Your first read</div>
+        <h2 className="pb-h1" style={{ margin: "14px auto 0" }}>We don't have your answers yet.</h2>
+        <p className="card-p" style={{ margin: "12px auto 0" }}>The read is built from the free interview. Take it now, or load an example to see how it works.</p>
+        <div style={{ marginTop: 24, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}><button className="btn lg" onClick={() => J.goStage("interview")}>Take the interview <Ic.Arrow s={15}/></button><button className="btn lg ghost" onClick={() => load(PB.EXAMPLE)}>Use Sarah's example</button></div>
+      </div>
+      {tweaks}
+    </div>
+  );
+
+  const r = PB.compute(a, w), N = r.N;
+  const exploring = a.stage === "considering", agreed = a.stage === "agreed";
+  return (
+    <div className={"site iv " + bg} data-screen-label="Playback · first read">
+      {header}
+      <main className="pb-body">
+        <div className="kick">Here's what we heard{N.hasMe ? ", " + N.Me : ""}</div>
+        <h1 className="pb-h1">{headline(a, N)}</h1>
+        <div className="pb-grid">
+          <div className="pb-main">
+            {exploring ? <PBOptions a={a} r={r} w={w} setW={setW}/> : agreed ? <><PBFairness a={a} r={r}/><PBRange a={a} r={r} w={w} setW={setW} compact/></> : <PBRange a={a} r={r} w={w} setW={setW}/>}
+            <PBPath a={a} r={r}/>
+            <PBWatch a={a} r={r} w={w}/>
+            {!exploring && <PBPartner a={a} r={r}/>}
+            {a.kids === "with" && <PBParenting a={a} r={r}/>}
+          </div>
+          <aside className="pb-aside">
+            <div className="next">
+              <div className="kick">What you can do next</div>
+              <h3>{exploring ? "Take your time. Come back when you're ready." : "Turn this read into a real settlement."}</h3>
+              <p>{exploring ? "Your read is free to keep. When you want to go further, these are the options." : "Choose how much guidance you want. Start with Your picture for £99 to turn these estimates into exact, evidenced figures — ready for mediation."}</p>
+              <div className="btns">
+                <button className="btn lg full" onClick={() => J.goStage("signup")}>See your options <Ic.Arrow s={15}/></button>
+                <button className="btn lg ghost full" onClick={() => setMail(true)}>Email me this read</button>
+              </div>
+            </div>
+            <div className="calm"><div className="kick" style={{ marginBottom: 6 }}><Ic.Lock s={11}/> No pressure, ever</div>This read is yours to keep. There's no account yet, nothing is shared with {N.them}, and you only pay when you choose a plan.</div>
+            <PBHeard a={a} onChange={change}/>
+          </aside>
+        </div>
+      </main>
+      <div className="pb-mcta"><button className="btn lg full" onClick={() => J.goStage("signup")}>See your options <Ic.Arrow s={15}/></button></div>
+      {mail && <EmailRead name={N.hasMe ? N.Me : ""} onClose={() => setMail(false)}/>}
+      {tweaks}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

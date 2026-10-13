@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" data-stage="dashboard">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Decouple — Proto 10 · Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="proto/signup/su.css">
+<link rel="stylesheet" href="proto/onboard/ob.css">
+<link rel="stylesheet" href="proto/prepare/pp.css">
+<link rel="stylesheet" href="proto/reconcile/rc.css">
+<link rel="stylesheet" href="proto/dashboard/db.css">
+<style>html,body{margin:0;background:#EFEAF6}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="proto/journey-store.js"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="proto/interview/iv-data.js"></script>
+<script src="proto/playback/pb-engine.js"></script>
+<script src="proto/reconcile/rc-data.js"></script>
+<script src="proto/dashboard/db-data.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-ui.jsx"></script>
+<script type="text/babel" src="proto/onboard/ob-cards.jsx"></script>
+<script type="text/babel" src="proto/reconcile/rc-ui.jsx"></script>
+<script type="text/babel" src="proto/dashboard/db-todo.jsx"></script>
+<script type="text/babel" src="proto/dashboard/db-journal.jsx"></script>
+<script type="text/babel" src="proto/dashboard/db-lean.jsx"></script>
+<script type="text/babel" src="proto/dashboard/db-hub.jsx"></script>
+<script type="text/babel" src="proto/dashboard/db-pages.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const J = window.Journey, PB = window.PB, Ic = window.DIc, DB = window.DB;
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "stage": "settle",
+  "shared": "auto",
+  "bg": "lilac",
+  "layout": "lean"
+}/*EDITMODE-END*/;
+const PAGES = ["hub", "vault", "journal", "guides", "account"];
+const KIND_UP = { payslip: [DB.D(2026, 9, 30), "Sep 2026"], bank: [DB.D(2026, 9, 30), "Oct 2025 – Sep 2026"], card: [DB.D(2026, 9, 28), "Sep 2026"], mortgage: [DB.D(2026, 9, 30), "To 30 Sep 2026"], valuation: [DB.TODAY, "Dated 11 Oct 2026"], cetv: [DB.TODAY, "Dated 8 Oct 2026"], p60: [DB.D(2026, 4, 5), "Tax year to 5 Apr 2026"] };
+const NEW = [["payslip", "income", "Payslip", "NHS Business Services"], ["bank", "bank", "Bank statement", "Monzo"], ["valuation", "home", "Property valuation", "Estate agent"], ["cetv", "pensions", "Pension valuation (CETV)", "Pension provider"], ["card", "debts", "Credit card or loan statement", "Lender"]];
+const ACC0 = { mfa: true, quiet: true, shareEv: false, presence: true, nudge: true, esc: true, exitTo: "weather", tab: false, preview: true, nt: { mke: true, mka: true, rme: true, rmt: true, rma: true, eve: true, eva: true } };
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const s0 = J.get(), a = ((s0.interview || {}).answers) || PB.EXAMPLE;
+  const N0 = PB.names(a), N = { ...N0, Me: N0.hasMe ? N0.Me : "Sarah", Them: N0.hasThem ? N0.Them : "Mark" };
+  const su = s0.signup || {}, plan = ((s0.household || {}).plan) || (su.tier && su.tier !== "free" ? su.tier : su.tier === "free" ? "picture" : "guided");
+  const d0 = s0.dash || {};
+  const readHash = () => { const h = location.hash.slice(1); return h.startsWith("account") ? ["account", h.split("-")[1] || null] : [PAGES.includes(h) ? h : "hub", null]; };
+  const [[page, sect], setRoute] = useState(readHash);
+  const [ups, setUps] = useState(d0.ups || {}), [added, setAdded] = useState(d0.added || []), [done, setDone] = useState(d0.done || {}), [nudged, setNudged] = useState(d0.nudged || {}), [acc, setAcc] = useState({ ...ACC0, ...(d0.acc || {}) });
+  const [vm, setVm] = useState(null), [gm, setGm] = useState(null), [upM, setUpM] = useState(false), [toast, setToast] = useState(null), [exit, setExit] = useState(false);
+  const sc = t.stage === "auto" ? DB.where(s0) : t.stage;
+  const shared = t.shared === "auto" ? sc !== "picture" : t.shared === "yes";
+  const vault = [...DB.VAULT0.map((v) => (ups[v.id] ? { ...v, ...ups[v.id], up: new Date(ups[v.id].up), end: ups[v.id].end ? new Date(ups[v.id].end) : null } : v)), ...added.map((v) => ({ ...v, up: new Date(v.up), end: new Date(v.end) }))];
+  const mine = vault.filter((v) => v.who === "a"), bad = mine.filter((v) => ["old", "soon"].includes(DB.status(v).k)).length;
+  useEffect(() => { J.set("dash", { on: true, ups, added, done, nudged, acc }); J.set("vault", { n: mine.length, bad }); }, [ups, added, done, nudged, acc]);
+  useEffect(() => { const f = () => { setRoute(readHash()); }; addEventListener("hashchange", f); return () => removeEventListener("hashchange", f); }, []);
+  useEffect(() => { if (page === "account" && sect) { let n = 0; const run = () => { const el = document.getElementById("acc-" + sect); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 84 }); else if (n++ < 10) requestAnimationFrame(run); }; requestAnimationFrame(() => requestAnimationFrame(run)); } else scrollTo({ top: 0 }); }, [page, sect]);
+  const say = (x, y) => { setToast([x, y]); clearTimeout(window.__dbT); window.__dbT = setTimeout(() => setToast(null), 3400); };
+  const nav = (h) => { location.hash = h; };
+  const replace = (v) => { const k = KIND_UP[v.kind] || [DB.TODAY, v.cov]; setUps({ ...ups, [v.id]: { up: DB.TODAY.toISOString(), end: k[0].toISOString(), cov: k[1], awaited: null, amt: v.amt || (v.kind === "cetv" ? "£112,400" : "") } }); setVm(null); say(`${v.t} updated`, "It's current again. We'll remind you before it expires."); };
+  const addNew = ([kind, cat, t2, src]) => { const k = KIND_UP[kind]; setAdded([...added, { id: "n" + Date.now(), who: "a", cat, kind, t: t2, src, cov: k[1], end: k[0].toISOString(), up: DB.TODAY.toISOString(), amt: "" }]); setUpM(false); say(`${t2} added to your vault`, acc.shareEv ? `${N.Them} can see it.` : `${N.Them} can't see it until you share.`); };
+
+  if (exit) return <IVNeutral onBack={() => setExit(false)}/>;
+  const K = (st) => <span className={"k" + (st ? " " + st : "")}>{st === "dn" && <Ic.Check s={9} w={3} c="#FFF"/>}</span>;
+  const sub = <>
+    <button className={"ph-grp" + (page === "hub" ? " on" : "")} onClick={() => nav("#hub")}><span className="gt">{K(page === "hub" ? "pt" : "")}Overview</span><small>To-dos, dates, activity</small></button>
+    <button className={"ph-grp" + (page === "vault" ? " on" : "")} onClick={() => nav("#vault")}><span className="gt">{K(page === "vault" ? "pt" : "")}Evidence vault</span><small>{bad ? `${bad} to renew · ${mine.length} files` : `${mine.length} files · all current`}</small></button>
+    <button className={"ph-grp" + (page === "journal" ? " on" : "")} onClick={() => nav("#journal")}><span className="gt">{K(page === "journal" ? "pt" : "")}Journal & help</span><small>Private log and advice</small></button>
+    <button className={"ph-grp" + (page === "guides" ? " on" : "")} onClick={() => nav("#guides")}><span className="gt">{K(page === "guides" ? "pt" : "")}Guides</span><small>{`${DB.GUIDES.length} short guides`}</small></button>
+    <button className={"ph-grp" + (page === "account" ? " on" : "")} onClick={() => nav("#account")}><span className="gt">{K(page === "account" ? "pt" : "")}Account settings</span><small>Profile, plan, privacy</small></button>
+    {page === "account" && <div className="ph-nest">{DBSECT.map(([k, l]) => <button key={k} className={sect === k ? "on" : ""} onClick={() => nav("#account-" + k)}>{k === "sharing" ? `Sharing with ${N.Them}` : l}</button>)}</div>}
+  </>;
+  const body = page === "vault" ? <DBVault N={N} vault={vault} shared={shared} onOpen={setVm} onUpload={() => setUpM(true)}/>
+    : page === "journal" ? <DBJournalPage N={N} sc={sc} tasks={DB.content(sc, N, shared, vault).T.filter((x) => !done[x.k])} say={say}/>
+    : page === "guides" ? <DBGuides sc={sc} openGuide={setGm}/>
+    : page === "account" ? <DBAccount N={N} acc={acc} setAcc={setAcc} plan={plan} say={say}/>
+    : <DBHub N={N} sc={sc} vault={vault} shared={shared} nudged={nudged} setNudged={setNudged} onOpen={setVm} openGuide={setGm} done={done} setDone={setDone} say={say} lean={t.layout === "lean"}/>;
+  return (
+    <div className={"site ob rc db " + (t.bg === "paper" ? "bg-paper" : "bg-lilac")} data-screen-label={"Dashboard · " + page}>
+      <OBTop N={N} onExit={() => setExit(true)}/>
+      <div className="ob-shell two wide">
+        <OBRail plan={plan} active="dashboard" full util={false} sub={sub} reach={DB.PHASE[sc]} onPhase={(i) => { if (page !== "hub") location.hash = "#hub"; setTimeout(() => window.dispatchEvent(new CustomEvent("db:view", { detail: i })), 30); }}/>
+        <main className="pp-stage rc-stage"><div className="rc-wrap">{body}</div></main>
+      </div>
+      {vm && <DBVaultModal v={vm} N={N} close={() => setVm(null)} onReplace={replace} onRemind={(v) => { setVm(null); say(`We've asked ${N.Them} for a newer ${v.t.split(" · ")[0].toLowerCase()}`, "Neutral wording, from Decouple."); }}/>}
+      {gm && <DBGuideModal g={gm} close={() => setGm(null)}/>}
+      {upM && <div className="mscrim" onClick={(e) => e.target === e.currentTarget && setUpM(false)}><div className="mbox db-gm" role="dialog" aria-modal="true" aria-label="Upload evidence">
+        <button className="mx" aria-label="Close" onClick={() => setUpM(false)}><Ic.X s={16}/></button>
+        <div className="pq-k">Evidence vault</div><h3>What are you adding?</h3><p>We'll file it in the right place and tell you when it goes out of date.</p>
+        <div className="db-help" style={{ gridTemplateColumns: "minmax(0,1fr)" }}>{NEW.map((x) => <button key={x[0]} onClick={() => addNew(x)}><b>{x[2]}</b><small>{DB.RULE[x[0]][1]}</small></button>)}</div>
+      </div></div>}
+      {toast && <div className="db-toast" role="status"><b>{toast[0]}</b>{toast[1] && <span>{toast[1]}</span>}</div>}
+      <TweaksPanel>
+        <TweakSection label="Where you are"/>
+        <TweakSelect label="Stage" value={t.stage} options={[{ value: "auto", label: "From your journey" }, ...DB.SCEN.map(([v, l]) => ({ value: v, label: l }))]} onChange={(x) => setTweak("stage", x)}/>
+        <TweakRadio label={`${N.Them} has shared`} value={t.shared} options={[{ value: "auto", label: "Auto" }, { value: "yes", label: "Yes" }, { value: "no", label: "No" }]} onChange={(x) => setTweak("shared", x)}/>
+        <TweakSection label="Look"/>
+        <TweakRadio label="Dashboard" value={t.layout} options={[{ value: "full", label: "Full" }, { value: "lean", label: "Lean" }]} onChange={(x) => setTweak("layout", x)}/>
+        <TweakRadio label="Background" value={t.bg} options={[{ value: "lilac", label: "Lilac" }, { value: "paper", label: "Paper" }]} onChange={(x) => setTweak("bg", x)}/>
+        <TweakSection label="Reset"/>
+        <TweakButton label="Reset dashboard demo" onClick={() => { setUps({}); setAdded([]); setDone({}); setNudged({}); setAcc(ACC0); }}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

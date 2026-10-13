@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Decouple — Prototype hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17141F;--sub:#57534E;--mute:#78716C;--line:#E7E3DC;--paper:#FAFAF7;--v:#5B21B6;--vl:#7C3AED;--vs:#F3EEFE;--sky:#0369A1;--mag:#9D174D;--grn:#047857;--amb:#B45309}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--v);text-decoration:none}a:hover{color:var(--vl)}
+.serif{font-family:'Source Serif Pro',Georgia,serif}
+em{font-style:italic;color:var(--vl)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.kick{font:600 11px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v)}
+.mono{font-family:'JetBrains Mono',monospace}
+/* top */
+.top{position:sticky;top:0;z-index:20;height:64px;display:flex;align-items:center;gap:24px;padding:0 32px;background:rgba(23,20,31,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.08);color:#FFF}
+.wm{font-weight:700;font-size:21px;letter-spacing:-.025em;color:#FFF}.wm i{font-style:normal;color:var(--vl)}
+.top .tag{font-size:12px;color:rgba(255,255,255,.6);padding-left:16px;border-left:1px solid rgba(255,255,255,.18)}
+.top nav{margin-left:auto;display:flex;gap:22px}.top>.btn{flex-shrink:0;margin-left:12px}.ttg{margin-left:20px}@media (max-width:1000px){.ttg{margin-left:auto}}.top nav a{color:rgba(255,255,255,.72);font-size:13px;font-weight:500}.top nav a:hover{color:#FFF}
+.btn{display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 20px;border-radius:999px;background:#FFF;color:var(--ink);font-size:13.5px;font-weight:600;white-space:nowrap;transition:transform .15s,background .15s}.btn:hover{color:var(--ink);background:#F3EEFE;transform:translateY(-1px)}
+.btn.sm{height:36px;padding:0 16px;font-size:12.5px}
+.btn.ink{background:var(--ink);color:#FFF}.btn.ink:hover{background:#000;color:#FFF}
+.btn svg,.go svg{width:14px;height:14px}
+/* hero */
+.hero{position:relative;overflow:hidden;background:#17141F;color:#FFF;margin-top:-64px;padding:168px 0 96px}
+.hero:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 82% 10%,rgba(124,58,237,.38),transparent 60%),radial-gradient(ellipse 50% 60% at 6% 100%,rgba(157,23,77,.24),transparent 60%)}
+.hero:after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:22px 22px;mask-image:linear-gradient(180deg,#000,transparent 85%);-webkit-mask-image:linear-gradient(180deg,#000,transparent 85%)}
+.hero .wrap{position:relative;z-index:1}
+.hero .kick{color:#C4B5FD}
+.hero h1{font:400 clamp(44px,6.4vw,88px)/1.02 'Source Serif Pro',Georgia,serif;letter-spacing:-.025em;margin:20px 0 0;max-width:14ch;text-wrap:balance}
+.hero h1 em{color:#C4B5FD}
+.hero .lede{font-size:clamp(17px,1.6vw,20px);line-height:1.55;color:rgba(255,255,255,.74);max-width:58ch;margin:28px 0 0;text-wrap:pretty}
+.hero .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+.hero .ghost{display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:999px;border:1px solid rgba(255,255,255,.24);color:#FFF;font-size:13.5px;font-weight:500}.hero .ghost:hover{background:rgba(255,255,255,.08);color:#FFF}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:80px;border-top:1px solid rgba(255,255,255,.14)}
+.facts div{padding:22px 24px 0 0}.facts div+div{padding-left:24px;border-left:1px solid rgba(255,255,255,.14)}
+.facts b{display:block;font:400 40px/1 'Source Serif Pro',Georgia,serif;letter-spacing:-.02em}.facts span{display:block;margin-top:8px;font-size:13px;line-height:1.45;color:rgba(255,255,255,.6)}
+/* journey */
+section{padding:112px 0}
+.sh{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:end;margin-bottom:56px}
+.sh h2{font:400 clamp(34px,4vw,52px)/1.06 'Source Serif Pro',Georgia,serif;letter-spacing:-.02em;margin:14px 0 0;text-wrap:balance}
+.sh p{margin:0;font-size:16px;line-height:1.6;color:var(--sub);max-width:52ch;text-wrap:pretty}
+.jy{display:grid;grid-template-columns:5fr 2fr 1.4fr 1.6fr;gap:10px}
+.ph{position:relative;padding:20px 20px 18px;border-radius:18px;background:#FFF;border:1px solid var(--line)}
+.ph .n{font:600 11px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--c)}
+.ph h3{font:600 24px 'Source Serif Pro',Georgia,serif;margin:8px 0 4px;letter-spacing:-.01em}.ph>p{margin:0;font-size:13px;line-height:1.5;color:var(--sub)}
+.ph .bar{position:absolute;left:20px;right:20px;top:0;height:3px;border-radius:0 0 3px 3px;background:var(--c)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px 0 6px;border-radius:999px;background:var(--paper);border:1px solid var(--line);font-size:12.5px;font-weight:500;color:var(--ink)}.chip:hover{border-color:var(--c);color:var(--ink)}
+.chip i{font:600 10px 'JetBrains Mono',monospace;font-style:normal;width:22px;height:20px;border-radius:999px;display:grid;place-items:center;background:var(--c);color:#FFF}
+.span{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:14px 20px;border-radius:14px;background:var(--vs);font-size:13.5px;color:#3B0764}.span .chip{--c:var(--v);background:#FFF;margin:0}
+.span b{font-weight:600}
+/* protos */
+.protos{display:grid;gap:28px}
+.pc{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:0;background:#FFF;border:1px solid var(--line);border-radius:24px;overflow:hidden;transition:box-shadow .25s,transform .25s}
+.pc:hover{box-shadow:0 24px 60px -24px rgba(40,20,80,.22)}
+.card:nth-child(even) .front{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}.card:nth-child(even) .front .shot{order:2}
+.shot{position:relative;display:flex;flex-direction:column;justify-content:center;padding:32px;background:linear-gradient(160deg,var(--t1),var(--t2));overflow:hidden;min-height:100%}
+.shot .fr{position:relative;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:#FFF;box-shadow:0 20px 50px -16px rgba(30,20,60,.35),0 0 0 1px rgba(30,20,60,.06);transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+.shot .fr:before{content:"";display:block;height:22px;background:#F4F2EE;border-bottom:1px solid #E7E3DC;background-image:radial-gradient(circle at 12px 11px,#D6D3D1 3.5px,transparent 4px),radial-gradient(circle at 26px 11px,#D6D3D1 3.5px,transparent 4px),radial-gradient(circle at 40px 11px,#D6D3D1 3.5px,transparent 4px)}
+.shot img{display:block;width:100%;height:auto}
+.pc:hover .shot .fr{transform:translateY(-6px)}
+.shot .open{position:absolute;right:20px;bottom:20px;opacity:0;transform:translateY(6px);transition:.2s}.pc:hover .shot .open{opacity:1;transform:none}
+.bd{padding:36px 40px 34px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.num{font:400 15px 'JetBrains Mono',monospace;color:var(--mute)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em}
+.pill.ph1{background:#F3EEFE;color:#5B21B6}.pill.ph2{background:#E0F2FE;color:#075985}.pill.ph3{background:#FCE7F3;color:#9D174D}.pill.ph4{background:#D1FAE5;color:#065F46}.pill.ph5{background:#F4F2EE;color:#44403C}
+.pill.live{background:transparent;color:var(--grn);padding:0}.pill.live:before{content:"";width:7px;height:7px;border-radius:99px;background:var(--grn);box-shadow:0 0 0 3px #D1FAE5}
+.pill.rev{background:#FEF3C7;color:#92400E}
+.bd h3{font:400 38px/1.05 'Source Serif Pro',Georgia,serif;letter-spacing:-.02em;margin:0}.bd h3 small{display:block;margin-top:6px;font:500 14px Inter,sans-serif;letter-spacing:0;color:var(--mute)}
+.bd .d{margin:0;font-size:15px;line-height:1.6;color:#3F3A36;text-wrap:pretty}
+.lbl{font:600 10.5px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12.5px;color:var(--ink)}.flow span{padding:3px 8px;border-radius:6px;background:#F4F2EE}.flow i{font-style:normal;color:#C4BFB8;font-size:11px}
+.sc{margin:0;padding:0;list-style:none;display:grid;gap:7px}.sc li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:9px;font-size:13.5px;line-height:1.45}
+.sc li:before{content:"";width:16px;height:16px;margin-top:1px;border-radius:99px;background:var(--vs) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 8.2l2.3 2.3 4.7-5' fill='none' stroke='%235B21B6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat}
+.ft{margin-top:auto;padding-top:18px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.tip{font-size:12px;color:var(--mute);line-height:1.45;max-width:36ch}.tip b{color:var(--sub);font-weight:600}
+.go{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink)}.go:hover{color:var(--v)}.go svg{transition:transform .2s}.go:hover svg{transform:translateX(3px)}
+.card{perspective:2600px}.flip{display:grid;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden}.back{transform:rotateY(180deg);pointer-events:none}
+.card.flipped .flip{transform:rotateY(180deg)}.card.flipped .back{pointer-events:auto}.card.flipped .front{pointer-events:none}
+.flipb{all:unset;cursor:pointer;margin-left:auto;display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--line);font-size:12px;font-weight:600;color:var(--ink);transition:.15s}.flipb:hover{border-color:var(--v);color:var(--v)}.flipb svg{width:13px;height:13px}.flipb:focus-visible{outline:2px solid var(--vl);outline-offset:2px}
+.back{position:relative;display:flex;flex-direction:column;gap:24px;padding:36px 40px 34px;background:#17141F;color:#FFF;border-color:#17141F}
+.back:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 55% 70% at 100% 0%,rgba(124,58,237,.3),transparent 60%);pointer-events:none}.back>*{position:relative}
+.bh{display:flex;align-items:center;gap:12px}.bh .num{color:rgba(255,255,255,.5)}.bk{font:600 11px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#C4B5FD}
+.back .flipb{border-color:rgba(255,255,255,.22);color:#FFF}.back .flipb:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.4);color:#FFF}
+.back h3{font:400 34px/1.05 'Source Serif Pro',Georgia,serif;letter-spacing:-.02em;margin:0}.back h3 small{display:block;margin-top:6px;font:500 14px Inter,sans-serif;letter-spacing:0;color:rgba(255,255,255,.6)}
+.back .lbl{color:#C4B5FD}
+.bg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.ol{margin:0;padding:0;list-style:none;display:grid;gap:9px}.ol li{position:relative;padding-left:16px;font-size:13.5px;line-height:1.45;color:rgba(255,255,255,.86);text-wrap:pretty}.ol li:before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:99px;border:1.5px solid #A78BFA}
+.qs li{padding-left:0}.qs li:before{display:none}.q{display:inline-flex;align-items:center;height:18px;padding:0 6px;margin-right:7px;border-radius:5px;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;vertical-align:1px}.q.ux{background:rgba(125,211,252,.16);color:#7DD3FC}.q.biz{background:rgba(252,211,77,.16);color:#FCD34D}
+.bet{margin-top:auto;padding:20px 22px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}.bet .lbl{color:#6EE7B7}
+.bt3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:22px}.bt3 small{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,.55)}.bt3 p{margin:5px 0 0;font-size:14px;line-height:1.5;color:#FFF;text-wrap:pretty}
+.fliptool{display:flex;align-items:center;gap:10px;margin:-28px 0 28px;font-size:12.5px;color:var(--mute)}.seg{display:inline-flex;padding:3px;border-radius:999px;background:#FFF;border:1px solid var(--line)}.seg button{all:unset;cursor:pointer;height:30px;padding:0 14px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--sub)}.seg button.on{background:var(--ink);color:#FFF}
+@media (max-width:720px){.back{padding:24px}.back h3{font-size:28px}}
+@media (prefers-reduced-motion:reduce){.flip{transition:none}}
+/* dark sections */
+.dark{background:#17141F;color:#FFF;position:relative;overflow:hidden}
+.dark:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 50% 60% at 100% 0%,rgba(124,58,237,.22),transparent 60%)}
+.dark .wrap{position:relative}
+.dark .kick{color:#C4B5FD}.dark .sh p{color:rgba(255,255,255,.66)}
+.tb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.tc{padding:24px;border-radius:18px;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.2);display:flex;flex-direction:column;gap:10px}
+.tc.big{grid-column:span 2;border-style:solid;background:linear-gradient(140deg,rgba(124,58,237,.22),rgba(255,255,255,.03))}
+.tc .num{color:rgba(255,255,255,.5)}
+.tc h4{font:400 26px/1.15 'Source Serif Pro',Georgia,serif;margin:0;letter-spacing:-.01em}.tc p{margin:0;font-size:14px;line-height:1.55;color:rgba(255,255,255,.7);text-wrap:pretty}
+.tc .pill{align-self:flex-start;background:rgba(255,255,255,.1);color:#E9DFFD}
+.tc .steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.tc .steps span{font-size:12px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.85)}
+/* decisions */
+.dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 48px;border-top:1px solid var(--line)}
+.dr{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;padding:22px 0;border-bottom:1px solid var(--line)}
+.dr .ix{font:400 13px 'JetBrains Mono',monospace;color:var(--mute);padding-top:3px}
+.dr h4{margin:0;font-size:16px;font-weight:600;line-height:1.35}.dr .where{font-size:12px;color:var(--mute);margin-top:3px}
+.dr .rec{margin-top:10px;font-size:13.5px;line-height:1.5;color:var(--sub)}.dr .rec b{display:inline-flex;margin-right:6px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--v)}
+.dr .rec.lg b{color:var(--amb)}
+/* testing */
+.tests{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;counter-reset:t}
+.tt{counter-increment:t;position:relative;padding:26px 28px 24px 84px;border-radius:18px;background:#FFF;border:1px solid var(--line)}
+.tt:before{content:counter(t,decimal-leading-zero);position:absolute;left:28px;top:24px;font:400 30px/1 'Source Serif Pro',Georgia,serif;color:var(--vl)}
+.tt h4{margin:0;font:600 19px/1.3 'Source Serif Pro',Georgia,serif}.tt p{margin:8px 0 0;font-size:14px;line-height:1.55;color:var(--sub)}
+.tt .sig{margin-top:14px;display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--ink)}.tt .sig b{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--grn);white-space:nowrap}
+.tt .where{position:absolute;top:24px;right:24px;font:500 11px 'JetBrains Mono',monospace;color:var(--mute)}
+/* footer */
+footer{padding:64px 0 72px;border-top:1px solid var(--line)}
+footer .wrap{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap;align-items:flex-start}
+footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:1.55;color:var(--mute);max-width:56ch}
+.rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}.rv.in{opacity:1;transform:none}
+.ttg{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 8px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:none;color:#FFF;font:500 12.5px Inter,sans-serif;cursor:pointer;flex-shrink:0}.ttg:hover{background:rgba(255,255,255,.08)}
+.sw{position:relative;width:30px;height:18px;border-radius:99px;background:rgba(255,255,255,.25);transition:.2s;flex-shrink:0}.sw:after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:99px;background:#FFF;transition:.2s}.on .sw{background:#10B981}.on .sw:after{left:14px}
+.ut{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px}
+.utp{padding:28px;border-radius:22px;background:#FFF;border:1px solid var(--line);display:grid;gap:18px;align-content:start}
+.utp.dk{background:#17141F;color:#FFF;border:0;position:relative;overflow:hidden}.utp.dk:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 100% 0%,rgba(124,58,237,.35),transparent 60%)}.utp.dk>*{position:relative}
+.utrow{display:flex;align-items:center;justify-content:space-between;gap:14px}.utrow b{font-size:16px}.utrow small{display:block;margin-top:2px;font-size:12.5px;color:rgba(255,255,255,.6)}
+.big-sw{all:unset;cursor:pointer}.big-sw .sw{width:46px;height:26px}.big-sw .sw:after{width:20px;height:20px;top:3px;left:3px}.big-sw.on .sw:after{left:23px}
+.utl{font:600 10.5px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#C4B5FD;margin-bottom:8px}
+.utlink{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}.utlink input{min-width:0;height:42px;padding:0 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#FFF;font:12px 'JetBrains Mono',monospace;outline:0}
+.utst{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.utst div{padding:12px;border-radius:12px;background:rgba(255,255,255,.06)}.utst small{display:block;font-size:11px;color:rgba(255,255,255,.55)}.utst b{display:block;margin-top:4px;font-size:14px;font-weight:600}.utst b.ok{color:#6EE7B7}
+.utacts{display:flex;flex-wrap:wrap;gap:8px}.ghost-d{all:unset;cursor:pointer;display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.22);font-size:12.5px;font-weight:500;color:#FFF}.ghost-d:hover{background:rgba(255,255,255,.08)}
+.steps{counter-reset:s;display:grid;gap:18px;margin:0;padding:0;list-style:none}.steps>li{counter-increment:s;display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px}.steps>li:before{content:counter(s);width:32px;height:32px;border-radius:99px;background:var(--vs);color:var(--v);display:grid;place-items:center;font:600 14px 'Source Serif Pro',Georgia,serif}
+.steps h4{margin:4px 0 0;font:600 18px 'Source Serif Pro',Georgia,serif}.steps p{margin:6px 0 0;font-size:13.5px;line-height:1.55;color:var(--sub)}
+.fl{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.fl span{font-size:11.5px;padding:4px 8px;border-radius:6px;background:#F4F2EE;color:var(--ink)}.fl span code{font:600 11px 'JetBrains Mono',monospace;color:var(--v);margin-left:4px}
+.utf{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-top:10px}.utf input{min-width:0;height:40px;padding:0 12px;border-radius:10px;border:1.5px solid var(--line);font:12.5px Inter,sans-serif;outline:0}.utf input:focus{border-color:var(--v)}.utf button{all:unset;cursor:pointer;height:40px;padding:0 14px;border-radius:10px;background:var(--ink);color:#FFF;font-size:12.5px;font-weight:600}
+.utmsg{font-size:12px;margin-top:6px;color:var(--grn)}.utmsg.bad{color:#B91C1C}
+.tiny{all:unset;cursor:pointer;font-size:12.5px;color:var(--v);text-decoration:underline;text-underline-offset:3px;margin-top:8px;display:inline-block}
+@media (max-width:900px){.ut{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+@media (max-width:1000px){.front,.card:nth-child(even) .front{grid-template-columns:1fr}.card:nth-child(even) .front .shot{order:0}.bg,.bt3{grid-template-columns:1fr}.jy{grid-template-columns:1fr 1fr}.tb{grid-template-columns:1fr 1fr}.tc.big{grid-column:1/-1}.top nav{display:none}}
+@media (max-width:720px){.wrap{padding:0 20px}.top{padding:0 20px}.top .tag{display:none}.sh,.dl,.tests{grid-template-columns:1fr}.sh{gap:16px}.facts{grid-template-columns:1fr 1fr}.facts div:nth-child(3){padding-left:0;border-left:0}.jy,.tb{grid-template-columns:1fr}.bd{padding:24px 24px}.shot{padding:20px}section{padding:80px 0}.tt{padding:24px 22px 22px 70px}.tt:before{left:22px}.tt .where{position:static;display:block;margin-bottom:6px}}
+</style>
+<script src="hub/hub-switch.js" defer></script>
+</head>
+<body>
+<header class="top">
+<a class="wm" href="#">Decouple<i>.</i></a><div data-hubsw="proto" data-date="October 2026"></div>
+<nav><a href="#journey">Journey</a><a href="#protos">Prototypes</a><a href="#next">To build</a><a href="#decide">Decisions</a><a href="#test">What we'll test</a><a href="#testing">Run a session</a></nav>
+<button class="ttg" id="ttg" type="button" aria-pressed="false"><span class="sw"></span>Testing mode</button>
+<a class="btn sm" href="Proto 01 · Discover.html">Start the journey<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+</header>
+
+<div class="hero">
+<div class="wrap">
+<div class="kick">The complete settlement workspace for separating couples</div>
+<h1>Separation, sorted out <em>together.</em></h1>
+<p class="lede">Decouple takes a couple from &ldquo;we&rsquo;ve decided to separate&rdquo; to a financial order sealed by the court. One shared record, plain-English guidance, and documents a judge expects to see, in about three months, for a fixed price.</p>
+<div class="acts"><a class="btn" href="Proto 01 · Discover.html">Walk the whole journey<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a><a class="ghost" href="#protos">Browse the prototypes</a></div>
+<div class="facts">
+<div><b>10</b><span>linked, clickable prototypes sharing one journey state</span></div>
+<div><b>4</b><span>phases: begin, prepare, settle, finalise</span></div>
+<div><b>£499</b><span>guided settlement for both of you, against about £15,000 through solicitors</span></div>
+<div><b>~3 mo</b><span>first conversation to sealed order, against 12 to 18 months</span></div>
+</div>
+</div>
+</div>
+
+<section id="journey">
+<div class="wrap">
+<div class="sh rv"><div><div class="kick">The journey</div><h2>One path, <em>two people,</em> from first search to sealed order.</h2></div><p>Every prototype is a stage of the same story. They share one state, so what Sarah enters in her interview carries through to the order the court seals. Mark, her ex, is played by the system so each step can be demoed solo.</p></div>
+<div class="jy rv">
+<div class="ph" style="--c:var(--v)"><span class="bar"></span><div class="n">Phase 1 · Begin</div><h3>Understand &amp; commit</h3><p>Free until you&rsquo;re ready to pay.</p><div class="chips"><a class="chip" href="#p01"><i>01</i>Discover</a><a class="chip" href="#p02"><i>02</i>Interview</a><a class="chip" href="#p03"><i>03</i>Playback</a><a class="chip" href="#p04"><i>04</i>Sign-up</a><a class="chip" href="#p05"><i>05</i>Onboard</a></div></div>
+<div class="ph" style="--c:var(--sky)"><span class="bar"></span><div class="n">Phase 2 · Prepare</div><h3>Get the facts straight</h3><p>Two pictures, one household.</p><div class="chips"><a class="chip" href="#p06"><i>06</i>Prepare</a><a class="chip" href="#p07"><i>07</i>Household</a></div></div>
+<div class="ph" style="--c:var(--mag)"><span class="bar"></span><div class="n">Phase 3 · Settle</div><h3>Agree</h3><p>Versioned proposals.</p><div class="chips"><a class="chip" href="#p08"><i>08</i>Settle</a></div></div>
+<div class="ph" style="--c:var(--grn)"><span class="bar"></span><div class="n">Phase 4 · Finalise</div><h3>Make it legal</h3><p>Documents, signing, filing.</p><div class="chips"><a class="chip" href="#p09"><i>09</i>Finalise</a></div></div>
+<div class="span"><a class="chip" href="#p10"><i>10</i>Dashboard</a><span><b>Runs alongside every phase.</b> From the household picture onwards, returning users land here: next action, what&rsquo;s waiting, evidence and support.</span></div>
+</div>
+</div>
+</section>
+
+<section id="protos" style="padding-top:0">
+<div class="wrap">
+<div class="sh rv"><div><div class="kick">The prototypes</div><h2>Ten stages, <em>all clickable.</em></h2></div><p>Each opens with our demo couple, Sarah and Mark: married 14 years, two children, a house, two pensions. Tweaks (bottom right in each prototype) jump to key moments and switch design options. Flip any card for its open edges: scenarios not yet covered, key questions, gaps and the MVP bet.</p></div>
+<div class="fliptool"><span>Show</span><div class="seg" role="group" aria-label="Card side"><button type="button" class="on" data-side="0">What’s built</button><button type="button" data-side="1">Open edges</button></div></div>
+<div class="protos">
+
+<article class="card rv" id="p01" style="--t1:#EFE6FB;--t2:#F6F4F2"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="Proto 01 · Discover.html"><div class="fr"><img src="atlas/hub/p01.png" alt="Discover — public landing page" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">01</span><span class="pill ph1">Begin</span><span class="pill live">Built</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Open edges</button></div>
+<h3>Discover<small>Public site</small></h3>
+<p class="d">The front door. It explains what Decouple does, what it costs and why it&rsquo;s calmer, faster and far cheaper than going solicitor to solicitor.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Landing</span><i>→</i><span>How it works</span><i>→</i><span>Why Decouple</span><i>→</i><span>Pricing</span><i>→</i><span>FAQ &amp; trust</span><i>→</i><span>Start free interview</span></div></div>
+<div><div class="lbl">Scenarios covered</div><ul class="sc"><li>First-time visitor researching options</li><li>Cost and time against the solicitor route</li><li>Trust, privacy and safety questions</li><li>Desktop and mobile layouts</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> use the bar at the bottom to switch between desktop and mobile.</span><a class="go" href="Proto 01 · Discover.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">01</span><span class="bk">The other side</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Discover<small>Open edges: what’s not covered yet</small></h3>
+<div class="bg">
+<div><div class="lbl">Scenarios not yet covered</div><ul class="ol"><li>Mark arriving cold, from a link Sarah sent him</li><li>Referrals from mediators, solicitors or an employer benefit</li><li>Unmarried couples, who can’t get a financial order</li><li>Scotland and Northern Ireland, where the law differs</li><li>Someone arriving in crisis or at risk</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Does “together” put off someone whose ex won’t cooperate?</li><li><b class="q ux">UX</b>What proof makes £499 against £15,000 believable, not too good to be true?</li><li><b class="q biz">Business</b>Which channel wins first: search, mediator referral or employer benefit?</li><li><b class="q biz">Business</b>Can we rank for “divorce cost” against law firms’ ad budgets?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Who this isn’t for: business owners, high net worth, abuse, assets abroad</li><li>How we say “not a law firm” without losing trust</li><li>Reviews and social proof before we have customers</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>An honest “is this right for us?” check on the landing page builds more trust than it loses</p></div><div><small>We’ll test it with</small><p>Two landing variants, with and without the check, on paid search</p></div><div><small>We’re right if</small><p>≥25% start the interview, and fewer drop out at playback</p></div></div></div>
+</div>
+</div></article>
+
+<article class="card rv" id="p02" style="--t1:#F3EEFE;--t2:#FAFAF7"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="Proto 02 · Interview.html"><div class="fr"><img src="atlas/hub/p02.png" alt="Interview — first question" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">02</span><span class="pill ph1">Begin</span><span class="pill live">Built</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Open edges</button></div>
+<h3>Interview<small>Free profiling · no account needed</small></h3>
+<p class="d">A gentle conversation that maps the situation in rough figures, with no exact numbers and no sign-up. A live &ldquo;picture so far&rdquo; fills in as you answer.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Where you are</span><i>→</i><span>The two of you</span><i>→</i><span>Children</span><i>→</i><span>Home</span><i>→</i><span>Money</span><i>→</i><span>What matters</span></div></div>
+<div><div class="lbl">Scenarios covered</div><ul class="sc"><li>Thinking about separating, decided, or already apart</li><li>Young children, grown-up children or none</li><li>&ldquo;Are you safe?&rdquo; check-in, with helpline and quick exit</li><li>Save and finish later</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> answer the safety question as unsure to see the safeguarding route.</span><a class="go" href="Proto 02 · Interview.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">02</span><span class="bk">The other side</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Interview<small>Open edges: what’s not covered yet</small></h3>
+<div class="bg">
+<div><div class="lbl">Scenarios not yet covered</div><ul class="ol"><li>Already divorced, but no financial order</li><li>Civil partners and second marriages, with or without a pre-nup</li><li>The partner who doesn’t know the household finances</li><li>Self-employed income or a family business</li><li>Assets or a partner abroad</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Do rough bands feel safe, or too vague to trust?</li><li><b class="q ux">UX</b>Does the safety check feel caring or alarming?</li><li><b class="q biz">Business</b>Do we ask for an email before playback, or after?</li><li><b class="q biz">Business</b>Which section loses the most people?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Where cases we can’t serve go: referral partners as a revenue line?</li><li>Consent and retention for answers given without an account</li><li>The safeguarding route needs a real partner behind it</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>Six short sections in rough bands are enough for a credible first read</p></div><div><small>We’ll test it with</small><p>Unmoderated sessions, timed, with drop-off tracked by section</p></div><div><small>We’re right if</small><p>≥60% finish, in under 8 minutes on a phone</p></div></div></div>
+</div>
+</div></article>
+
+<article class="card rv" id="p03" style="--t1:#EFE6FB;--t2:#F6F4F2"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="Proto 03 · Playback.html"><div class="fr"><img src="atlas/hub/p03.png" alt="Playback — likely settlement range" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">03</span><span class="pill ph1">Begin</span><span class="pill live">Built</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Open edges</button></div>
+<h3>Playback<small>The magic moment</small></h3>
+<p class="d">The answers come back as a first read: the share a court would likely see as reasonable, a three-month path and the things to watch. This is the moment that turns curiosity into commitment.</p>
+<div><div class="lbl">Scenarios covered</div><ul class="sc"><li>Married, with or without children</li><li>A settlement range that moves with the answers</li><li>Things to watch, such as pensions, housing and maintenance</li><li>Routes onward to choosing a plan</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> go back to the interview, change an answer and watch the range move.</span><a class="go" href="Proto 03 · Playback.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">03</span><span class="bk">The other side</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Playback<small>Open edges: what’s not covered yet</small></h3>
+<div class="bg">
+<div><div class="lbl">Scenarios not yet covered</div><ul class="ol"><li>Bad news: less than they hoped for</li><li>“There’s nothing much to split”</li><li>Needs-led cases where housing the children outweighs everything</li><li>Wide ranges from complex pensions</li><li>What Mark would see if he did it too</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>How do we show uncertainty without weakening confidence?</li><li><b class="q ux">UX</b>Will people screenshot it and send it to their ex? Should we design for that?</li><li><b class="q biz">Business</b>Is playback free for good, or the start of the paywall?</li><li><b class="q biz">Business</b>What’s our liability if the range turns out wrong?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>How the range is calculated, and who signs it off legally</li><li>How strong the disclaimer is, and where it sits</li><li>Recalibrating the range against real outcomes over time</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>A transparent rules-based range, with its assumptions shown, beats an AI “black box” on trust</p></div><div><small>We’ll test it with</small><p>Show both versions to matched groups</p></div><div><small>We’re right if</small><p>≥70% rate it credible and choose a plan in the session</p></div></div></div>
+</div>
+</div></article>
+
+<article class="card rv" id="p04" style="--t1:#F3EEFE;--t2:#FAFAF7"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="Proto 04 · Sign-up.html"><div class="fr"><img src="atlas/hub/p04.png" alt="Sign-up — three plans" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">04</span><span class="pill ph1">Begin</span><span class="pill live">Built</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Open edges</button></div>
+<h3>Sign-up<small>Plan, pay, account</small></h3>
+<p class="d">One fair price, split between you. Three plans, a clear &ldquo;just right&rdquo; middle option, and the choice to split the cost with your partner.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Plan</span><i>→</i><span>Pay</span><i>→</i><span>Account</span><i>→</i><span>Done</span></div></div>
+<div><div class="lbl">Scenarios covered</div><ul class="sc"><li>Your picture £99 · Guided settlement £499 · Complete &amp; filed £999</li><li>Pay in full, or split it so your partner pays their half</li><li>Upgrade later and pay only the difference</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> switch on &ldquo;We&rsquo;ll split it&rdquo; to see the partner payment note.</span><a class="go" href="Proto 04 · Sign-up.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">04</span><span class="bk">The other side</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Sign-up<small>Open edges: what’s not covered yet</small></h3>
+<div class="bg">
+<div><div class="lbl">Scenarios not yet covered</div><ul class="ol"><li>Split payment where the partner never pays</li><li>The partner pays, then refuses to go on: refunds</li><li>Low income: instalments or a reduced fee</li><li>One on £99, the other on £499</li><li>An employer or family member paying</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Do three plans help, or stall the decision?</li><li><b class="q ux">UX</b>Is “split it” a relief, or a negotiation on day one?</li><li><b class="q biz">Business</b>Where’s the price ceiling: £399, £499 or £599?</li><li><b class="q biz">Business</b>When is value “delivered” for refunds?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Account model: one account per person, or one case shared by two?</li><li>When to check identity: at sign-up, or before signing?</li><li>Who owns the case if only one of them paid</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>One recommended plan at £499 converts better than three equal choices</p></div><div><small>We’ll test it with</small><p>Price and layout tests on the plan page</p></div><div><small>We’re right if</small><p>≥40% choose Guided; split-payment completion ≥70%</p></div></div></div>
+</div>
+</div></article>
+
+<article class="card rv" id="p05" style="--t1:#EFE6FB;--t2:#F6F4F2"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="Proto 05 · Onboard.html"><div class="fr"><img src="atlas/hub/p05.png" alt="Onboard — welcome and bank connection" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">05</span><span class="pill ph1">Begin</span><span class="pill live">Built</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Open edges</button></div>
+<h3>Onboard<small>Day one · shown once</small></h3>
+<p class="d">Connect a bank through Open Banking and watch your financial picture draft itself from real transactions. Then a short tour of what&rsquo;s ahead.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Welcome</span><i>→</i><span>Connect your bank</span><i>→</i><span>First steps</span><i>→</i><span>Welcome tour</span></div></div>
+<div><div class="lbl">Scenarios covered</div><ul class="sc"><li>Bank connected, with 1,284 transactions sorted automatically</li><li>First-steps checklist, inside and outside Decouple</li><li>Four-phase tour ending on the first dashboard</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> this is the only first-time-only stage. Returning users go to the dashboard instead.</span><a class="go" href="Proto 05 · Onboard.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">05</span><span class="bk">The other side</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Onboard<small>Open edges: what’s not covered yet</small></h3>
+<div class="bg">
+<div><div class="lbl">Scenarios not yet covered</div><ul class="ol"><li>Won’t connect a bank, or the bank isn’t supported</li><li>Joint accounts: whose transactions are they?</li><li>Several banks, credit cards and savings apps</li><li>Business accounts</li><li>The person who isn’t the household’s money lead</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Does auto-sorting feel like magic, or like surveillance?</li><li><b class="q ux">UX</b>How much do people trust a third-party bank connection?</li><li><b class="q biz">Business</b>What does each connection cost, and with re-consent every 90 days?</li><li><b class="q biz">Business</b>Is bank connection a real speed gain, or a drop-off point?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>A manual route: uploaded statements, parsed for them</li><li>What we store, for how long, and who can see it</li><li>The first-steps checklist outside Decouple needs real content</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>Bank connection as an optional shortcut, not a gate, keeps more people moving</p></div><div><small>We’ll test it with</small><p>A/B test: required or optional connection</p></div><div><small>We’re right if</small><p>≥50% connect; the manual route takes no more than twice as long</p></div></div></div>
+</div>
+</div></article>
+
+<article class="card rv" id="p06" style="--t1:#E0F2FE;--t2:#F6F4F2"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="Proto 06 · Prepare.html"><div class="fr"><img src="atlas/hub/p06.png" alt="Prepare — your financial picture" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">06</span><span class="pill ph2">Prepare</span><span class="pill live">Built</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Open edges</button></div>
+<h3>Prepare<small>Your picture</small></h3>
+<p class="d">Each person builds their own financial picture in private, backed by evidence. Sharing it is the invitation: Mark joins when Sarah shares.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Setup</span><i>→</i><span>Income</span><i>→</i><span>Outgoings</span><i>→</i><span>Assets</span><i>→</i><span>Debts</span><i>→</i><span>Pensions</span><i>→</i><span>Share</span></div></div>
+<div><div class="lbl">Scenarios covered</div><ul class="sc"><li>Private and shared views of the same picture</li><li>Changes held back, then shared as v1, v2…</li><li>Evidence attached item by item</li><li>Questions raised from bank transactions (&ldquo;Is this your salary?&rdquo;)</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> edit a figure after sharing to see the &ldquo;Share updates&rdquo; count appear.</span><a class="go" href="Proto 06 · Prepare.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">06</span><span class="bk">The other side</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Prepare<small>Open edges: what’s not covered yet</small></h3>
+<div class="bg">
+<div><div class="lbl">Scenarios not yet covered</div><ul class="ol"><li>Hidden or undeclared assets</li><li>Crypto, shares and share options</li><li>Valuing a business</li><li>Inheritance and assets from before the marriage</li><li>Pension valuations that take months to arrive</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Does working in private make people feel safe, or tempt them to hide things?</li><li><b class="q ux">UX</b>How do we keep momentum through a three-month pension valuation wait?</li><li><b class="q biz">Business</b>Where do paid experts come in: valuers, pension reports? Partner revenue?</li><li><b class="q biz">Business</b>Will mediators accept our picture in place of Form E?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>What counts as enough evidence, item by item</li><li>What happens when one person stops halfway</li><li>What we say about the consequences of not disclosing</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>Guided, evidence-backed checklists get a full picture done without a professional</p></div><div><small>We’ll test it with</small><p>A concierge pilot with 10 real couples</p></div><div><small>We’re right if</small><p>Median time to share ≤14 days; ≥80% of items backed by evidence</p></div></div></div>
+</div>
+</div></article>
+
+<article class="card rv" id="p07" style="--t1:#E0F2FE;--t2:#FAFAF7"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="Proto 07 · Reconcile.html"><div class="fr"><img src="atlas/hub/p07.png" alt="Household — Mark's picture as shared" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">07</span><span class="pill ph2">Prepare</span><span class="pill live">Built</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Open edges</button></div>
+<h3>Household<small>Their picture &amp; ours</small></h3>
+<p class="d">Both pictures merge into one household view. Every item is agreed, queried or backed with evidence before anyone talks about how to split it. Truth first, negotiation second.</p>
+<div><div class="lbl">Scenarios covered</div><ul class="sc"><li>Waiting for Mark, from not yet opened to fully shared</li><li>Six item states: agreed, contested, unverified, gap, new, excluded</li><li>Accept, challenge or request evidence, item by item</li><li>A thread on each item, with the AI flagging only when something looks off</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> use Tweaks to simulate Mark sharing his picture.</span><a class="go" href="Proto 07 · Reconcile.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">07</span><span class="bk">The other side</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Household<small>Open edges: what’s not covered yet</small></h3>
+<div class="bg">
+<div><div class="lbl">Scenarios not yet covered</div><ul class="ol"><li>Mark never joins: what is Sarah’s route then?</li><li>Mark disputes almost everything</li><li>Pictures that differ wildly, suggesting something’s hidden</li><li>A new partner’s income or a shared home</li><li>Items that change mid-process: a bonus, a sale</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Does challenging item by item cool things down, or escalate them?</li><li><b class="q ux">UX</b>Do both sides see the AI flags as neutral?</li><li><b class="q biz">Business</b>Is a mediator hand-off, when things stall, a paid add-on?</li><li><b class="q biz">Business</b>What’s the realistic time to a fully agreed picture?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>A way out of deadlock, and when we suggest it</li><li>The legal fallback if one side won’t cooperate</li><li>Showing a “bigger gap” without it reading as an accusation</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>Agreeing the facts before talking about the split shortens negotiation</p></div><div><small>We’ll test it with</small><p>Measure rounds and days to agreement in pilot couples</p></div><div><small>We’re right if</small><p>≥60% reach an agreed household in three rounds or fewer</p></div></div></div>
+</div>
+</div></article>
+
+<article class="card rv" id="p08" style="--t1:#FCE7F3;--t2:#F6F4F2"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="Proto 08 · Settle.html"><div class="fr"><img src="atlas/hub/p08.png" alt="Settle — the agreed settlement" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">08</span><span class="pill ph3">Settle</span><span class="pill live">Built</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Open edges</button></div>
+<h3>Settle<small>Proposals &amp; versions</small></h3>
+<p class="d">The agreed household becomes a settlement. Each round is a numbered version; each section is accepted, countered or discussed until both versions match. Then both sign.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Your proposal</span><i>→</i><span>Mark&rsquo;s counter</span><i>→</i><span>Your reply</span><i>→</i><span>Agreement</span><i>→</i><span>Sign</span></div></div>
+<div><div class="lbl">Scenarios covered</div><ul class="sc"><li>Seven decisions, from the children to spousal maintenance</li><li>Each option tagged Strong, Reasonable or A stretch for a court</li><li>Withdraw an unopened version, recall, or reverse after signing</li><li>Agreement as a legal sheet, signed by drawing, uploading or typing</li><li>AI advisor check, plus a Word copy to send a solicitor</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Tweaks → &ldquo;Agreed — ready to sign&rdquo; jumps straight to the signing moment.</span><a class="go" href="Proto 08 · Settle.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">08</span><span class="bk">The other side</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Settle<small>Open edges: what’s not covered yet</small></h3>
+<div class="bg">
+<div><div class="lbl">Scenarios not yet covered</div><ul class="ol"><li>Deadlock after several rounds</li><li>Mediation and the MIAM requirement</li><li>Child arrangements, which sit outside the financial order</li><li>Pension sharing against offsetting, in depth</li><li>Pressure: one side agreeing just to make it stop</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Will court tags be used as weapons: “the app says I’m right”?</li><li><b class="q ux">UX</b>Do sliders feel too much like a game for serious money?</li><li><b class="q biz">Business</b>Is the AI advisor giving regulated legal advice?</li><li><b class="q biz">Business</b>Do we sell an independent solicitor review for each side?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Spotting coercion, or a settlement that’s unrealistically one-sided</li><li>How we hand over to a mediator mid-negotiation</li><li>What happens when circumstances change after signing</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>Versioned proposals with court tags get couples to a signed agreement without a professional</p></div><div><small>We’ll test it with</small><p>Pilot couples with an optional review from a solicitor</p></div><div><small>We’re right if</small><p>≥50% sign; few changes asked for by the reviewing solicitor</p></div></div></div>
+</div>
+</div></article>
+
+<article class="card rv" id="p09" style="--t1:#D1FAE5;--t2:#F6F4F2"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="Proto 09 · Finalise.html"><div class="fr"><img src="atlas/hub/p09.png" alt="Finalise — order approved, court tracker" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">09</span><span class="pill ph4">Finalise</span><span class="pill live">Built</span><span class="pill rev">In review</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Open edges</button></div>
+<h3>Finalise<small>Documents, signing &amp; filing</small></h3>
+<p class="d">The signed agreement becomes the court pack: Form A, the consent order, Form D81 and pension annex Form P1. Both edit and sign it together, run checks, then file and track it to a sealed order.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Your details</span><i>→</i><span>Generate</span><i>→</i><span>Your documents</span><i>→</i><span>Pre-flight</span><i>→</i><span>File</span><i>→</i><span>Track</span></div></div>
+<div><div class="lbl">Scenarios covered</div><ul class="sc"><li>Plan check and upgrade for Guided users</li><li>Editing together, with tracked changes and live presence</li><li>Each document signed once its own changes are settled</li><li>&ldquo;View as Mark&rdquo;: the co-signer&rsquo;s side</li><li>File it yourself, or our partner solicitor files it (+£199)</li><li>Live tracker: filed → with a judge → sealed → in effect</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Tweaks → View as Mark, then &ldquo;Simulate court&rdquo; on the tracker.</span><a class="go" href="Proto 09 · Finalise.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">09</span><span class="bk">The other side</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Finalise<small>Open edges: what’s not covered yet</small></h3>
+<div class="bg">
+<div><div class="lbl">Scenarios not yet covered</div><ul class="ol"><li>The court rejects the order, or asks questions</li><li>The divorce itself: conditional and final order timing</li><li>A judge calls a hearing</li><li>The pension provider is slow with Form P1</li><li>Carrying out the order: moving the house, sharing the pension</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Do people grasp that the consent order is separate from the divorce?</li><li><b class="q ux">UX</b>Is co-editing calm for both, or a fresh point of conflict?</li><li><b class="q biz">Business</b>Do the economics of a £199 partner-solicitor filing work?</li><li><b class="q biz">Business</b>Can a non-solicitor platform file through the court’s online portal?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Is the divorce application in scope, or not?</li><li>Life after the seal: an implementation checklist</li><li>Who answers when a court queries the order</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>Generated packs get through first time as often as solicitor-drafted ones</p></div><div><small>We’ll test it with</small><p>File a first batch through the partner solicitor and track outcomes</p></div><div><small>We’re right if</small><p>≥85% approved without a query</p></div></div></div>
+</div>
+</div></article>
+
+<article class="card rv" id="p10" style="--t1:#EFE6FB;--t2:#FAFAF7"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="Proto 10 · Dashboard.html"><div class="fr"><img src="atlas/hub/p10.png" alt="Dashboard — welcome back" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">10</span><span class="pill ph5">All phases</span><span class="pill live">Built</span><span class="pill rev">In review</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Open edges</button></div>
+<h3>Dashboard<small>Your home base</small></h3>
+<p class="d">Where you land when you come back. One clear next step, what&rsquo;s waiting on the other person, and everything you&rsquo;ve done so far, whatever stage you&rsquo;re at.</p>
+<div><div class="lbl">Scenarios covered</div><ul class="sc"><li>&ldquo;Welcome back&rdquo; with one action that fits your stage</li><li>Waiting on Mark, with a nudge after three days</li><li>To-dos by priority, with a short &ldquo;why&rdquo; on each</li><li>Evidence vault that flags out-of-date documents</li><li>Journal and AI companion, with safety prompts</li><li>Guides, account, billing and notifications</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Tweaks → Stage switches the dashboard between phases; Layout switches Full and Lean.</span><a class="go" href="Proto 10 · Dashboard.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">10</span><span class="bk">The other side</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Dashboard<small>Open edges: what’s not covered yet</small></h3>
+<div class="bg">
+<div><div class="lbl">Scenarios not yet covered</div><ul class="ol"><li>Coming back after three months away</li><li>Life after the order: reminders for maintenance and transfers</li><li>A bad day: arriving upset or in crisis</li><li>A shared or monitored device</li><li>Too many notifications</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Does one next action help more than seeing overall progress?</li><li><b class="q ux">UX</b>Are the journal and AI companion wanted, or intrusive?</li><li><b class="q biz">Business</b>Is there a product after the order: maintenance tracking, a subscription?</li><li><b class="q biz">Business</b>Which nudges bring stalled users back?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Closing the account, exporting data and how long we keep it</li><li>Being logged in on a shared device</li><li>How the dashboard reads for Mark, not just Sarah</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>A lean dashboard with one clear next action reduces stalls</p></div><div><small>We’ll test it with</small><p>Compare Full and Lean with returning testers</p></div><div><small>We’re right if</small><p>≥70% come back within 7 days of a nudge</p></div></div></div>
+</div>
+</div></article>
+
+</div>
+</div>
+</section>
+
+<section class="dark" id="next">
+<div class="wrap">
+<div class="sh rv"><div><div class="kick">Still to build</div><h2>What&rsquo;s next on <em>the map.</em></h2></div><p>Sarah&rsquo;s side is complete end to end. The next work is Mark&rsquo;s own experience, phone-first use, and the edge cases that matter most in real separations.</p></div>
+<div class="tb rv">
+<div class="tc big"><div class="meta"><span class="num">11</span><span class="pill">Planned · decisions needed</span></div><h4>Co-signer: Mark&rsquo;s own journey</h4><p>Being invited into something your ex started is a different experience. A neutral invite, a clear landing, and the same documents, so he can check, correct and sign with confidence.</p><div class="steps"><span>Invite</span><span>Landing</span><span>Identity check</span><span>Confirm details</span><span>Documents</span><span>Sign</span><span>Waiting room</span><span>Sealed order</span></div></div>
+<div class="tc"><span class="num">12</span><h4>Phone-first pass</h4><p>The whole journey at 375px. Mark may only ever use a phone, so editing and signing must work there.</p></div>
+<div class="tc"><span class="num">13</span><h4>Splitting the cost</h4><p>How the partner pays their half, what stays locked until they do, and refunds.</p></div>
+<div class="tc"><span class="num">14</span><h4>Safeguarding private mode</h4><p>For cases involving abuse, turn off live presence, cursors and &ldquo;Sarah is viewing&rdquo; for that case.</p></div>
+<div class="tc"><span class="num">15</span><h4>Court queries &amp; final order</h4><p>What happens when a judge asks a question, applying for the final order, then closing and archiving the account.</p></div>
+</div>
+</div>
+</section>
+
+<section id="decide">
+<div class="wrap">
+<div class="sh rv"><div><div class="kick">Open decisions</div><h2>Calls still <em>to make.</em></h2></div><p>Each has a working recommendation. Several depend on legal input before launch.</p></div>
+<div class="dl rv">
+<div class="dr"><span class="ix">D1</span><div><h4>Full or Lean dashboard as the default?</h4><div class="where">Proto 10</div><div class="rec"><b>Lean</b>Fewer blocks, and the next action stays obvious. Keep Full for users with a lot on.</div></div></div>
+<div class="dr"><span class="ix">D2</span><div><h4>Do Mark&rsquo;s corrections apply straight away, or does Sarah approve them?</h4><div class="where">Proto 09 · 11</div><div class="rec"><b>Split</b>His own facts apply straight away with a notice. Anything touching Sarah&rsquo;s facts or the terms goes through suggestions.</div></div></div>
+<div class="dr"><span class="ix">D3</span><div><h4>Does the co-signer need a paid plan?</h4><div class="where">Proto 04 · 11</div><div class="rec"><b>Free</b>Free as a co-signer. Charge only if he wants his own legal review.</div></div></div>
+<div class="dr"><span class="ix">D4</span><div><h4>Who chooses between filing it yourself and having us file it?</h4><div class="where">Proto 09</div><div class="rec"><b>Applicant</b>Sarah chooses; Mark is told and can raise a concern.</div></div></div>
+<div class="dr"><span class="ix">D5</span><div><h4>How strong does an e-signature need to be?</h4><div class="where">Proto 08 · 09</div><div class="rec lg"><b>Legal check</b>Confirm what HMCTS accepts for consent orders and D81 statements of truth.</div></div></div>
+<div class="dr"><span class="ix">D6</span><div><h4>Should Mark be prompted to get independent advice?</h4><div class="where">Proto 11</div><div class="rec"><b>Yes</b>A gentle prompt, and a record of &ldquo;had advice&rdquo; or &ldquo;chose not to&rdquo;.</div></div></div>
+<div class="dr"><span class="ix">D7</span><div><h4>How much of Sarah&rsquo;s workspace does Mark see?</h4><div class="where">Proto 11</div><div class="rec"><b>Minimal</b>The agreed proposal history and the documents only. Never her notes, journal or plan.</div></div></div>
+<div class="dr"><span class="ix">D8</span><div><h4>Legal sign-off on guidance and AI</h4><div class="where">Protos 08 · 10</div><div class="rec lg"><b>Legal check</b>Guide copy, the AI companion and advisor rules, safety triggers, and the evidence expiry thresholds (3, 6 and 12 months).</div></div></div>
+</div>
+</div>
+</section>
+
+<section id="test" style="padding-top:0">
+<div class="wrap">
+<div class="sh rv"><div><div class="kick">What we&rsquo;ll test</div><h2>The riskiest assumptions, <em>first.</em></h2></div><p>Moderated sessions with people mid-separation, ordered by how much the business depends on each answer.</p></div>
+<div class="tests rv">
+<div class="tt"><span class="where">03 Playback</span><h4>Do people trust a first read from a free interview?</h4><p>If the likely range feels credible, the move from free to paid follows. If it feels like a guess, nothing downstream matters.</p><div class="sig"><b>Signal</b>Plan chosen within the session; people say it &ldquo;sounds like us&rdquo;</div></div>
+<div class="tt"><span class="where">06 Prepare</span><h4>Will people share first, knowing it invites their ex?</h4><p>Sharing your picture is the invitation. That&rsquo;s elegant, but it&rsquo;s also the most exposed moment in the product.</p><div class="sig"><b>Signal</b>Share rate and time to share; held-back items per share</div></div>
+<div class="tt"><span class="where">08 Settle</span><h4>Do the court tags guide people without feeling like judgement?</h4><p>&ldquo;A stretch&rdquo; should move people towards outcomes a court will approve, without anyone feeling told off.</p><div class="sig"><b>Signal</b>Stretch options chosen less often; tone rated neutral or better</div></div>
+<div class="tt"><span class="where">08 Settle</span><h4>Do versions make negotiating feel calmer than email?</h4><p>Numbered rounds, a visible gap that&rsquo;s closing, and only the changed sections to answer.</p><div class="sig"><b>Signal</b>Rounds to agreement; people can explain where they are</div></div>
+<div class="tt"><span class="where">08 · 09</span><h4>Do people understand what signing locks?</h4><p>Signing has real consequences. People should feel sure of it, not rushed.</p><div class="sig"><b>Signal</b>Can say what changes after signing; few reversal requests</div></div>
+<div class="tt"><span class="where">08 · 10</span><h4>Is the AI trusted, but not mistaken for a lawyer?</h4><p>The advisor and companion should feel useful and safe, and make clear when to get professional help.</p><div class="sig"><b>Signal</b>Questions asked; people describe it as &ldquo;guidance&rdquo;</div></div>
+<div class="tt"><span class="where">All</span><h4>Can someone leave in under two seconds?</h4><p>Quick exit and safety help must be findable at once, on every screen and every device.</p><div class="sig"><b>Signal</b>Time to exit; found without being prompted</div></div>
+<div class="tt"><span class="where">09 Finalise</span><h4>Does the Finalise upgrade feel fair?</h4><p>Guided users pay the difference to get court documents. It must read as the natural next step, not a trap.</p><div class="sig"><b>Signal</b>Upgrade rate; price described as fair</div></div>
+</div>
+</div>
+</section>
+
+<section id="testing" style="padding-top:0">
+<div class="wrap">
+<div class="sh rv"><div><div class="kick">User testing mode</div><h2>Run a session in <em>three steps.</em></h2></div><p>With testing mode on, the end of each prototype opens a short check-in: a recap, the data carried into the next prototype, a few questions and optional feedback. Then it moves on. The questions come from a Google Sheet, so you can change them without touching code.</p></div>
+<div class="ut rv">
+<div class="utp dk">
+<div class="utrow"><div><b>Testing mode</b><small>On this device. Participants get it from their link.</small></div><button class="big-sw" id="utsw" type="button" aria-pressed="false" aria-label="Testing mode"><span class="sw"></span></button></div>
+<div><div class="utl">Participant link</div><div class="utlink"><input id="utlink" readonly aria-label="Participant link"><button class="btn sm" id="utcopy" type="button">Copy</button></div></div>
+<div class="utst"><div><small>Questions</small><b id="utsrc">Built-in</b></div><div><small>Google Form</small><b id="utform">Not set</b></div><div><small>Saved here</small><b id="utn">0 answers</b></div></div>
+<div class="utacts"><a class="btn sm" id="utstart" href="Proto 01 · Discover.html?test=1">Start a session</a><button class="ghost-d" id="utexp" type="button">Export answers (CSV)</button><button class="ghost-d" id="utnew" type="button">New participant</button></div>
+</div>
+<div class="utp">
+<ol class="steps">
+<li><div><h4>Questions: a Google Sheet</h4><p>Import the template into Google Sheets. Then File › Share › Publish to web, choose the sheet, pick <b>Comma-separated values (.csv)</b> and paste the link here. Each row is one recap line or question. Types: <code>recap</code>, <code>rating5</code>, <code>ease7</code>, <code>choice</code>, <code>yesno</code>, <code>task</code>.</p><div class="utf"><input id="utsheet" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv" aria-label="Published sheet CSV link"><button id="utsheetb" type="button">Save</button></div><div class="utmsg" id="utsheetm"></div><button class="tiny" id="uttpl" type="button">Download the question template (CSV)</button></div></li>
+<li><div><h4>Answers: a Google Form</h4><p>Create a form with these nine short-answer questions, in any order. Then ⋮ › <b>Get pre-filled link</b>, type each code shown into its question, click Get link, and paste it here.</p><div class="fl"><span>Session ID<code>SID</code></span><span>Participant<code>PID</code></span><span>Prototype<code>PROTO</code></span><span>Question ID<code>QID</code></span><span>Question<code>QUESTION</code></span><span>Type<code>TYPE</code></span><span>Answer<code>ANSWER</code></span><span>Submitted at<code>TIME</code></span><span>Device<code>DEVICE</code></span></div><div class="utf"><input id="utfm" placeholder="https://docs.google.com/forms/d/e/…/viewform?usp=pp_url&amp;entry.…" aria-label="Pre-filled form link"><button id="utfmb" type="button">Save</button></div><div class="utmsg" id="utfmm"></div></div></li>
+<li><div><h4>Send the participant link</h4><p>It switches testing mode on, carries your sheet and form settings, and asks for a participant ID at the start. Answers go to the form and are also saved in the participant's browser.</p></div></li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+
+<footer>
+<div class="wrap">
+<div><span class="wm">Decouple<i>.</i></span><p>Prototype hub, October 2026. Prototypes use a fictional couple and simulated partner, court and bank responses. Legal wording, court-reasonableness ratings and AI guidance are placeholders pending legal review.</p></div>
+<a class="btn ink" href="Proto 01 · Discover.html">Start the journey<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+</div>
+</footer>
+<script>
+(function(){var els=document.querySelectorAll('.rv');if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;}var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{rootMargin:'0px 0px -8% 0px'});els.forEach(function(e){io.observe(e)});setTimeout(function(){els.forEach(function(e){e.classList.add('in')})},2500);})();
+</script>
+<script>
+(function(){var cards=[].slice.call(document.querySelectorAll('.card')),seg=[].slice.call(document.querySelectorAll('.seg button'));
+function set(c,on){c.classList.toggle('flipped',on);c.querySelector('.front').setAttribute('aria-hidden',on);c.querySelector('.back').setAttribute('aria-hidden',!on)}
+function sync(){var n=cards.filter(function(c){return c.classList.contains('flipped')}).length;seg[0].classList.toggle('on',n===0);seg[1].classList.toggle('on',n===cards.length)}
+cards.forEach(function(c){c.querySelectorAll('.flipb').forEach(function(b){b.addEventListener('click',function(){set(c,!c.classList.contains('flipped'));sync()})})});
+seg.forEach(function(b){b.addEventListener('click',function(){var on=b.dataset.side==='1';cards.forEach(function(c){set(c,on)});sync()})});})();
+</script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script>
+(function(){var U=window.UT,$=function(i){return document.getElementById(i)};
+function dl(name,text){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;document.body.appendChild(a);a.click();a.remove();}
+function render(){var s=U.get(),on=!!s.on;[$('ttg'),$('utsw')].forEach(function(b){b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
+$('utlink').value=U.participantLink('Proto 01 · Discover.html');$('utstart').href=$('utlink').value;$('utsrc').textContent=s.sheet||U.defaults.SHEET_CSV?'Google Sheet':'Built-in';var fm=U.formMap();$('utform').textContent=fm&&Object.keys(fm.m).length?Object.keys(fm.m).length+' fields':'Not set';$('utform').className=fm&&Object.keys(fm.m).length?'ok':'';
+var n=(s.local||[]).length;$('utn').textContent=n+' answer'+(n===1?'':'s');if(document.activeElement!==$('utsheet'))$('utsheet').value=s.sheet||'';if(document.activeElement!==$('utfm'))$('utfm').value=s.form||U.defaults.FORM_PREFILL||'';}
+function tog(){U.setOn(!U.on())}$('ttg').onclick=tog;$('utsw').onclick=tog;
+$('utcopy').onclick=function(){var i=$('utlink');i.select();(navigator.clipboard?navigator.clipboard.writeText(i.value):Promise.reject()).catch(function(){document.execCommand('copy')});this.textContent='Copied';var t=this;setTimeout(function(){t.textContent='Copy'},1600)};
+$('utexp').onclick=function(){dl('Decouple testing answers.csv',U.exportCSV())};
+$('utnew').onclick=function(){U.newSession();this.textContent='Cleared: next start asks for an ID';var t=this;setTimeout(function(){t.textContent='New participant'},2200)};
+$('uttpl').onclick=function(){dl('Decouple testing questions.csv',U.defaults.CSV)};
+$('utsheetb').onclick=async function(){var v=$('utsheet').value.trim(),m=$('utsheetm');U.set({sheet:v});if(!v){m.textContent='Using the built-in questions.';m.className='utmsg';return}m.textContent='Checking…';m.className='utmsg';var rows=await U.load();m.textContent=U.source()==='sheet'?'Connected: '+rows.filter(function(r){return r.type!=='recap'}).length+' questions found.':'Couldn\'t read that link. Check it\'s published as CSV. Using the built-in questions for now.';m.className='utmsg'+(U.source()==='sheet'?'':' bad')};
+$('utfmb').onclick=function(){var v=$('utfm').value.trim(),m=$('utfmm');U.set({form:v});var f=U.formMap(),need=['SID','PID','PROTO','QID','QUESTION','TYPE','ANSWER','TIME','DEVICE'];if(!v){m.textContent='Answers will only be saved in the browser.';m.className='utmsg';return}if(!f){m.textContent='That doesn\'t look like a Google Form link.';m.className='utmsg bad';return}var miss=need.filter(function(k){return !f.m[k]});m.textContent=miss.length?'Connected, but missing: '+miss.join(', ')+'. Those fields won\'t be sent.':'Connected: all nine fields found.';m.className='utmsg'+(miss.length?' bad':'')};
+U.subscribe(render);render();})();
+</script>
+</body>
+</html>

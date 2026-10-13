@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decouple — Marketing hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17141F;--sub:#57534E;--mute:#78716C;--line:#E7E3DC;--paper:#FAFAF7;--v:#5B21B6;--vl:#7C3AED;--vs:#F3EEFE;--grn:#047857;--amb:#B45309}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--v);text-decoration:none}a:hover{color:var(--vl)}
+em{font-style:italic;color:var(--vl)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.kick{font:600 11px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v)}
+.top{position:sticky;top:0;z-index:20;height:64px;display:flex;align-items:center;gap:24px;padding:0 32px;background:rgba(23,20,31,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.08);color:#FFF}
+.wm{font-weight:700;font-size:21px;letter-spacing:-.025em;color:#FFF}.wm i{font-style:normal;color:var(--vl)}
+.top nav{margin-left:auto;display:flex;gap:22px}.top nav a{color:rgba(255,255,255,.72);font-size:13px;font-weight:500}.top nav a:hover{color:#FFF}.top>.btn{flex-shrink:0;margin-left:12px}
+.btn{display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 20px;border-radius:999px;background:#FFF;color:var(--ink);font-size:13.5px;font-weight:600;white-space:nowrap;transition:transform .15s,background .15s}.btn:hover{color:var(--ink);background:#F3EEFE;transform:translateY(-1px)}.btn.sm{height:36px;padding:0 16px;font-size:12.5px}.btn svg,.go svg{width:14px;height:14px}
+.hero{position:relative;overflow:hidden;background:#17141F;color:#FFF;margin-top:-64px;padding:168px 0 96px}
+.hero:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 82% 10%,rgba(124,58,237,.38),transparent 60%),radial-gradient(ellipse 50% 60% at 6% 100%,rgba(4,120,87,.22),transparent 60%)}
+.hero:after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:22px 22px;mask-image:linear-gradient(180deg,#000,transparent 85%);-webkit-mask-image:linear-gradient(180deg,#000,transparent 85%)}
+.hero .wrap{position:relative;z-index:1}.hero .kick{color:#C4B5FD}
+.hero h1{font:400 clamp(44px,6.4vw,88px)/1.02 'Source Serif Pro',Georgia,serif;letter-spacing:-.025em;margin:20px 0 0;max-width:14ch;text-wrap:balance}.hero h1 em{color:#C4B5FD}
+.hero .lede{font-size:clamp(17px,1.6vw,20px);line-height:1.55;color:rgba(255,255,255,.74);max-width:58ch;margin:28px 0 0;text-wrap:pretty}
+.hero .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+.hero .ghost{display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:999px;border:1px solid rgba(255,255,255,.24);color:#FFF;font-size:13.5px;font-weight:500}.hero .ghost:hover{background:rgba(255,255,255,.08);color:#FFF}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:80px;border-top:1px solid rgba(255,255,255,.14)}
+.facts div{padding:22px 24px 0 0}.facts div+div{padding-left:24px;border-left:1px solid rgba(255,255,255,.14)}
+.facts b{display:block;font:400 40px/1 'Source Serif Pro',Georgia,serif;letter-spacing:-.02em}.facts span{display:block;margin-top:8px;font-size:13px;line-height:1.45;color:rgba(255,255,255,.6)}
+section{padding:112px 0}
+.sh{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:end;margin-bottom:56px}
+.sh h2{font:400 clamp(34px,4vw,52px)/1.06 'Source Serif Pro',Georgia,serif;letter-spacing:-.02em;margin:14px 0 0;text-wrap:balance}
+.sh p{margin:0;font-size:16px;line-height:1.6;color:var(--sub);max-width:52ch;text-wrap:pretty}
+.protos{display:grid;gap:28px}
+.pc{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);background:#FFF;border:1px solid var(--line);border-radius:24px;overflow:hidden;transition:box-shadow .25s}.pc:hover{box-shadow:0 24px 60px -24px rgba(40,20,80,.22)}
+.shot{position:relative;display:flex;flex-direction:column;justify-content:center;padding:32px;background:linear-gradient(160deg,var(--t1),var(--t2));overflow:hidden}
+.shot .fr{position:relative;border-radius:12px;overflow:hidden;background:#FFF;box-shadow:0 20px 50px -16px rgba(30,20,60,.35),0 0 0 1px rgba(30,20,60,.06);transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+.shot .fr:before{content:"";display:block;height:22px;background:#F4F2EE;border-bottom:1px solid #E7E3DC;background-image:radial-gradient(circle at 12px 11px,#D6D3D1 3.5px,transparent 4px),radial-gradient(circle at 26px 11px,#D6D3D1 3.5px,transparent 4px),radial-gradient(circle at 40px 11px,#D6D3D1 3.5px,transparent 4px)}
+.shot img{display:block;width:100%;height:auto}.pc:hover .shot .fr{transform:translateY(-6px)}
+.bd{padding:36px 40px 34px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.num{font:400 15px 'JetBrains Mono',monospace;color:var(--mute)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em}
+.pill.col{background:#D1FAE5;color:#065F46}.pill.rev{background:#FEF3C7;color:#92400E}
+.bd h3{font:400 38px/1.05 'Source Serif Pro',Georgia,serif;letter-spacing:-.02em;margin:0}.bd h3 small{display:block;margin-top:6px;font:500 14px Inter,sans-serif;letter-spacing:0;color:var(--mute)}
+.bd .d{margin:0;font-size:15px;line-height:1.6;color:#3F3A36;text-wrap:pretty}
+.lbl{font:600 10.5px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.flow{display:flex;flex-wrap:wrap;gap:4px 6px;font-size:12.5px}.flow span{padding:3px 8px;border-radius:6px;background:#F4F2EE}
+.sc{margin:0;padding:0;list-style:none;display:grid;gap:7px}.sc li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:9px;font-size:13.5px;line-height:1.45}
+.sc li:before{content:"";width:16px;height:16px;margin-top:1px;border-radius:99px;background:var(--vs) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 8.2l2.3 2.3 4.7-5' fill='none' stroke='%235B21B6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat}
+.ft{margin-top:auto;padding-top:18px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.tip{font-size:12px;color:var(--mute);line-height:1.45;max-width:36ch}.tip b{color:var(--sub);font-weight:600}
+.go{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink)}.go:hover{color:var(--v)}.go svg{transition:transform .2s}.go:hover svg{transform:translateX(3px)}
+.dark{background:#17141F;color:#FFF;position:relative;overflow:hidden}.dark:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 50% 60% at 100% 0%,rgba(124,58,237,.22),transparent 60%)}.dark .wrap{position:relative}.dark .kick{color:#C4B5FD}.dark .sh p{color:rgba(255,255,255,.66)}
+.tb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.tc{padding:24px;border-radius:18px;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.2);display:flex;flex-direction:column;gap:10px}
+.tc.big{grid-column:span 2;border-style:solid;background:linear-gradient(140deg,rgba(124,58,237,.22),rgba(255,255,255,.03))}
+.tc .num{color:rgba(255,255,255,.5)}.tc .meta{gap:8px}
+.tc h4{font:400 26px/1.15 'Source Serif Pro',Georgia,serif;margin:0;letter-spacing:-.01em}.tc p{margin:0;font-size:14px;line-height:1.55;color:rgba(255,255,255,.7);text-wrap:pretty}
+.tc .pill{background:rgba(255,255,255,.1);color:#E9DFFD}.tc .pill.g{background:rgba(110,231,183,.14);color:#6EE7B7}
+.tc .rat{margin-top:auto;padding-top:12px;border-top:1px solid rgba(255,255,255,.1);font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.8)}.tc .rat b{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#C4B5FD;margin-bottom:3px}
+footer{padding:64px 0 72px;border-top:1px solid var(--line)}footer .wrap{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap}footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:1.55;color:var(--mute);max-width:56ch}
+@media (max-width:1000px){.pc{grid-template-columns:1fr}.tb{grid-template-columns:1fr 1fr}.tc.big{grid-column:1/-1}.top nav{display:none}.top>.btn{margin-left:auto}}
+@media (max-width:720px){.wrap,.top{padding:0 20px}.sh{grid-template-columns:1fr;gap:16px}.facts{grid-template-columns:1fr 1fr}.facts div:nth-child(3){padding-left:0;border-left:0}.tb{grid-template-columns:1fr}.bd{padding:24px}.shot{padding:20px}section{padding:80px 0}.top>.btn{display:none}}
+</style>
+<script src="hub/hub-switch.js" defer></script>
+</head>
+<body>
+<header class="top">
+<a class="wm" href="#">Decouple<i>.</i></a><div data-hubsw="mkt" data-date="October 2026"></div>
+<nav><a href="#collateral">Collateral</a><a href="#experiments">Experiments</a></nav>
+<a class="btn sm" href="Marketing 01 · Holding Page.html">Open the holding page<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+</header>
+<div class="hero"><div class="wrap">
+<div class="kick">Marketing, validation and pre-build</div>
+<h1>Prove the demand <em>before</em> we build.</h1>
+<p class="lede">Everything we put in front of real people before the product exists: the public face of Decouple, low-cost fake doors that test our riskiest assumptions, and research with friendly participants.</p>
+<div class="acts"><a class="btn" href="Marketing 01 · Holding Page.html">Open the holding page<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a><a class="ghost" href="#experiments">See what’s planned</a></div>
+<div class="facts">
+<div><b>2</b><span>pieces of collateral: a holding page and a free divorce guide</span></div>
+<div><b>4</b><span>experiments planned, all buildable without a dev team</span></div>
+<div><b>3</b><span>riskiest assumptions: demand, price and both partners joining</span></div>
+<div><b>£0</b><span>build cost so far: AI-built pages and off-the-shelf tools</span></div>
+</div>
+</div></div>
+<section id="collateral"><div class="wrap">
+<div class="sh"><div><div class="kick">Collateral</div><h2>What the public sees.</h2></div><p>Each piece is something we publish or share: pages, ads, emails. Numbered in the order we make them.</p></div>
+<div class="protos">
+<article class="pc" style="--t1:#EDE7FB;--t2:#F7F4EE">
+<a class="shot" href="Marketing 01 · Holding Page.html"><div class="fr"><img src="atlas/hub/m01.png" alt="Decouple holding page"></div></a>
+<div class="bd">
+<div class="meta"><span class="num">M01</span><span class="pill col">Collateral</span><span class="pill rev">Ready to go live</span></div>
+<h3>Holding page<small>Coming soon, on the new Decouple domain</small></h3>
+<p class="d">A single calm page: what Decouple is, who it’s for, and a way to hear when it opens. It says enough to be credible without promising features or prices we haven’t tested.</p>
+<div><div class="lbl">What’s on it</div><ul class="sc"><li>One-line promise and a plain-English summary</li><li>Email sign-up with an optional “where are you right now?” question</li><li>Three short benefits: together, fair, official</li><li>“Not a law firm” line and the domestic abuse helpline</li></ul></div>
+<div><div class="lbl">What it tells us</div><div class="flow"><span>Sign-ups</span><span>Stage of separation</span><span>Traffic source (utm)</span><span>Professionals interested</span></div></div>
+<div class="ft"><span class="tip"><b>Before launch:</b> connect the sign-up form, add analytics, and check the domain’s privacy policy.</span><a class="go" href="Marketing 01 · Holding Page.html">Open the page<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</article>
+<article class="pc" style="--t1:#E8E2F7;--t2:#EEF5F1">
+<a class="shot" href="Marketing 02 · Divorce Guide.html?demo=1&amp;phase=guide"><div class="fr"><img src="atlas/hub/m02.png" alt="Your personalised divorce guide, chapter one"></div></a>
+<div class="bd">
+<div class="meta"><span class="num">M02</span><span class="pill col">Collateral + experiment</span><span class="pill rev">Ready for friendly testers</span></div>
+<h3>Your personalised divorce guide<small>Landing page, free tool, then a guide with the questions woven in</small></h3>
+<p class="d">A free tool for people trying to work out what to do next. It uses the same components as Protos 01–03. Each guide chapter explains what happens, then mentions what we’re building for that step and asks a few optional questions.</p>
+<div><div class="lbl">Landing, then interview (about 6 min)</div><div class="flow"><span>Landing: “Trying to work out what to do next?”</span><span>About you</span><span>Safety check</span><span>Children</span><span>Home and living</span><span>Money</span><span>Life and support</span><span>Where you both are</span><span>What matters</span></div></div>
+<div><div class="lbl">The guide, chapter by chapter</div><div class="flow"><span>Where you are and the journey in order</span><span>Financial picture and Form E</span><span>Children and parenting plan</span><span>The home</span><span>What’s fair</span><span>Reaching agreement</span><span>Making it legal</span><span>Looking after yourself</span><span>Packages, A/B priced</span><span>Partner, £100 spend, opt-ins</span><span>Full guide</span></div></div>
+<div><div class="lbl">Links</div><ul class="sc"><li>Participant: add <b>?pid=NAME</b> to tag their answers</li><li>Prices: A is £99 / £499 / £999 and B is £499 / £999 / £1,999, assigned at random. Force one with <b>?v=A</b> or <b>?v=B</b></li><li>Landing: five designs, A to E (chapters, first question, a letter, questions people ask, see your guide). Switch in Tweaks, or add <b>?landing=b</b> to a link, or <b>?landing=random</b> to rotate them</li><li>Answers go to the testing-mode Google Form, tagged PROTO “M02 Guide”. Safety answers and names are never sent.</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo:</b> ?demo=1&amp;phase=landing, guide or full shows Sarah’s example. Nothing is saved or sent. The first version is kept in Marketing 02 · Free Tool.html.</span><a class="go" href="Marketing 02 · Divorce Guide.html">Open the guide<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</article>
+</div>
+</div></section>
+<section class="dark" id="experiments"><div class="wrap">
+<div class="sh"><div><div class="kick">Experiments</div><h2>Next, the fake doors and research.</h2></div><p>Low-cost, low-risk tests we can build with AI tools. Each one targets a single assumption and has a clear pass mark agreed before it runs.</p></div>
+<div class="tb">
+<div class="tc big"><div class="meta"><span class="num">E01</span><span class="pill g">Fake door</span><span class="pill">Built as M02</span></div><h4>Free guide, with validation woven in</h4><p>A personalised divorce guide (Protos 01–03). Each chapter asks a few optional questions about features, routes and trust, then packages, price and whether their partner would take part.</p><div class="rat"><b>Tests</b>People want a credible first read, and will leave an email for it</div></div>
+<div class="tc"><div class="meta"><span class="num">E02</span><span class="pill g">Fake door</span><span class="pill">Planned</span></div><h4>Price and deposit</h4><p>Landing variants at three prices, each with a small refundable deposit through Stripe.</p><div class="rat"><b>Tests</b>Willingness to pay, and where the price ceiling is</div></div>
+<div class="tc"><div class="meta"><span class="num">E03</span><span class="pill g">Fake door</span><span class="pill">Planned</span></div><h4>Invite your partner</h4><p>After sign-up, an “invite your partner” step that sends a real email and logs whether it’s opened and accepted.</p><div class="rat"><b>Tests</b>Both partners will join, the biggest risk in the model</div></div>
+<div class="tc big"><div class="meta"><span class="num">R01</span><span class="pill">Research</span><span class="pill">Planned</span></div><h4>Questionnaires for friendly participants</h4><p>Short, private-link surveys for people who’ve been through separation, and for mediators and solicitors. They also recruit people for interviews and the concierge pilot.</p><div class="rat"><b>Tests</b>Where it hurts most today, what people paid, and who they trusted</div></div>
+</div>
+</div></section>
+<footer><div class="wrap"><div><span class="wm">Decouple<i>.</i></span><p>Marketing hub. Collateral and experiments run before the product is built. The journey itself lives in the Prototype hub.</p></div><a class="go" href="Decouple · Prototype Hub.html">Go to the Prototype hub<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div></footer>
+</body>
+</html>

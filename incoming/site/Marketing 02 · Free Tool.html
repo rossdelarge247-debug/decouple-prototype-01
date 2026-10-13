@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find your footing — a free guide from Decouple</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="m02/m02.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/playback/pb-engine.js"></script>
+<script src="m02/m02-data.js"></script>
+</head>
+<body>
+<header class="m-top"><a class="m-wm" href="?">Decouple<i>.</i></a><span class="m-tag">Free guide</span><button class="m-exit" type="button" onclick="location.replace('https://www.bbc.co.uk/weather')"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 3l6 6M9 3l-6 6"></path></svg>Leave quickly</button></header>
+<div id="root"></div>
+<script type="text/babel" src="m02/m02-ui.jsx"></script>
+<script type="text/babel" src="m02/m02-results.jsx"></script>
+<script type="text/babel">
+/* State in decouple.m02.v1 only. ?pid=NAME tags a participant, ?v=A|B forces the price set, ?demo=1 shows an example result (not saved, not sent). */
+const KEY = "decouple.m02.v1", qp = new URLSearchParams(location.search), DEMO = qp.get("demo") === "1";
+const EX = { safe: "safe", stage: "separated", status: "married", where: "ew", kids: "with", kids_live: "me", years: "10_20", home: "own_together", home_value: "500_1m", mortgage: "100_250", savings: "10_50", debt_total: "5_20", pen_me: "u50", pen_them: "50_200", inc_me: "25_50", inc_them: "50_100", comms: "tense", worries: ["home", "kids", "fair"] };
+function init() {
+  let s = {}; if (!DEMO) { try { s = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {} }
+  if (!s.sid) s.sid = "m02-" + Math.random().toString(36).slice(2, 8);
+  const v = (qp.get("v") || "").toUpperCase(); if (v === "A" || v === "B") s.v = v; if (!s.v) s.v = Math.random() < .5 ? "A" : "B";
+  if (qp.get("pid")) s.pid = qp.get("pid");
+  s.a = s.a || {}; s.phase = s.phase || "intro"; s.i = s.i || 0;
+  if (DEMO) { s.a = { ...EX }; s.phase = qp.get("phase") || "result"; }
+  return s;
+}
+function formMap() {
+  const u = (window.UT_DEFAULTS || {}).FORM_PREFILL; if (!u) return null;
+  try { const x = new URL(u), m = {}; x.searchParams.forEach((v, k) => { if (k.startsWith("entry.")) m[v.trim().toUpperCase()] = k; }); return { action: x.origin + x.pathname.replace(/\/(viewform|formResponse).*$/, "/formResponse"), m }; } catch (e) { return null; }
+}
+const label = (f, v) => {
+  if (v == null) return "";
+  const L = (k) => ((f.opts || []).find((o) => o[0] === k) || [k, k])[1];
+  if (Array.isArray(v)) return v.map(L).join("; ");
+  return f.opts ? L(v) : String(v);
+};
+function rowsFor(st, a, ver) {
+  const out = [], M = window.M02;
+  window.visFields(st, a).forEach((f) => {
+    const v = a[f.k], t = f.type || "one";
+    if (t === "feat") M.FEATURES.forEach(([id, n]) => out.push([`feat.${id}`, `Feature: ${n}`, t, ({ must: "Must have", nice: "Nice to have", no: "Not for me" })[(v || {})[id]] || ""]));
+    else if (t === "spend") M.FEATURES.forEach(([id, n]) => (v || {})[id] && out.push([`spend.${id}`, `£100 spend: ${n}`, t, "£" + v[id]]));
+    else if (t === "vw") [["cheap", "Too cheap"], ["bargain", "Bargain"], ["dear", "Getting expensive"], ["too", "Too expensive"]].forEach(([k, n]) => (v || {})[k] && out.push([`vw.${k}`, `Price (${a.tier || "guided"}): ${n}`, t, "£" + v[k]]));
+    else if (t === "tiers") { const i = M.TIERS.findIndex((x) => x.id === v); out.push(["tier", f.q, t, i < 0 ? "None of these" : `${M.TIERS[i].name} £${M.PRICES[ver][i]}`]); }
+    else if (t === "optin") { const o = v || {}; out.push(["optin", "Stay involved", t, ["launch", "chat", "pilot"].filter((k) => o[k]).join("; ") || "None"]); if (o.email) out.push(["optin.email", "Email", t, o.email.trim()]); }
+    else out.push([f.k, f.q, t, label(f, v)]);
+  });
+  return out;
+}
+
+function App() {
+  const [s, setS] = React.useState(init);
+  const up = (p) => setS((o) => { const n = { ...o, ...p }; if (!DEMO) localStorage.setItem(KEY, JSON.stringify(n)); return n; });
+  const M = window.M02;
+  const post = (sec, rows) => {
+    if (DEMO || !rows.length) return;
+    const F = formMap(), at = new Date().toISOString(), device = `${innerWidth}×${innerHeight}`;
+    if (!F) return;
+    rows.forEach(([qid, q, type, ans]) => {
+      const vals = { SID: s.sid, PID: s.pid || "anon", PROTO: `M02 Free tool · ${sec} · ${s.v}`, QID: "m02." + qid, QUESTION: q, TYPE: type, ANSWER: ans, TIME: at, DEVICE: device };
+      const b = new URLSearchParams(); Object.entries(F.m).forEach(([ph, k]) => { if (ph in vals) b.append(k, vals[ph]); });
+      fetch(F.action, { method: "POST", mode: "no-cors", body: b }).catch(() => {});
+    });
+  };
+  const ref = React.useRef(s); ref.current = s;
+  const set = (k, v) => setS((o) => { const n = { ...o, a: { ...o.a, [k]: v } }; if (!DEMO) localStorage.setItem(KEY, JSON.stringify(n)); return n; });
+  React.useEffect(() => { window.scrollTo(0, 0); }, [s.phase, s.i]);
+  const list = (s.phase === "survey" ? M.SURVEY : M.TOOL).filter((st) => window.visFields(st, s.a).length);
+  const go = (phase, i = 0) => up({ phase, i });
+
+  let body;
+  if (s.phase === "intro") body = <div className="m-main"><div className="m-intro m-step">
+    <div className="kick">A free, private guide from Decouple</div>
+    <h1>Separating? Find your <em>footing.</em></h1>
+    <p className="m-lede">The start is often the hardest part: too much advice, and no clear order to do things in. Answer a few questions and we’ll show you where you are, what happens next, and what it might mean for your money.</p>
+    <div className="m-get"><div className="m-lbl">What you’ll get</div><ul>
+      <li>Where you are now, and what has to happen next, in order</li>
+      <li>What you can do yourselves, and when to get help</li>
+      <li>A rough picture of how your finances might be split</li>
+      <li>Typical costs and timescales</li>
+      <li>What to do this week, and where to find support</li>
+    </ul></div>
+    <div className="m-start"><button type="button" className="m-btn" onClick={() => go("tool")}>{Object.keys(s.a).length ? "Carry on" : "Start"}<ArrowM /></button><div className="m-meta"><span>About 5 minutes</span><span>No account or name</span><span>Free</span></div></div>
+    <p className="m-fine">This is general guidance, not legal advice, and it’s based on the law in England and Wales. We keep your answers anonymous and use them to improve the guide.</p>
+  </div></div>;
+  else if (s.phase === "result") body = <div className="m-main wide"><ResultsM a={s.a} surveyDone={!!s.surveyDone} emailed={!!s.emailed}
+    onSurvey={() => { post("Opt", [["survey_start", "Started questionnaire", "event", "yes"]]); go("survey"); }}
+    onSkip={() => { post("Opt", [["survey_start", "Started questionnaire", "event", "no"]]); up({ surveyDone: "skipped" }); }}
+    onEmail={(e) => { post("Summary", [["summary_email", "Email me this summary", "email", e]]); up({ emailed: true }); }}
+    onRestart={() => up({ a: {}, phase: "intro", i: 0, emailed: false, surveyDone: false, sid: "m02-" + Math.random().toString(36).slice(2, 8) })} /></div>;
+  else if (s.phase === "thanks") body = <div className="m-main"><div className="m-thanks m-step">
+    <div className="kick">Thank you</div><h1>That really <em>helps.</em></h1>
+    <p className="m-lede">Your answers go straight into what we build next. If you know someone else going through a separation, this guide is free for them too.</p>
+    <div className="m-copy"><input readOnly value={location.origin + location.pathname} aria-label="Link to this guide" onFocus={(e) => e.target.select()} /><button type="button" className="m-btn" onClick={(e) => { navigator.clipboard && navigator.clipboard.writeText(location.origin + location.pathname); e.currentTarget.textContent = "Copied"; }}>Copy link</button></div>
+    <div className="m-start"><button type="button" className="m-btn lt" style={{ border: "1.5px solid var(--line)" }} onClick={() => go("result")}>Back to your summary</button></div>
+  </div></div>;
+  else {
+    const i = Math.min(s.i, list.length - 1), st = list[i], last = i === list.length - 1, sv = s.phase === "survey";
+    body = <div className="m-main"><StepM st={st} i={i} n={list.length} a={s.a} set={set} ver={s.v} last={last}
+      label={!sv && last ? "See my summary" : null}
+      onBack={() => i === 0 ? go(sv ? "result" : "intro") : up({ i: i - 1 })}
+      onNext={() => { const c = ref.current; post(sv ? "Questionnaire" : "Tool", rowsFor(st, c.a, c.v)); if (last) sv ? up({ phase: "thanks", i: 0, surveyDone: true }) : go("result"); else up({ i: i + 1 }); }} /></div>;
+  }
+  return body;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

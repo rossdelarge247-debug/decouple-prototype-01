@@ -10,11 +10,11 @@ For Claude Code. Written 13 Oct 2026, from the design project. The owner is Ross
 |---|---|---|
 | **Public** | Anyone | `/`: the M02 guide's landing page, or the M01 holding page (switchable). `/privacy`. |
 | **Testers** | Anyone with a tester code | Everything in the guide after the landing page. |
-| **Owner** | Ross, signed in | Prototype hub, Marketing hub, Results, Protos 01–10, and every other file. Plus the site switches. |
+| **Owner** | Ross, signed in | Prototype hub, Marketing hub, Results, Site settings, Protos 01–10, and every other file. |
 
 - The guide's landing page is public. Starting the guide needs a tester code, until the owner turns that off (`requireCode`). The page asks for the code; the server enforces it, because answers and email need a tester or owner session.
 - Holding mode only changes `/`, which then shows the holding page. `/guide` always serves the guide file, so emailed guide links keep working. Without a code, nobody can start the guide there while `requireCode` is on.
-- Discreet login: the login page is at `LOGIN_PATH` (default `/studio`) and nothing links to it. A private path requested without a session returns a plain **404**, never a redirect to the login page, so private pages don't reveal that they exist.
+- Discreet login: the login page is at `LOGIN_PATH` (default `/studio`) and nothing links to it. The one hidden way in: clicking the footer wordmark on the guide or the holding page three times goes to `/studio`, or to `/hub` if already signed in. A private path requested without a session returns a plain **404**, never a redirect to the login page, so private pages don't reveal that they exist.
 
 ## 2. Addresses
 
@@ -30,14 +30,16 @@ The files in `site/` keep their names, spaces and `·` included, because the pag
 | `/hub` | `Decouple · Prototype Hub.html` | Owner |
 | `/hub/marketing` | `Decouple · Marketing Hub.html` | Owner |
 | `/hub/results` | `Decouple · Results.html` | Owner |
+| `/hub/site` | `Decouple · Site Settings.html` (site settings: public mode, tester codes, test mode) | Owner |
 | `/p/01` … `/p/10` | `Proto 01 · Discover.html` … `Proto 10 · Dashboard.html` | Owner (testers too if `TESTERS_CAN_OPEN_PROTOS=true`) |
 
 ## 3. Sessions
 
 - Cookies: `dc_owner` and `dc_tester`. Each is httpOnly, Secure, SameSite=Lax, Path=/ and lasts 30 days. Optionally a `dc_human` cookie (24h) after a Turnstile check.
-- Value: `base64url(JSON{r, l, exp}).base64url(HMAC-SHA256)`, keyed with `SESSION_SECRET`. `r` is `"owner"`, `"tester"` or `"human"`. `l` is the tester code's label, which becomes the participant ID on every answer.
+- Value: `base64url(JSON{r, l, c, t, exp}).base64url(HMAC-SHA256)`, keyed with `SESSION_SECRET`. `r` is `"owner"`, `"tester"` or `"human"`. `l` is the tester code's label, which becomes the participant ID on every answer. `c` is the code itself, so that turning a code off ends its sessions: re-check `c` against the codes list on every `/api/answers` and `/api/session`. `t` = 1 for a **test code**.
+- **Testing** (sent as `testing` in `/api/session`) is true when the owner is signed in with `testMode` on, or the tester session came from a test code. While testing, `/api/answers` and `/api/signup` reply 200 `{ok:true, test:true}` and save nothing. `/api/email` still sends.
 - Owner password: compare against `OWNER_PASSWORD_HASH` (scrypt, with its salt stored alongside) using a constant-time compare. Wait about 800 ms on a failure. Add `npm run hash-password` to generate the hash.
-- Tester codes: the "Codes" tab of the sheet, with columns `code`, `label`, `active`, `expires`, read through the Google script (§6) and cached in memory for 5 minutes. `TESTER_CODES` (`CODE:label,CODE2:label2`) is a fallback when the script is unreachable. Codes don't depend on capitalisation.
+- Tester codes: the "Codes" tab of the sheet (§6), read through the Google script and cached in memory for 60 seconds. Clear the cache on any `/api/admin/codes` change. `TESTER_CODES` (`CODE:label,CODE2:label2`) is a fallback when the script is unreachable. Codes don't depend on capitalisation. A code works if `active` is true and `expires` is empty or today or later. Each successful redeem calls the script's `code_used`, which adds 1 to `uses` and sets `last_used`.
 
 ## 4. Middleware (`middleware.ts`, Vercel Routing Middleware, Node runtime)
 
@@ -47,7 +49,7 @@ For each request:
    - `LOGIN_PATH`, `/holding`, `/privacy`, `/favicon.ico`.
    - Every path in `dist/_public.json`, which the build generates (§5).
 2. **`/` or `/guide`:**
-   - Read the site settings from Edge Config (`mode`, `requireCode`), cached for 60 seconds per instance. Defaults: `{ mode: "holding", requireCode: true }`.
+   - Read the site settings from Edge Config (`mode`, `requireCode`, `testMode`), cached for 60 seconds per instance. Defaults: `{ mode: "holding", requireCode: true, testMode: false }`.
    - If `?code=` is present: check it (§3). If it's valid, set `dc_tester` and send a 302 to `/` with the code removed. If not, send a 302 to `/?code_error=1`.
    - At `/`: serve the guide when mode = guide, or the request has a tester or owner session. Otherwise serve the holding page. `/guide` always serves the guide.
    - The owner can preview with `/?view=holding` or `/?view=guide`.
@@ -82,13 +84,15 @@ Target: a Lighthouse mobile performance score of 90 or more for `/`.
 - **Tabs** are created with headers if they're missing:
   - `M02 Guide` and `Prototype testing`: `received_at, batch_key, sid, pid, test, step, price, landing, qid, qv, question, type, answer, device`
   - `Signups`: `received_at, email, stage, source, sid`
-  - `Codes`: `code, label, active, expires`
+  - `Codes`: `code, label, active, test, expires, created, uses, last_used`
   - `M02 Questions`: the header `id, section, type, label, helper, options, show_if, required, max, exclusive, placeholder, skip, version, active`. Ross imports `site/m02/guide/questions-template.csv` into it once; SETUP.md says how.
   - Any other `test` value gets its own tab, named after it.
 - **`doPost`, `kind: "answers"`:** take a `LockService` lock. Drop the batch if its `batch_key` was seen in the last 6 hours (CacheService). Otherwise append one row per answer to the test's tab. Return `{ok:true}`.
 - **`doPost`, `kind: "signup"`:** append the sign-up to `Signups`.
+- **`doPost`, `kind: "codes"`:** `op` is `create` (`codes:[{code,label,expires,test}]`; reject duplicates; sets `active` = TRUE, `created` = now, `uses` = 0), `update` (`code` plus any of `active`, `label`, `expires`, `test`), or `delete` (`code`; removes the row, but answers already given with it are kept). Returns the full list.
+- **`doPost`, `kind: "code_used"`:** `{code}` → adds 1 to `uses` and sets `last_used` to now.
 - **`doGet`:**
-  - `action=codes` → the active, unexpired codes.
+  - `action=codes` → every code, with all its columns. The API filters these for redeeming and shows the full list to the owner.
   - `action=questions` → the `M02 Questions` rows as objects.
   - `action=results&test=…&since=ISO` → the answer rows as objects, plus a signup summary `{count, byStage, byDay}`. **Email addresses are never returned.**
 - `SETUP.md` gives Ross a click-by-click setup: paste the code, set the secret, deploy, copy the URL into Vercel, and a test with curl.
@@ -100,7 +104,7 @@ All JSON. Reject any body over 64 KB.
 
 | Route | Who | In | Does | Out |
 |---|---|---|---|---|
-| `GET /api/session` | Anyone | — | Reads the cookies and site settings | `{owner, tester, human, label?, mode, requireCode, turnstileSiteKey}` |
+| `GET /api/session` | Anyone | — | Reads the cookies and site settings | `{owner, tester, human, testing, label?, mode, requireCode, turnstileSiteKey}` |
 | `POST /api/login` | Anyone | `{password}` | §3 | 200 and sets `dc_owner`, or 401 |
 | `POST /api/logout` | Anyone | — | Clears `dc_owner` and `dc_tester` | 200 |
 | `POST /api/tester` | Anyone | `{code}` | Checks the code (§3) | 200 `{label}` and sets `dc_tester`, or 404 |
@@ -109,7 +113,8 @@ All JSON. Reject any body over 64 KB.
 | `POST /api/signup` | Human | `{email, stage?, source, sid, hp}` | Checks the email, then sends `kind: "signup"`. Sources: `holding:<utm_source>`, `guide`, `guide-optin`. `stage` can be a `;` list. | 200, 400 or 403 |
 | `POST /api/email` | Same as `/api/answers` | `{email, link, sid}` | Sends the guide email (below) | 200, 400, 401 or 429 |
 | `GET /api/results` | Owner | `?test=&since=` | Passes the request to `action=results` | `{rows:[{sid,pid,test,step,price,landing,qid,qv,q,type,a,at,device}], signups}` |
-| `GET` and `POST /api/admin/site` | Owner | `{mode?: "guide"\|"holding", requireCode?: boolean}` | Reads or writes the Edge Config items through the Vercel REST API (`EDGE_CONFIG_ID`, `VERCEL_API_TOKEN`) | `{mode, requireCode}` |
+| `GET` and `POST /api/admin/site` | Owner | `{mode?: "guide"\|"holding", requireCode?: boolean, testMode?: boolean}` | Reads or writes the Edge Config items through the Vercel REST API (`EDGE_CONFIG_ID`, `VERCEL_API_TOKEN`) | `{mode, requireCode, testMode}` |
+| `GET` and `POST /api/admin/codes` | Owner | POST: `{action: "create", codes:[{code, label, expires, test}]}`, `{action: "update", code, active?, label?, expires?, test?}` or `{action: "delete", code}` | Passes the change to the script's `kind: "codes"` (GET reads `action=codes`). On create, check the format `^[A-Z]{2,6}-[A-Z]{2,6}-\d{2}$`, labels of 40 characters at most, and at most 20 codes per request. The page makes the code strings. | `{codes:[{code,label,active,test,expires,created,uses,last_used}]}` |
 | `POST /api/admin/publish` | Owner | — | Calls `DEPLOY_HOOK_URL`, which rebuilds and so picks up edited questions | `{ok}` |
 
 **Cleaning answers:**
@@ -158,7 +163,9 @@ The design project owns every other page. The client side of the API is `site/sh
 ## 11. Checks before merging (in the Vercel preview)
 
 1. Logged out: `/` shows the holding page, which is the default mode. `/hub`, `/hub/results` and `/Proto%2001%20%C2%B7%20Discover.html` all return 404. So do `/results/r-app.jsx` and `/proto/ut/ut.js`.
-2. Owner signs in at `/studio`, then `/hub`, `/hub/marketing`, `/hub/results` and every proto open with no failed requests in the console.
+2. Owner signs in at `/studio`, then `/hub`, `/hub/marketing`, `/hub/results`, `/hub/site` and every proto open with no failed requests in the console.
+   - Site settings: make a code, copy its link, open the link in a private window, start the guide, then turn the code off. Within a minute the next answer gets 401 and `/api/session` says `tester: false`.
+   - Turn test mode on, finish a guide step, and check the sheet gets no rows. Do the same with a test code.
 3. Owner sets mode = guide through `POST /api/admin/site`. Logged out, `/` now shows the guide's landing page with no failed requests. Every request it makes is in `_public.json`.
 4. `/?code=<valid>` sets `dc_tester` and redirects to `/`. An invalid code redirects to `/?code_error=1`.
 5. `/api/answers` without a session → 401. With one → the rows land in the right tab, and the blocked fields are stripped. Sending the same `batchKey` twice → one set of rows.
