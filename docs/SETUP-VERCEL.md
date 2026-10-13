@@ -16,8 +16,8 @@ Vercel renamed Edge Config to Global Config in 2026; the spec's "Edge Config" is
 1. Vercel › Storage › Create Database › **Global Config**. Name it `decouple-site`. Create.
 2. On the store's page: Connect Project › choose the project › Production and Preview › Connect. This adds `GLOBAL_CONFIG` to the project.
 3. Items tab › edit and paste: `{ "mode": "holding", "requireCode": true, "testMode": false }` › Save Items.
-4. Your avatar, top right › Account Settings › Tokens › Create Token: name `decouple-site settings`, scope: your team (`rossdelarge247-debug's projects`), expiry as you like. Copy it once, for `VERCEL_API_TOKEN`. It can act on the whole team, so it lives only in Vercel's environment variables.
-5. `VERCEL_TEAM_ID` = `team_Z76rAImaSJeB08jfbq6gIvGo` (Team Settings › General shows it). Vercel treats every account as a team, so the API needs it.
+4. Open https://vercel.com/account/tokens (the Tokens page of your personal account; the switcher at the top left must show your account, not the team). Create: name `decouple-site settings`, Scope: the team `rossdelarge247-debug's projects`, then the project `decouple-prototype-01`, expiry as you like. Copy the `vcp_…` value once, for `VERCEL_API_TOKEN`. It lives only in Vercel's environment variables.
+5. `VERCEL_TEAM_ID` = `team_Z76rAImaSJeB08jfbq6gIvGo`. With a team- or project-scoped token Vercel infers the team, so this is a belt-and-braces setting; with a full-account token it is required.
 6. `GLOBAL_CONFIG_ID` is optional: the site reads the store ID from the `GLOBAL_CONFIG` connection string the Connect step added.
 
 ## Deploy hook (Publish questions)
@@ -26,7 +26,7 @@ Vercel renamed Edge Config to Global Config in 2026; the spec's "Edge Config" is
 
 ## Environment variables
 
-Settings › Environment Variables, each for Production and Preview:
+https://vercel.com/rossdelarge247-debugs-projects/decouple-prototype-01/settings/environment-variables, each for Production and Preview:
 
 `SITE_ORIGIN` `https://decouple.uk` · `LOGIN_PATH` `/studio` · `OWNER_PASSWORD_HASH` from `npm run hash-password` · `SESSION_SECRET` from `openssl rand -hex 32` · `TESTER_CODES` (optional fallback) · `TESTERS_CAN_OPEN_PROTOS` `false` · `APPS_SCRIPT_URL` and `APPS_SCRIPT_SECRET` from `apps-script/SETUP.md` · `RESEND_API_KEY` · `MAIL_FROM` `Decouple <hello@decouple.uk>` · `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` from Cloudflare › Turnstile › Add widget (domain decouple.uk, managed mode) · `VERCEL_API_TOKEN` · `VERCEL_TEAM_ID` · `DEPLOY_HOOK_URL` (`GLOBAL_CONFIG` comes from the Connect step; `GLOBAL_CONFIG_ID` only if you prefer to set it by hand).
 
