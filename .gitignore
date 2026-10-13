@@ -1,5 +1,7 @@
 # Whole repository. The archived prototype carries its own .gitignore inside its folder.
 node_modules/
+dist/
+.dev/
 .next/
 out/
 build/
