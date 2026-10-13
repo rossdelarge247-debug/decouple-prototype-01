@@ -14,9 +14,9 @@ The project that serves decouple.uk is the one already connected to this reposit
 1. Vercel › Storage › Create Database › Edge Config. Name it `decouple-site`. Create.
 2. On the store's page: Connect Project › choose the project › Production and Preview › Connect. This adds `EDGE_CONFIG` to the project.
 3. Items tab › edit and paste: `{ "mode": "holding", "requireCode": true, "testMode": false }` › Save Items.
-4. Copy the store ID (starts with `ecfg_`) for `EDGE_CONFIG_ID`.
-5. Account › Settings › Tokens › Create: name `decouple-site settings`, scope the project, expiry as you like. Copy it for `VERCEL_API_TOKEN`.
-6. If the project is in a team, copy the team ID from Team Settings › General for `VERCEL_TEAM_ID`.
+4. Your avatar, top right › Account Settings › Tokens › Create Token: name `decouple-site settings`, scope: your team (`rossdelarge247-debug's projects`), expiry as you like. Copy it once, for `VERCEL_API_TOKEN`. It can act on the whole team, so it lives only in Vercel's environment variables.
+5. `VERCEL_TEAM_ID` = `team_Z76rAImaSJeB08jfbq6gIvGo` (Team Settings › General shows it). Vercel treats every account as a team, so the API needs it.
+6. `EDGE_CONFIG_ID` is optional: the site reads the store ID from the `EDGE_CONFIG` connection string the Connect step added.
 
 ## Deploy hook (Publish questions)
 
@@ -26,7 +26,7 @@ The project that serves decouple.uk is the one already connected to this reposit
 
 Settings › Environment Variables, each for Production and Preview:
 
-`SITE_ORIGIN` `https://decouple.uk` · `LOGIN_PATH` `/studio` · `OWNER_PASSWORD_HASH` from `npm run hash-password` · `SESSION_SECRET` from `openssl rand -hex 32` · `TESTER_CODES` (optional fallback) · `TESTERS_CAN_OPEN_PROTOS` `false` · `APPS_SCRIPT_URL` and `APPS_SCRIPT_SECRET` from `apps-script/SETUP.md` · `RESEND_API_KEY` · `MAIL_FROM` `Decouple <hello@decouple.uk>` · `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` from Cloudflare › Turnstile › Add widget (domain decouple.uk, managed mode) · `EDGE_CONFIG_ID` · `VERCEL_API_TOKEN` · `VERCEL_TEAM_ID` (team only) · `DEPLOY_HOOK_URL`.
+`SITE_ORIGIN` `https://decouple.uk` · `LOGIN_PATH` `/studio` · `OWNER_PASSWORD_HASH` from `npm run hash-password` · `SESSION_SECRET` from `openssl rand -hex 32` · `TESTER_CODES` (optional fallback) · `TESTERS_CAN_OPEN_PROTOS` `false` · `APPS_SCRIPT_URL` and `APPS_SCRIPT_SECRET` from `apps-script/SETUP.md` · `RESEND_API_KEY` · `MAIL_FROM` `Decouple <hello@decouple.uk>` · `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` from Cloudflare › Turnstile › Add widget (domain decouple.uk, managed mode) · `VERCEL_API_TOKEN` · `VERCEL_TEAM_ID` · `DEPLOY_HOOK_URL` (`EDGE_CONFIG_ID` only if you prefer to set it by hand).
 
 Then remove `TINK_CLIENT_ID`, `TINK_CLIENT_SECRET` and `ANTHROPIC_API_KEY` from Production, and rotate them at Tink and Anthropic: the app that used them is retired. Deployments › the latest › Redeploy, so the functions pick everything up.
 

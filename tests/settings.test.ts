@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { DEFAULTS, clearSettingsCache, normaliseSettings, parsePatch, readSettings, useSettingsReader } from '../lib/settings.js'
+import { DEFAULTS, clearSettingsCache, edgeConfigId, normaliseSettings, parsePatch, readSettings, useSettingsReader } from '../lib/settings.js'
 
 afterEach(() => useSettingsReader(null))
 
@@ -8,6 +8,13 @@ describe('site settings', () => {
     expect(normaliseSettings(null)).toEqual(DEFAULTS)
     expect(normaliseSettings({ mode: 'guide', requireCode: false, testMode: 'yes' })).toEqual({ mode: 'guide', requireCode: false, testMode: false })
     expect(normaliseSettings({ mode: 'other' }).mode).toBe('holding')
+  })
+
+  it('finds the store id in EDGE_CONFIG_ID or the connection string', () => {
+    expect(edgeConfigId({ EDGE_CONFIG_ID: 'ecfg_abc' })).toBe('ecfg_abc')
+    expect(edgeConfigId({ EDGE_CONFIG: 'https://edge-config.vercel.com/ecfg_xyz123?token=t' })).toBe('ecfg_xyz123')
+    expect(edgeConfigId({ EDGE_CONFIG: 'not a url' })).toBeNull()
+    expect(edgeConfigId({})).toBeNull()
   })
 
   it('validates a patch from the owner', () => {

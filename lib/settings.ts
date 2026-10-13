@@ -79,11 +79,23 @@ export async function readSettings(now: number = Date.now(), ttlMs: number = SET
   return value
 }
 
+/* The store's id, from EDGE_CONFIG_ID or from the connection string Vercel adds when the store is connected */
+export function edgeConfigId(e: Env = env()): string | null {
+  if (e.EDGE_CONFIG_ID) return e.EDGE_CONFIG_ID.trim()
+  if (!e.EDGE_CONFIG) return null
+  try {
+    const m = new URL(e.EDGE_CONFIG).pathname.match(/^\/(ecfg_[A-Za-z0-9]+)/)
+    return m ? m[1] : null
+  } catch {
+    return null
+  }
+}
+
 /* Upsert the changed keys in the Edge Config store, then return the merged settings */
 export async function writeSettings(patch: Partial<Settings>, e: Env = env()): Promise<Settings> {
-  const id = e.EDGE_CONFIG_ID
+  const id = edgeConfigId(e)
   const token = e.VERCEL_API_TOKEN
-  if (!id || !token) throw new Error('Edge Config writes are not configured (EDGE_CONFIG_ID, VERCEL_API_TOKEN).')
+  if (!id || !token) throw new Error('Edge Config writes are not configured: connect the store (EDGE_CONFIG) and set VERCEL_API_TOKEN.')
   const current = await readSettings()
   const next: Settings = { ...current, ...patch }
   const u = new URL(`https://api.vercel.com/v1/edge-config/${encodeURIComponent(id)}/items`)

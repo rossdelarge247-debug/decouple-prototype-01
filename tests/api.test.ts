@@ -194,12 +194,12 @@ describe('owner-only routes', () => {
 
   it('writes settings through the Vercel API when configured', async () => {
     const fetch = mockFetch(() => ({ status: 'ok' }))
-    Object.assign(process.env, { EDGE_CONFIG_ID: 'ecfg_1', VERCEL_API_TOKEN: 'tok' })
+    Object.assign(process.env, { EDGE_CONFIG: 'https://edge-config.vercel.com/ecfg_1?token=t', VERCEL_API_TOKEN: 'tok', VERCEL_TEAM_ID: 'team_9' })
     const owner = await cookieFor('owner')
     const r = await sitePost(post('/api/admin/site', { mode: 'guide', testMode: true }, owner))
     expect(await r.json()).toEqual({ mode: 'guide', requireCode: true, testMode: true })
     const [url, init] = fetch.mock.calls[0]
-    expect(String(url)).toBe('https://api.vercel.com/v1/edge-config/ecfg_1/items')
+    expect(String(url)).toBe('https://api.vercel.com/v1/edge-config/ecfg_1/items?teamId=team_9')
     expect(init?.method).toBe('PATCH')
     expect(JSON.parse(String(init?.body))).toEqual({ items: [{ operation: 'upsert', key: 'mode', value: 'guide' }, { operation: 'upsert', key: 'testMode', value: true }] })
   })
