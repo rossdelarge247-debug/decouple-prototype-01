@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decouple — coming soon</title>
+<meta name="description" content="Decouple helps separating couples in England and Wales agree their finances together and make it legally binding, for a fixed fee. Coming soon.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17141F;--sub:#57534E;--mute:#78716C;--line:#E7E3DC;--paper:#FAFAF7;--v:#5B21B6;--vl:#7C3AED;--vs:#F3EEFE;--grn:#047857}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--paper);color:var(--ink);font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;position:relative;overflow-x:hidden}
+body:before{content:"";position:absolute;top:-30vh;right:-20vw;width:80vw;height:90vh;background:radial-gradient(closest-side,rgba(124,58,237,.12),transparent);pointer-events:none}
+a{color:var(--v);text-decoration:underline;text-underline-offset:3px}a:hover{color:var(--vl)}
+.w{position:relative;width:100%;max-width:1080px;margin:0 auto;padding:0 32px}
+header{padding:28px 0}header .w{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.wm{font-weight:700;font-size:22px;letter-spacing:-.025em}.wm i{font-style:normal;color:var(--vl)}
+.soon{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 12px;border-radius:999px;background:#FFF;border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--sub)}.soon:before{content:"";width:7px;height:7px;border-radius:99px;background:var(--vl);box-shadow:0 0 0 3px var(--vs)}
+main{flex:1;display:flex;align-items:center;padding:56px 0 72px}
+.kick{font:600 11.5px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v)}
+h1{font:400 clamp(44px,7vw,84px)/1.02 'Source Serif Pro',Georgia,serif;letter-spacing:-.025em;margin:18px 0 0;max-width:15ch;text-wrap:balance}h1 em{font-style:italic;color:var(--vl)}
+.lede{margin:26px 0 0;max-width:54ch;font-size:clamp(17px,1.7vw,19px);line-height:1.6;color:var(--sub);text-wrap:pretty}
+form{margin-top:36px;max-width:560px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:6px;border-radius:999px;background:#FFF;border:1.5px solid var(--line);transition:border-color .15s,box-shadow .15s}.row:focus-within{border-color:var(--vl);box-shadow:0 0 0 4px var(--vs)}
+.row input{min-width:0;height:46px;padding:0 18px;border:0;background:none;font:15px Inter,sans-serif;color:var(--ink);outline:0}
+button{all:unset;cursor:pointer;height:46px;padding:0 22px;border-radius:999px;background:var(--ink);color:#FFF;font-size:14px;font-weight:600;text-align:center;transition:background .15s}button:hover{background:var(--v)}button:focus-visible{outline:2px solid var(--vl);outline-offset:2px}
+.stage{margin-top:16px}.stage legend{padding:0;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:10px}
+fieldset{border:0;margin:0;padding:0}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts label{cursor:pointer}.opts input{position:absolute;opacity:0;pointer-events:none}
+.opts span{display:inline-flex;align-items:center;min-height:36px;padding:6px 14px;border-radius:999px;background:#FFF;border:1px solid var(--line);font-size:13px;color:var(--sub);transition:.15s}.opts label:hover span{border-color:#C4B5FD;color:var(--ink)}
+.opts input:checked+span{background:var(--vs);border-color:var(--vl);color:var(--v);font-weight:600}.opts input:focus-visible+span{outline:2px solid var(--vl);outline-offset:2px}
+.fine{margin:14px 0 0;font-size:12.5px;line-height:1.5;color:var(--mute)}
+.err{margin:10px 0 0;font-size:13px;color:#B91C1C;min-height:0}
+.done{display:none;margin-top:36px;max-width:560px;padding:22px 24px;border-radius:18px;background:#FFF;border:1px solid var(--line)}.done b{display:block;font:600 22px 'Source Serif Pro',Georgia,serif}.done p{margin:6px 0 0;font-size:14.5px;line-height:1.55;color:var(--sub)}
+.sent form{display:none}.sent .done{display:block}
+.pts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;margin-top:80px;padding:0;list-style:none}
+.pts li{padding-top:18px;border-top:1px solid var(--line)}.pts b{display:block;font:600 19px/1.3 'Source Serif Pro',Georgia,serif}.pts p{margin:8px 0 0;font-size:14.5px;line-height:1.55;color:var(--sub);text-wrap:pretty}
+footer{border-top:1px solid var(--line);padding:24px 0 32px}footer .w{display:flex;justify-content:space-between;gap:12px 32px;flex-wrap:wrap;font-size:12.5px;line-height:1.55;color:var(--mute)}footer p{margin:0;max-width:62ch}
+@media (max-width:760px){.w{padding:0 20px}main{padding:24px 0 56px}.pts{grid-template-columns:1fr;gap:20px;margin-top:56px}.row{grid-template-columns:1fr;border-radius:20px}.row input{height:48px}}
+.hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;opacity:0}#ts{margin-top:10px}button[disabled]{opacity:.6;pointer-events:none}
+</style>
+</head>
+<body>
+<header><div class="w"><span class="wm">Decouple<i>.</i></span><span class="soon">Coming soon</span></div></header>
+<main><div class="w" id="hold">
+<div class="kick">For separating couples in England and Wales</div>
+<h1>Separation, sorted out <em>together.</em></h1>
+<p class="lede">Decouple helps you agree what happens to your money, home and pensions, then make it legally binding with a court order. You do it together, with plain-English guidance, for one fixed fee.</p>
+<form id="f" novalidate>
+<div class="row"><input type="email" name="email" placeholder="Your email address" autocomplete="email" aria-label="Email address" required><button type="submit">Tell me when it’s ready</button></div>
+<fieldset class="stage"><legend>Where are you right now? <span style="font-weight:400;color:var(--mute)">(optional)</span></legend>
+<div class="opts">
+<label><input type="radio" name="stage" value="considering"><span>Thinking about separating</span></label>
+<label><input type="radio" name="stage" value="separated"><span>Separated, finances not agreed</span></label>
+<label><input type="radio" name="stage" value="agreed"><span>Agreed, need it made legal</span></label>
+<label><input type="radio" name="stage" value="professional"><span>I’m a mediator or solicitor</span></label>
+</div></fieldset>
+<p class="err" id="err" role="alert"></p>
+<input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+<div id="ts"></div>
+<p class="fine">We’ll only email you about Decouple’s launch. One click to unsubscribe, and we never share your details. <a href="privacy.html">Privacy notice</a></p>
+</form>
+<div class="done" role="status"><b>Thank you, you’re on the list.</b><p>We’ll be in touch when Decouple opens. No spam, and nothing that says “divorce” in the subject line.</p></div>
+<ul class="pts">
+<li><b>Work it out together</b><p>One shared, private record of everything you own and owe, so you’re both looking at the same picture.</p></li>
+<li><b>Know what’s fair</b><p>Clear guidance on what a court would expect, so you can agree with confidence rather than guesswork.</p></li>
+<li><b>Make it official</b><p>The documents to turn your agreement into a court order, which protects you both for good.</p></li>
+</ul>
+</div></main>
+<footer><div class="w"><p>Decouple is not a law firm and does not give legal advice. If you’re worried about your safety, call the National Domestic Abuse Helpline free on 0808 2000 247, any time.</p><span><a href="privacy.html" style="color:inherit">Privacy</a> · <a href="mailto:hello@decouple.uk" style="color:inherit">hello@decouple.uk</a> · <span id="wmf" style="user-select:none">© 2026 Decouple.</span></span></div></footer>
+<script src="shared/dc-site.js"></script>
+<script>DC.secret(document.getElementById('wmf'));DC.testing().then(function(t){if(t){var p=document.createElement('span');p.textContent='Test mode · nothing is sent';p.style.cssText='margin-left:auto;margin-right:12px;padding:5px 11px;border-radius:99px;background:#FEF3C7;border:1px solid #FDE68A;color:#92400E;font:600 12px Inter,sans-serif';var s=document.querySelector('header .soon');s.parentNode.insertBefore(p,s)}});</script>
+<script>
+/* On decouple.uk sign-ups go to /api/signup (with a check that it's a person). In the design project, set ENDPOINT to test against a form. */
+var ENDPOINT='',FIELDS={email:'email',stage:'stage'};
+document.getElementById('f').addEventListener('submit',async function(e){
+e.preventDefault();var f=e.target,em=f.email.value.trim(),err=document.getElementById('err'),btn=f.querySelector('button[type=submit]');
+if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){err.textContent='Please enter a valid email address.';f.email.focus();return}
+err.textContent='';var st=(f.querySelector('input[name=stage]:checked')||{}).value||'',src=new URLSearchParams(location.search).get('utm_source')||'direct';
+var go=function(){document.getElementById('hold').classList.add('sent')},fail=function(){btn.disabled=false;btn.textContent='Tell me when it’s ready';err.textContent='Something went wrong. Please try again.'};
+btn.disabled=true;btn.textContent='Sending…';
+if(await DC.onSite()){var ok=await DC.human(document.getElementById('ts'));if(!ok)return fail();var r=await DC.signup({email:em,stage:st,source:'holding:'+src,sid:DC.rid(),hp:f.website.value});return r.ok?go():fail()}
+if(!ENDPOINT){go();return}
+var p=new URLSearchParams();p.append(FIELDS.email,em);p.append(FIELDS.stage,st);p.append('source',src);
+fetch(ENDPOINT,{method:'POST',mode:'no-cors',body:p}).then(go,fail);
+});
+</script>
+</body>
+</html>

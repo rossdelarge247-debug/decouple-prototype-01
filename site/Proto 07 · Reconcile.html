@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" data-stage="reconcile">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Decouple — Proto 07 · Their picture & our household</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="proto/signup/su.css">
+<link rel="stylesheet" href="proto/onboard/ob.css">
+<link rel="stylesheet" href="proto/prepare/pp.css">
+<link rel="stylesheet" href="proto/reconcile/rc.css">
+<style>html,body{margin:0;background:#F6EEF4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="proto/journey-store.js"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="proto/interview/iv-data.js"></script>
+<script src="proto/playback/pb-engine.js"></script>
+<script src="proto/reconcile/rc-data.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-ui.jsx"></script>
+<script type="text/babel" src="proto/onboard/ob-cards.jsx"></script>
+<script type="text/babel" src="proto/reconcile/rc-ui.jsx"></script>
+<script type="text/babel" src="proto/reconcile/rc-rail.jsx"></script>
+<script type="text/babel" src="proto/reconcile/rc-hub.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+const J = window.Journey, PB = window.PB, Ic = window.DIc, RC = window.RC, ot = RC.ot;
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "wash": "pink"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const s0 = J.get(), a = ((s0.interview || {}).answers) || PB.EXAMPLE;
+  const N0 = PB.names(a), N = { ...N0, Me: N0.hasMe ? N0.Me : "Sarah", Them: N0.hasThem ? N0.Them : "Mark" };
+  const kids = a.kids !== "none" && a.kids !== "grown";
+  const r0 = s0.household || {};
+  const [plan, setPlan] = useState(r0.plan || ((s0.prepare || {}).plan === "complete" ? "complete" : "guided"));
+  const [st, setSt] = useState(r0.st || {}), [v, setV] = useState(r0.v || "a"), [sign, setSign] = useState(r0.sign || {}), [sol, setSol] = useState(r0.sol || null);
+  const [locked, setLocked] = useState(!!r0.locked), [page, setPage] = useState(["hub", "mine", "theirs", "house"].includes(location.hash.slice(1)) ? location.hash.slice(1) : r0.page || "hub");
+  const [open, setOpen] = useState(null), [seen, setSeen] = useState(r0.seen || {}), [third, setThird] = useState(false), [toast, setToast] = useState(null), [exit, setExit] = useState(false), [lockModal, setLockModal] = useState(false);
+  useEffect(() => { J.set("household", { plan, st, v, sign, sol, locked, page, seen }); }, [plan, st, v, sign, sol, locked, page, seen]);
+
+  const base = useMemo(() => RC.seed(N, kids), [N.Me, N.Them, kids]);
+  const L = RC.apply(base, st);
+  const o = ot(v), nm = (k) => (k === "a" ? N.Me : N.Them), O = nm(o);
+  const me = RC.progress(L, v), th = RC.progress(L, o), unlocked = me.done && th.done;
+  const say = (x, y) => { setToast([x, y]); setTimeout(() => setToast(null), 3200); };
+  const patch = (id, p) => setSt((s) => { const cur = s[id] || {}; return { ...s, [id]: { ...cur, ...p, acc: { ...(cur.acc || {}), ...(p.acc || {}) }, add: [...(cur.add || []), ...(p.add || [])] } }; });
+  useEffect(() => { if (page === "house" && !unlocked && (sign.a || sign.b)) setSign({}); }, [unlocked]);
+
+  function resolve(id, type, p = {}) {
+    const l = L.find((x) => x.id === id), V = nm(v), msg = (t) => ({ w: v, t, ago: "just now" });
+    if (type === "accept") { patch(id, { acc: { [v]: true } }); return; }
+    if (type === "query") { patch(id, { q: v, acc: { a: false, b: false }, pending: { by: v, type: "keep" }, add: [msg(p.text)], ...(p.doc ? { waitDoc: p.doc, got: false } : {}) }); setOpen(id); say(`Query sent to ${O}`, "It shows beside the line on their picture."); }
+    if (type === "acceptTheirs" || type === "acceptMine") { const ag = l[o] != null ? l[o] : l[v]; if (ag == null) { resolve(id, "park"); return; } patch(id, { agreed: ag, pending: null, add: [{ sys: `${V} accepted ${O}'s figure — ${RC.fmt(l, ag)}.` }] }); }
+    if (type === "acceptProp") patch(id, { agreed: l.pending.value, pending: null, add: [{ sys: `${V} agreed ${RC.fmt(l, l.pending.value)}.` }] });
+    if (type === "new") patch(id, { pending: { by: v, type: "new", value: p.value }, add: [msg(`Could we agree ${RC.fmt(l, p.value)}?`)] });
+    if (type === "ask") patch(id, { pending: { by: v, type: "ask", doc: p.doc }, waitDoc: p.doc, got: false, add: [msg(`Could you upload your ${RC.lc(p.doc)} for this?`)] });
+    if (type === "upload") patch(id, { got: true, ...(l.a == null && l.b == null ? { [v]: 112400 } : {}), pending: { by: v, type: "upload", doc: p.doc }, add: [{ w: v, file: p.doc, ago: "just now" }] });
+    if (type === "msg") patch(id, { pending: { by: v, type: "keep" }, add: [msg(p.text)] });
+    if (type === "nudge") { patch(id, { ...(l.pending ? {} : { pending: { by: v, type: "nudge" } }), add: [{ sys: `Reminder sent to ${O}.` }] }); say(`Chased ${O}`, "We've sent a gentle reminder."); }
+    if (type === "park") { patch(id, { parked: true, pending: null, add: [{ sys: `${V} carried this into Settle — it'll show as ${l.a != null && l.b != null ? "a range" : "pending"}.` }] }); say("Carried into Settle", "It won't hold up the household picture."); }
+  }
+  function simOne(l) {
+    if (!l.open || RC.nextUp(l) !== o) return false;
+    setSeen((s) => { const n = { ...s }; delete n[l.id]; return n; });
+    const pd = l.pending, said = (t) => ({ w: o, t, ago: "just now" });
+    if (pd && pd.type === "new") { patch(l.id, { agreed: pd.value, pending: null, add: [said(`OK — ${RC.fmt(l, pd.value)} works for me.`)] }); return true; }
+    if ((pd && (pd.type === "ask" || pd.type === "nudge") && l.waitDoc && !l.got) || (!pd && l.waitDoc && !l.got && l.owner === o)) { const doc = (l.waitDoc || "Document") + ".pdf"; patch(l.id, { got: true, pending: { by: o, type: "upload", doc }, add: [{ w: o, file: doc, ago: "just now" }] }); return true; }
+    if (l.q === o) { const ag = l[v] != null ? l[v] : l[o]; patch(l.id, { agreed: ag != null ? ag : 0, pending: null, add: [said("Thanks — that answers it. Happy to accept.")] }); return true; }
+    if (l.a != null && l.b != null && l.a !== l.b) { const M = Math.round((l.a + l.b) / 2); patch(l.id, { pending: { by: o, type: "new", value: M }, add: [said(`I still see it differently. Could we meet in the middle at ${RC.fmt(l, M)}?`)] }); return true; }
+    patch(l.id, { pending: { by: o, type: "keep" }, add: [said("That's right — it's on the statement I uploaded in Prepare.")] }); return true;
+  }
+  function sim(id) { if (!simOne(L.find((x) => x.id === id))) say(`${O} is waiting for you`, "Reply on this line first."); }
+  function simAll() {
+    let n = 0; L.forEach((l) => { if (simOne(l)) n++; });
+    const rv = RC.reviewList(L, o).filter((l) => !l.acc[o] && !l.open); rv.forEach((l) => patch(l.id, { acc: { [o]: true } }));
+    say(n || rv.length ? `${O} reviewed your picture` : `Nothing waiting on ${O}`, n || rv.length ? `${rv.length} accepted · ${n} replies` : "They're waiting on you.");
+  }
+  function finishSide(k) { L.forEach((l) => { if (l.open && (l.q === k || (k === "both"))) patch(l.id, l.waitDoc && l.a == null && l.b == null ? { parked: true } : { agreed: l.ai && l.ai.val ? l.ai.val : l.owner === "b" ? l.b : l.a != null ? l.a : l.b, pending: null }); if (k === "both" || k === v) patch(l.id, { acc: k === "both" ? { a: true, b: true } : { [v]: true } }); }); }
+  const act = {
+    resolve, sim, simAll, open: (id) => goLine(id), acceptMany: (ids) => { ids.forEach((id) => patch(id, { acc: { [v]: true } })); say(`Accepted ${ids.length} lines`); },
+    sign: (k, on) => { const ns = { ...sign, [k]: on }; setSign(ns); if (ns.a && ns.b) { setLocked(true); setLockModal(true); } },
+    sol: () => { setSol("req"); say("Solicitor check requested", "Usually back within 2 working days."); }, solDone: () => setSol("done"),
+    mediator: () => say("Mediator invite ready", "They see the household figures, not your messages."), formE: () => say("Form E draft downloaded"),
+    stopShare: () => say(`Stopped sharing with ${O}`, "Prototype only — sharing is still on so you can keep exploring."),
+    see: (id) => setSeen((s) => ({ ...s, [id]: true })),
+    chaseReview: () => say(`Chased ${O}`, "We've reminded them to finish reviewing your picture."),
+  };
+
+  const whereOf = (l) => (l.owner === o || (l.owner === "j" && l.q === v) ? "theirs" : "mine");
+  const scrollTo0 = (id) => setTimeout(() => { const el = document.getElementById(id); if (el) { const r = el.getBoundingClientRect(); if (r.top < 90 || r.bottom > innerHeight - 60) scrollTo({ top: r.top + scrollY - 110, behavior: "smooth" }); } }, 60);
+  function goLine(id) { const l = L.find((x) => x.id === id); setSeen((s) => ({ ...s, [id]: true })); setPage(whereOf(l)); setOpen(id); scrollTo0("rcl-" + id); }
+  const goPage = (p) => { setPage(p); setOpen(null); scrollTo({ top: 0 }); };
+  const goSec = (p, id) => { if (page !== p) setPage(p); setTimeout(() => { const el = document.getElementById("rc-" + id); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 84, behavior: "smooth" }); }, 40); };
+
+  const secsOf = (p) => RC.SECS.filter((s) => L.some((l) => l.sec === s.id && RC.onPic(l, p)));
+  const nestFor = (p) => <div className="ph-nest">{secsOf(p).map((s) => {
+    const ls = L.filter((l) => l.sec === s.id && RC.onPic(l, p)), opn = ls.filter((l) => l.open).length, rv = p === o ? v : o, left = ls.filter((l) => !l.acc[rv] && !l.open).length, ok = ls.every((l) => l.acc[rv]);
+    return <button key={s.id} className={ok ? "dn" : opn ? "pt rc-d" : ""} onClick={() => goSec(p === v ? "mine" : "theirs", s.id)}><span className="k">{ok && <Ic.Check s={9} w={3.2} c="#FFF"/>}</span>{s.t}{!ok && <small>{opn ? `${opn} open` : p === o ? `${left} to review` : "waiting"}</small>}</button>; })}</div>;
+  const myQs = L.filter((l) => l.open && l.q === o && RC.nextUp(l) === v).length;
+  const K = (s) => <span className={"k " + s}>{s === "dn" ? <Ic.Check s={9} w={3.2} c="#FFF"/> : s === "lk" ? <Ic.Lock s={8}/> : null}</span>;
+  const nav = <>
+    <button className={"ph-grp" + (page === "hub" ? " on" : "")} onClick={() => goPage("hub")}><span className="gt">{K(locked ? "dn" : "pt")}Overview</span><small>{L.filter((l) => l.open && RC.nextUp(l) === v).length ? `${L.filter((l) => l.open && RC.nextUp(l) === v).length} response needed` : ""}</small></button>
+    <button className={"ph-grp" + (page === "mine" ? " on" : "")} onClick={() => goPage("mine")}><span className="gt">{K(th.done ? "dn" : "pt")}Your picture</span><small>{th.done ? "Accepted" : myQs ? `${myQs} to answer` : "Shared"}</small></button>
+    {page === "mine" && <>{nestFor(v)}<button className="ph-edit" onClick={() => J.goStage("prepare")}>Edit your answers<Ic.Arrow s={10}/></button></>}
+    <button className={"ph-grp" + (page === "theirs" ? " on" : "")} onClick={() => goPage("theirs")}><span className="gt">{K(me.done ? "dn" : "pt")}{`${O}'s picture`}</span><small>{me.done ? "Accepted" : `${me.left + me.open} to go`}</small></button>
+    {page === "theirs" && nestFor(o)}
+    <button className={"ph-grp" + (page === "house" ? " on" : "") + (unlocked ? "" : " soft")} onClick={() => goPage("house")}><span className="gt">{K(locked ? "dn" : unlocked ? "pt" : "lk")}Our household</span><small>{locked ? "Signed" : unlocked ? "Ready" : "Locked"}</small></button>
+    {page === "house" && unlocked && <div className="ph-nest">{RC.SECS.filter((s) => L.some((l) => l.sec === s.id)).map((s) => <button key={s.id} className="dn" onClick={() => goSec("house", s.id)}><span className="k"><Ic.Check s={9} w={3.2} c="#FFF"/></span>{s.t}</button>)}</div>}
+  </>;
+
+  if (exit) return <IVNeutral onBack={() => setExit(false)}/>;
+  const P = page === "theirs" ? o : v;
+  const head = page === "theirs" ? { c: "#0369A1", tab: `${O.toUpperCase()}'S PICTURE · SHARED WITH YOU`, k: `Prepare · ${O}'s picture`, h: <>{`${O}'s picture,`}<br/><em>as shared with you.</em></>, p: `Go through each line. Accept what looks right and query anything that doesn't — ${O} answers beside their picture.` }
+    : page === "mine" ? { c: "#5B21B6", tab: `YOUR PICTURE · SHARED WITH ${O.toUpperCase()}`, k: "Prepare · your picture", h: <>Your picture,<br/><em>{`with ${O}'s questions.`}</em></>, p: `${O} is reviewing this. Anything they query opens beside the line — answer it here.` }
+    : { c: "#9D174D", tab: "OUR HOUSEHOLD · BOTH OF YOU", k: "Prepare · our household", h: unlocked ? <>{`${N.Me} & ${N.Them},`}<br/><em>side by side.</em></> : <>Our household<br/><em>unlocks soon.</em></>, p: unlocked ? (third ? "The mediator view — figures and outcomes, with no messages." : "Everything you've both accepted, in one place. Lines that changed along the way keep their history — open any to see how you got there.") : "When you've each accepted the other's picture, we'll put them side by side here." };
+  const nA = RC.net(L, "x"), changed = L.filter((l) => l.q).length, parked = L.filter((l) => l.parked).length;
+  return (
+    <div className={"site ob rc " + (t.wash === "pink" ? "rc-wash" : "bg-paper")} data-screen-label={"Prepare · " + page + " · " + nm(v)}>
+      <OBTop N={N} onExit={() => setExit(true)}>
+          <div className="rc-as" role="group" aria-label="View as"><span>View as</span>{["a", "b"].map((k) => <button key={k} className={v === k ? "on" : ""} aria-pressed={v === k} onClick={() => { setV(k); setOpen(null); }}><RCAv w={k} N={N} size={18}/>{nm(k)}</button>)}</div>
+      </OBTop>
+      <div className="ob-shell two wide">
+        <OBRail plan={plan} active="prepare" full sub={nav}/>
+        <main className="pp-stage rc-stage">
+          {page === "hub" ? <RCHub L={L} v={v} N={N} locked={locked} seen={seen} onOpen={goLine} goPage={goPage} act={act}/> :
+          <div className="rc-wrap">
+            <div className="rc-main">
+              <div className="paper pp-card rc-head">
+                <span className="ftab rc-ftab" style={{ background: head.c }}>{page === "house" ? <><RCAv w="a" N={N} size={15}/><RCAv w="b" N={N} size={15}/></> : <RCAv w={P} N={N} size={15}/>}{head.tab}</span>
+                <div className="pq-k" style={{ color: head.c }}>{head.k}</div>
+                <h1>{head.h}</h1>
+                <p className="pq-why">{head.p}</p>
+                {page !== "house" && <div className="rc-tally">{(() => { const ex = L.filter((l) => (l.open && (page === "theirs" ? (l.owner === o || (l.owner === "j" && l.q === v)) : (l.owner === v || (l.owner === "j" && l.q !== v)))) || (page === "theirs" && l.owner && (l.owner === o || l.owner === "j") && !l.done && !l.acc[v] && !l.open)), rn = ex.filter((l) => l.open && RC.nextUp(l) === v).length, wt = ex.filter((l) => l.open && RC.nextUp(l) === o).length; return ex.length ? <><span className="op"><i></i>{`${ex.length} item${ex.length > 1 ? "s" : ""} to reconcile`}</span>{rn > 0 && <span className="rn"><i></i>{`${rn} response needed`}</span>}{wt > 0 && <span><i></i>{`${wt} with ${O}`}</span>}{page === "mine" && th.left > 0 && <span><i></i>{`${th.left} not reviewed by ${O} yet`}</span>}</> : <span className="ok"><i></i>Everything reconciled</span>; })()}</div>}
+                {page === "house" && unlocked && <div className="rc-hsum"><div><small>Net household assets</small><b className="tab">{RC.gbp(nA)}</b></div><div><small>Lines</small><b className="tab">{L.length}</b></div><div><small>Changed in review</small><b className="tab">{changed}</b></div>{parked > 0 && <div><small>Carried to Settle</small><b className="tab">{parked}</b></div>}</div>}
+                {locked && page === "house" && <div className="rc-locked"><Ic.Lock s={14}/><span><b>Version 1 locked.</b>{` Signed by you both.`}</span><button className="btn sm" onClick={() => J.goStage("settle")}>Go to proposals <Ic.Arrow s={12}/></button></div>}
+              </div>
+              <div className="paper pp-card rc-doc">
+                {page === "house" ? (unlocked ? <RCHousehold L={L} v={v} N={N} third={third}/> : <div className="rc-lockp"><div className="ic"><Ic.Lock s={22}/></div><RCGate L={L} v={v} N={N} onHouse={() => {}}/><div className="rc-btns"><button className="btn sm" onClick={() => goPage(me.done ? "mine" : "theirs")}>{me.done ? "See your picture" : `Keep reviewing ${O}'s picture`}<Ic.Arrow s={12}/></button></div></div>)
+                  : <RCPicture L={L} v={v} N={N} p={P} act={act} open={open} setOpen={setOpen} seen={seen}/>}
+                <div className="rc-foot"><span>Generated by Decouple · 9 October 2026</span><span>{page === "house" ? "Visible to you both" : page === "mine" ? `Shared with ${O}` : `Shared by ${O}`}</span></div>
+              </div>
+            </div>
+            <aside className="rc-rail"><RCRail page={page} L={L} v={v} N={N} act={act} onOpen={goLine} onHouse={() => goPage("house")} sign={sign} plan={plan} sol={sol} third={third} setThird={setThird}/></aside>
+          </div>}
+        </main>
+      </div>
+      {lockModal && <div className="mscrim" onClick={(e) => e.target === e.currentTarget && setLockModal(false)}><div className="mbox wide rc-lockm" role="dialog" aria-modal="true" aria-label="Household picture agreed">
+        <button className="mx" aria-label="Close" onClick={() => setLockModal(false)}><Ic.X s={16}/></button>
+        <div className="mail-ill" style={{ background: "#D1FAE5" }}><Ic.Check s={26} w={2.6} c="#166534"/></div>
+        <h3 style={{ textAlign: "center" }}>Household picture agreed.</h3>
+        <p style={{ textAlign: "center" }}>{`Version 1 is locked and signed by you both — ${RC.gbp(nA)} in net household assets. Next, you'll each put forward how to split it.`}</p>
+        <div className="mrow" style={{ justifyContent: "center" }}><button className="btn lg" onClick={() => J.goStage("settle")}>Go to proposals <Ic.Arrow s={15}/></button><button className="btn lg ghost" onClick={() => setLockModal(false)}>Stay here</button></div>
+      </div></div>}
+      {toast && <div className="pp-toast" role="status"><b>{toast[0]}</b>{toast[1] && <span>{toast[1]}</span>}</div>}
+      <TweaksPanel>
+        <TweakSection label="Perspective"/>
+        <TweakRadio label="View as" value={v} options={[{ value: "a", label: N.Me }, { value: "b", label: N.Them }]} onChange={(x) => { setV(x); setOpen(null); }}/>
+        <TweakButton label={`Simulate ${O}`} onClick={simAll}/>
+        <TweakSection label="Jump to"/>
+        <TweakButton label={`You've finished reviewing ${O}'s`} onClick={() => { finishSide(v); goPage("mine"); }}/>
+        <TweakButton label="Both accepted — unlock household" onClick={() => { finishSide("both"); goPage("house"); }}/>
+        <TweakButton label="Reset" onClick={() => { setSt({}); setSign({}); setSol(null); setLocked(false); setOpen(null); setSeen({}); setPage("hub"); }}/>
+        <TweakSection label="Look & plan"/>
+        <TweakRadio label="Background" value={t.wash} options={[{ value: "pink", label: "Wash" }, { value: "paper", label: "Paper" }]} onChange={(x) => setTweak("wash", x)}/>
+        <TweakRadio label="Plan" value={plan} options={[{ value: "guided", label: "£499" }, { value: "complete", label: "£999" }]} onChange={setPlan}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

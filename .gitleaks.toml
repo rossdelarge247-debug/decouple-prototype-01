@@ -1,0 +1,8 @@
+# Gitleaks (.github/workflows/gitleaks.yml) scans every push. The design export names its
+# localStorage keys "decouple.<thing>.v1", which the generic rule mistakes for API keys.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "localStorage key names in the design export are not secrets"
+regexes = ['''^decouple\.[A-Za-z0-9._-]+$''']

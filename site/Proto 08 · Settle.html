@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-stage="settle">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Decouple — Proto 08 · Settle</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@500&family=Mrs+Saint+Delafield&family=Homemade+Apple&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="proto/signup/su.css">
+<link rel="stylesheet" href="proto/onboard/ob.css">
+<link rel="stylesheet" href="proto/prepare/pp.css">
+<link rel="stylesheet" href="proto/reconcile/rc.css">
+<link rel="stylesheet" href="proto/settle/st.css">
+<style>html,body{margin:0;background:#EEF2FA}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="proto/journey-store.js"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="proto/interview/iv-data.js"></script>
+<script src="proto/playback/pb-engine.js"></script>
+<script src="proto/reconcile/rc-data.js"></script>
+<script src="proto/settle/st-data.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-ui.jsx"></script>
+<script type="text/babel" src="proto/onboard/ob-cards.jsx"></script>
+<script type="text/babel" src="proto/reconcile/rc-ui.jsx"></script>
+<script type="text/babel" src="proto/settle/st-ui.jsx"></script>
+<script type="text/babel" src="proto/settle/st-sign.jsx"></script>
+<script type="text/babel" src="proto/settle/st-advisor.jsx"></script>
+<script type="text/babel" src="proto/settle/st-rail.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+const J = window.Journey, PB = window.PB, Ic = window.DIc, ST = window.ST;
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "wash": "sky",
+  "decide": "slider"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const s0 = J.get(), a = ((s0.interview || {}).answers) || PB.EXAMPLE;
+  const N0 = PB.names(a), N = { ...N0, Me: N0.hasMe ? N0.Me : "Sarah", Them: N0.hasThem ? N0.Them : "Mark" };
+  window.__N = N;
+  const kids = a.kids !== "none" && a.kids !== "grown";
+  const S = useMemo(() => ST.secs(N, kids), [N.Me, N.Them, kids]);
+  const r0 = s0.settle || {};
+  const plan = ((s0.household || {}).plan) || "guided";
+  const [rounds, setRounds] = useState(r0.rounds || []), [draft, setDraft] = useState(r0.draft || {}), [custom, setCustom] = useState(r0.custom || {});
+  const [resp, setRespAll] = useState(r0.resp || {}), [agreed, setAgreed] = useState(r0.agreed || null), [sign, setSign] = useState(r0.sign || {}), [locked, setLocked] = useState(!!r0.locked);
+  const [vn, setVn] = useState(r0.vn || null), [rev, setRev] = useState(!!r0.rev);
+  const [page, setPage] = useState(() => { const p0 = ["hub", "draft", "reply", "agree"].includes(location.hash.slice(1)) ? location.hash.slice(1) : r0.page || "hub"; return !(r0.rounds || []).length ? "draft" : p0 === "ver" && !r0.vn ? "hub" : p0; });
+  const [conf, setConf] = useState({}), [toast, setToast] = useState(null), [exit, setExit] = useState(false), [lockModal, setLockModal] = useState(false), [ask, setAsk] = useState(null), [sm, setSm] = useState(null);
+  useEffect(() => { J.set("settle", { rounds, draft, custom, resp, agreed, sign, locked, page, vn, rev }); }, [rounds, draft, custom, resp, agreed, sign, locked, page, vn, rev]);
+  const say = (x, y) => { setToast([x, y]); setTimeout(() => setToast(null), 3200); };
+  const O = N.Them;
+  const lastA = [...rounds].reverse().find((r) => r.by === "a"), lastB = [...rounds].reverse().find((r) => r.by === "b");
+  const turn = !agreed && (!rounds.length || rounds[rounds.length - 1].by === "b");
+  const finalN = rounds.length ? rounds[rounds.length - 1].n + 1 : 1, ver = page === "ver" ? rounds.find((r) => r.n === vn) : null;
+  const changed = lastA && lastB && turn ? S.filter((s) => lastB.picks[s.id] !== lastA.picks[s.id]) : [];
+  const need = changed.filter((s) => !resp[s.id]).length;
+  const nDrafted = S.filter((s) => ST.valid(s, draft[s.id], custom[s.id])).length;
+  const setPick = (sid, id) => setDraft((d) => ({ ...d, [sid]: id }));
+  useEffect(() => { setDraft((d) => { const n = {}; if (!rounds.length && ["p1", "p2", "p3"].includes(d.children)) return n; S.forEach((s) => { const v = ST.toStyle(s, d[s.id], t.decide); if (v && (v === "custom" || ST.opt(s, v))) n[s.id] = v; }); return n; }); }, [t.decide, S]);
+  const setCus = (sid, x) => setCustom((c) => ({ ...c, [sid]: x }));
+  const setResp = (sid, x) => setRespAll((r) => { const n = { ...r }; if (x) n[sid] = x; else delete n[sid]; return n; });
+  const goPage = (p) => { setPage(p); scrollTo({ top: 0 }); };
+
+  function send() {
+    if (!rounds.length) { setRounds([{ n: 1, by: "a", picks: { ...draft }, why: {}, at: Date.now() }]); say(`v1 sent to ${O}`, "They see it as a single, finished document."); goPage("hub"); return; }
+    if (!lastB || !turn) return;
+    if (changed.every((s) => resp[s.id] && resp[s.id].k === "accept")) { setAgreed({ ...lastB.picks }); setRespAll({}); say(`You accepted v${lastB.n} as written`, "That's an agreement."); goPage("agree"); return; }
+    const picks = {}, why = {};
+    S.forEach((s) => { const r = resp[s.id]; picks[s.id] = !r ? lastB.picks[s.id] : r.k === "accept" ? lastB.picks[s.id] : r.k === "counter" ? r.v : lastA.picks[s.id]; if (r && r.k === "discuss") why[s.id] = r.note; });
+    setRounds((rs) => [...rs, { n: lastB.n + 1, by: "a", picks, why, at: Date.now() }]); setRespAll({}); say(`v${lastB.n + 1} sent to ${O}`, "Only the sections you changed need their answer."); goPage("hub");
+  }
+  function simMark() {
+    if (!lastA || (lastB && lastB.n > lastA.n)) return say(`${O} is waiting for you`);
+    const k = rounds.filter((r) => r.by === "b").length, rep = ST.markReply(S, lastA.picks, k);
+    if (S.every((s) => rep.picks[s.id] === lastA.picks[s.id])) { setAgreed({ ...lastA.picks }); say(`${O} accepted v${lastA.n} as written`, "You have an agreement."); goPage("agree"); return; }
+    setRounds((rs) => [...rs.slice(0, -1), { ...rs[rs.length - 1], opened: true }, { n: lastA.n + 1, by: "b", picks: rep.picks, why: rep.why, at: Date.now() }]); say(`${O} replied with v${lastA.n + 1}`);
+  }
+  const act = {
+    send, simMark, mediator: () => say("Mediator review booked", "One hour, £150 — they'll read your draft first."),
+    view: (n) => { setVn(n); goPage("ver"); }, back: () => goPage("hub"),
+    withdraw: () => { const L = rounds[rounds.length - 1]; if (!L || L.by !== "a" || L.opened) return;
+      if (L.n === 1) return setAsk({ h: `Withdraw v1 from ${O}?`, p: `${O} hasn't opened it yet, so they'll never see it. Your draft comes back exactly as you sent it, so you can change anything and send it again as a fresh v1.`, btn: "Withdraw and edit", fn: () => { setDraft({ ...L.picks }); setRounds([]); setRespAll({}); setConf({}); goPage("draft"); say("v1 withdrawn", `${O} can no longer see it. Edit and send when you're ready.`); } });
+      const pB = rounds[rounds.length - 2], pA = [...rounds.slice(0, -2)].reverse().find((r) => r.by === "a"), back = {};
+      S.forEach((s) => { if (pB.picks[s.id] === pA.picks[s.id]) return; const v = L.picks[s.id]; back[s.id] = v === pB.picks[s.id] ? { k: "accept" } : L.why[s.id] ? { k: "discuss", note: L.why[s.id] } : { k: "counter", v }; });
+      setAsk({ h: `Withdraw v${L.n} from ${O}?`, p: `${O} hasn't opened it yet, so they'll never see it. Your responses to their v${pB.n} come back exactly as you left them.`, btn: "Withdraw and edit", fn: () => { setRounds((rs) => rs.slice(0, -1)); setRespAll(back); goPage("reply"); say(`v${L.n} withdrawn`, `Change your responses, then send again.`); } }); },
+    open: () => setRounds((rs) => rs.map((r, i) => (i === rs.length - 1 ? { ...r, opened: true } : r))),
+    recall: () => setAsk(locked
+      ? { h: "Reverse the signed agreement?", p: `${O} will be told and asked to confirm. Once they do, both signatures are removed and you're back on v${finalN - 1} to keep negotiating.`, btn: "Ask to reverse", fn: () => { setRev(true); say("Reversal requested", `We've asked ${O} to confirm. It stays signed until they do.`); } }
+      : { h: "Recall the agreement?", p: `Nobody has signed yet. Recalling it reopens v${finalN - 1} and ${O} is told straight away.`, btn: "Recall agreement", fn: () => { setAgreed(null); setSign({}); setRespAll({}); goPage("hub"); say("Agreement recalled", `You're back on v${finalN - 1}.`); } }),
+    revConfirm: () => { setRev(false); setAgreed(null); setSign({}); setLocked(false); setRespAll({}); goPage("hub"); say("Agreement reversed", `${O} confirmed. You're back on v${finalN - 1}.`); },
+    revCancel: () => { setRev(false); say("Request cancelled", "The agreement stays signed."); },
+    openSign: () => setSm(true),
+    sign: (k, on, x = {}) => { const ns = { ...sign, [k]: on, ...x }; setSign(ns); if (ns.a && ns.b) { setLocked(true); setLockModal(true); } },
+  };
+
+  const K = (s) => <span className={"k " + s}>{s === "dn" ? <Ic.Check s={9} w={3.2} c="#FFF"/> : s === "lk" ? <Ic.Lock s={8}/> : null}</span>;
+  const goSec = (p, id) => { if (page !== p) setPage(p); setTimeout(() => { const el = document.getElementById("st-" + id); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 84, behavior: "smooth" }); }, 40); };
+  const lastR = rounds[rounds.length - 1];
+  const navKey = (r) => (!agreed && r === lastR ? (r.by === "a" ? "draft" : "reply") : "ver");
+  const isOn = (r) => { const k = navKey(r); return k === "ver" ? page === "ver" && vn === r.n : page === k; };
+  const openR = (r) => { const k = navKey(r); if (k === "ver") setVn(r.n); goPage(k); };
+  const dShort = (t) => (t ? " · " + new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "");
+  const rTitle = (r, i) => (r.by === "a" ? (i === 0 ? "Your proposal" : "Your counter") : `${O}'s counter`);
+  const rSmall = (r) => { const k = navKey(r); if (k === "reply") return `v${r.n} · ${need ? `${need} to answer` : "ready to send"}`; if (k === "draft") return `v${r.n} · ${r.opened ? `opened by ${O}` : "sent, not opened"}`; return `v${r.n}${dShort(r.at)}`; };
+  const nest = (p, okFn, tag) => <div className="ph-nest">{S.map((s) => { const ok = okFn(s); return <button key={s.id} className={ok ? "dn" : tag ? "pt rc-d" : ""} onClick={() => goSec(p, s.id)}><span className="k">{ok && <Ic.Check s={9} w={3.2} c="#FFF"/>}</span>{s.t}{!ok && tag && <small>{tag}</small>}</button>; })}</div>;
+  const nav = <>
+    <button className={"ph-grp" + (page === "hub" ? " on" : "") + (rounds.length ? "" : " soft")} onClick={() => rounds.length && goPage("hub")}><span className="gt">{K(agreed ? "dn" : rounds.length ? "pt" : "lk")}Overview</span><small>{!rounds.length ? "After you send" : !agreed && need ? `${need} response${need > 1 ? "s" : ""} needed` : ""}</small></button>
+    {!rounds.length && <><button className={"ph-grp" + (page === "draft" ? " on" : "")} onClick={() => goPage("draft")}><span className="gt">{K("pt")}Your proposal</span><small>{`v1 draft · ${nDrafted} of ${S.length} done`}</small></button>
+      {page === "draft" && nest("draft", (s) => ST.valid(s, draft[s.id], custom[s.id]))}</>}
+    {rounds.map((r, i) => { const k = navKey(r); return <React.Fragment key={r.n}><button className={"ph-grp" + (isOn(r) ? " on" : "")} onClick={() => openR(r)}><span className="gt">{K(k === "ver" ? "dn" : "pt")}{rTitle(r, i)}</span><small>{rSmall(r)}</small></button>
+      {isOn(r) && (k === "reply" ? nest("reply", (s) => lastB.picks[s.id] === lastA.picks[s.id] || !!resp[s.id], "respond") : nest(k, () => true))}</React.Fragment>; })}
+    {!agreed && (!rounds.length || lastR.by === "a") && <button className="ph-grp soft" onClick={() => rounds.length && goPage("hub")}><span className="gt">{K("lk")}{`${O}'s reply`}</span><small>{rounds.length ? `v${lastR.n + 1} · waiting` : "After you send"}</small></button>}
+    <button className={"ph-grp" + (page === "agree" ? " on" : "") + (agreed ? "" : " soft")} onClick={() => agreed && goPage("agree")}><span className="gt">{K(locked ? "dn" : agreed ? "pt" : "lk")}Agreement</span><small>{locked ? `v${finalN} · signed` : agreed ? `v${finalN} · ready to sign` : "Locked"}</small></button>
+  </>;
+
+  if (exit) return <IVNeutral onBack={() => setExit(false)}/>;
+  const roDraft = !!lastA;
+  const showPicks = lastA ? lastA.picks : draft;
+  const allPicked = S.every((s) => ST.valid(s, draft[s.id], custom[s.id]));
+  const head = page === "draft" ? { c: "#5B21B6", tab: lastA ? `YOUR PROPOSAL · v${lastA.n} SENT` : `${N.Me.toUpperCase()} · PRIVATE DRAFT`, k: "Settle · your proposal", h: lastA ? <>{`Version ${lastA.n},`}<br/><em>{`as ${O} sees it.`}</em></> : <>Your opening<br/><em>{`proposal to ${O}.`}</em></>, p: lastA ? "This is the version you sent. To change anything now, answer their reply." : `${S.length} decisions, drawn from your household picture. Pick one position per section. ${O} sees nothing until you send — as a single, finished document.` }
+    : page === "reply" ? { c: "#0369A1", tab: lastB ? `${O.toUpperCase()}'S COUNTER · v${lastB.n}` : `${O.toUpperCase()}'S REPLY`, k: `Settle · ${O}'s reply`, h: lastB ? <>{`${O} accepted`}<br/><em>{`${S.length - changed.length} of ${S.length} sections.`}</em></> : <>{`Waiting for`}<br/><em>{`${O}'s reply.`}</em></>, p: lastB ? (turn ? `Read each change, then accept, counter or open a discussion. Your responses become v${lastB.n + 1}.` : "You've responded. We'll tell you when the next version lands.") : "Send your proposal first." }
+    : page === "ver" && ver ? { c: ver.by === "a" ? "#5B21B6" : "#0369A1", tab: `v${ver.n} · ${ver.by === "a" ? "YOU SENT" : `${O.toUpperCase()}'S COUNTER`} · PREVIOUS`, k: "Settle · previous version", h: <>{`Version ${ver.n},`}<br/><em>{agreed && ver === lastR ? `agreed as v${finalN} final.` : `superseded by v${ver.n + 1}.`}</em></>, p: `A read-only record of what ${ver.by === "a" ? "you" : O} sent${ver.at ? " on " + new Date(ver.at).toLocaleDateString("en-GB", { day: "numeric", month: "long" }) : ""}. Nothing here can change.` }
+    : { c: "#047857", tab: locked ? `AGREEMENT · v${finalN} FINAL · SIGNED` : `AGREEMENT · v${finalN} FINAL · READY TO SIGN`, k: "Settle · agreement", h: <>{`${N.Me} & ${N.Them},`}<br/><em>agreed.</em></>, p: "Every section agreed on the same version. Read it through, then you both sign." };
+  return (
+    <div className={"site ob rc st " + (t.wash === "sky" ? "st-wash" : "bg-paper")} data-screen-label={"Settle · " + page}>
+      <OBTop N={N} onExit={() => setExit(true)}/>
+      <div className="ob-shell two wide">
+        <OBRail plan={plan} active="settle" full sub={nav}/>
+        <main className="pp-stage rc-stage">
+          {page === "hub" ? <STHub S={S} N={N} rounds={rounds} resp={resp} setResp={setResp} agreed={!!agreed} locked={locked} go={goPage} act={act} draftPicks={draft} custom={custom} rev={rev}/> :
+          <div className="rc-wrap">
+            <div className="rc-main">
+              <div className="paper pp-card rc-head">
+                <span className="ftab rc-ftab" style={{ background: head.c }}>{page === "agree" ? <><RCAv w="a" N={N} size={15}/><RCAv w="b" N={N} size={15}/></> : <RCAv w={page === "reply" || (ver && ver.by === "b") ? "b" : "a"} N={N} size={15}/>}{head.tab}</span>
+                <div className="pq-k" style={{ color: head.c }}>{head.k}</div>
+                <h1>{head.h}</h1>
+                <p className="pq-why">{head.p}</p>
+                {page === "reply" && lastB && turn && <div className="rc-tally">{need ? <span className="rn"><i></i>{`${need} response${need > 1 ? "s" : ""} needed`}</span> : <span className="ok"><i></i>All answered</span>}<span><i></i>{`${S.length - changed.length} agreed as written`}</span></div>}
+                {page === "draft" && !lastA && <div className="rc-tally"><span className={allPicked ? "ok" : "op"}><i></i>{`${nDrafted} of ${S.length} drafted`}</span></div>}
+              </div>
+              {page === "ver" && ver && <STDraft S={S} N={N} style={t.decide} notes={ver.why || {}} noteBy={ver.by} picks={ver.picks} setPick={() => {}} custom={custom} setCustom={() => {}} ro/>}
+              {page === "draft" && <STDraft S={S} N={N} style={t.decide} notes={lastA ? lastA.why : {}} picks={showPicks} setPick={setPick} custom={custom} setCustom={setCus} ro={roDraft}/>}
+              {page === "reply" && lastB && <STReply S={S} N={N} style={t.decide} mine={lastA.picks} theirs={turn ? lastB.picks : lastA.picks} why={turn ? lastB.why : {}} myWhy={turn ? lastA.why : {}} resp={resp} setResp={setResp}/>}
+              {(page === "reply" && !lastB) && <div className="paper pp-card rc-doc">
+                <div className="rc-none">{`${O}'s reply will appear here.`}</div>
+                <div className="rc-foot"><span>Autosaved on Decouple</span><span>Visible to you both</span></div>
+              </div>}
+              {page === "agree" && agreed && <STAgree S={S} N={N} picks={agreed} custom={custom} sign={sign} finalN={finalN} fromN={finalN - 1} locked={locked} onSign={act.openSign}/>}
+              {page === "draft" && !lastA && <div className="paper pp-card st-send">
+                <div><div className="pq-k" style={{ color: "#5B21B6" }}>Final step</div><h2>{`Ready to hand this to ${O}?`}</h2><p className="pq-why">{`Once you send, your draft becomes v1 — ${O} sees a single, finished document, not your edits. You can always send a follow-up version.`}</p></div>
+                <div className="st-conf">{[["read", `I've read every section and I'd be content if ${O} accepted it as written`], ["v1", "I understand this becomes version 1 of the offer"]].map(([k, l]) => <label key={k} className={"rc-sign" + (conf[k] ? " on" : "")}><input type="checkbox" checked={!!conf[k]} onChange={(e) => setConf((c) => ({ ...c, [k]: e.target.checked }))}/><span>{l}</span></label>)}
+                  <button className="btn" disabled={!allPicked || !conf.read || !conf.v1} onClick={send}>{`Send proposal to ${O}`}<Ic.Arrow s={13}/></button>{!allPicked && <small className="rc-fine">Pick a position in every section first.</small>}</div>
+              </div>}
+              {page === "reply" && lastB && turn && <div className="paper pp-card st-send">
+                <div><div className="pq-k" style={{ color: "#0369A1" }}>Send your reply</div><h2>{need ? <>{`${need} change${need > 1 ? "s" : ""} still `}<em>{`need${need > 1 ? "" : "s"} your response.`}</em></> : changed.every((s) => resp[s.id] && resp[s.id].k === "accept") ? <>{`Accept v${lastB.n} `}<em>as written.</em></> : <>{`Ready to send `}<em>{`v${lastB.n + 1}.`}</em></>}</h2><p className="pq-why">{changed.every((s) => resp[s.id] && resp[s.id].k === "accept") ? "You've accepted every change — that makes an agreement." : `${O} will see only the sections you changed. The ones you've agreed stay agreed.`}</p></div>
+                <div className="st-conf"><button className="btn" disabled={need > 0} onClick={send}>{changed.every((s) => resp[s.id] && resp[s.id].k === "accept") ? "Accept and agree" : `Send v${lastB.n + 1}`}<Ic.Arrow s={13}/></button></div>
+              </div>}
+            </div>
+            <aside className="rc-rail"><STRail page={page} S={S} N={N} draft={showPicks} setPick={setPick} lastA={lastA} lastB={lastB && turn ? lastB : null} resp={resp} setResp={setResp} act={act} agreed={agreed} locked={locked} sign={sign} ver={ver} rev={rev} custom={custom} finalN={finalN}/></aside>
+          </div>}
+        </main>
+      </div>
+      {lockModal && <div className="mscrim" onClick={(e) => e.target === e.currentTarget && setLockModal(false)}><div className="mbox wide rc-lockm" role="dialog" aria-modal="true" aria-label="Settlement agreed">
+        <button className="mx" aria-label="Close" onClick={() => setLockModal(false)}><Ic.X s={16}/></button>
+        <div className="mail-ill" style={{ background: "#D1FAE5" }}><Ic.Check s={26} w={2.6} c="#166534"/></div>
+        <h3 style={{ textAlign: "center" }}>Settlement signed.</h3>
+        <p style={{ textAlign: "center" }}>{`You've both signed. Next, Finalise turns it into a consent order and the court forms.`}</p>
+        <div className="mrow" style={{ justifyContent: "center" }}><button className="btn lg" onClick={() => J.goStage("finalise")}>Go to Finalise <Ic.Arrow s={15}/></button><button className="btn lg ghost" onClick={() => setLockModal(false)}>Stay here</button></div>
+      </div></div>}
+      {sm && agreed && <STSignModal N={N} S={S} finalN={finalN} agreed={agreed} close={() => setSm(null)} onDone={(g, nm, ad) => { act.sign("a", true, { an: nm, ad, ag: g }); setSm(null); say("You've signed", `We've asked ${O} to sign v${finalN}.`); }}/>}
+      {ask && <div className="mscrim" onClick={(e) => e.target === e.currentTarget && setAsk(null)}><div className="mbox st-ask" role="dialog" aria-modal="true" aria-label={ask.h}>
+        <button className="mx" aria-label="Close" onClick={() => setAsk(null)}><Ic.X s={16}/></button>
+        <h3 style={{ textAlign: "center" }}>{ask.h}</h3><p>{ask.p}</p>
+        <div className="mrow" style={{ justifyContent: "center" }}><button className="btn warn" onClick={() => { const f = ask.fn; setAsk(null); f(); }}>{ask.btn}</button><button className="btn ghost" onClick={() => setAsk(null)}>Cancel</button></div>
+      </div></div>}
+      {toast && <div className="pp-toast" role="status"><b>{toast[0]}</b>{toast[1] && <span>{toast[1]}</span>}</div>}
+      <TweaksPanel>
+        <TweakSection label="Simulate"/>
+        <TweakButton label={`Simulate ${O}`} onClick={simMark}/>
+        <TweakSection label="Jump to"/>
+        <TweakButton label="Fill my draft (example)" onClick={() => { setDraft(t.decide === "slider" ? { ...ST.SARAH } : { ...ST.SARAH, home: "mesher", pensions: "each", savings: "each" }); goPage("draft"); }}/>
+        <TweakButton label={`${O} replied (v2)`} onClick={() => { const v1 = { n: 1, by: "a", picks: { ...ST.SARAH }, why: {} }, rep = ST.markReply(S, v1.picks, 0); setRounds([v1, { n: 2, by: "b", picks: rep.picks, why: rep.why }]); setRespAll({}); setAgreed(null); setSign({}); setLocked(false); goPage("hub"); }}/>
+        <TweakButton label="Agreed — ready to sign" onClick={() => { const p = { ...ST.SARAH, pensions: "quarter", debts: "shared", spousal: "two" }; setRounds([{ n: 1, by: "a", picks: { ...ST.SARAH }, why: {} }, { n: 2, by: "b", picks: ST.markReply(S, ST.SARAH, 0).picks, why: {} }, { n: 3, by: "a", picks: p, why: {} }]); setAgreed(p); setSign({}); setLocked(false); goPage("agree"); }}/>
+        <TweakButton label="Reset Settle" onClick={() => { setRounds([]); setDraft({}); setCustom({}); setRespAll({}); setAgreed(null); setSign({}); setLocked(false); setConf({}); goPage("draft"); }}/>
+        <TweakSection label="Look"/>
+        <TweakRadio label="Decisions" value={t.decide} options={[{ value: "slider", label: "Sliders" }, { value: "radio", label: "Radios" }]} onChange={(x) => setTweak("decide", x)}/>
+        <TweakRadio label="Background" value={t.wash} options={[{ value: "sky", label: "Wash" }, { value: "paper", label: "Paper" }]} onChange={(x) => setTweak("wash", x)}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

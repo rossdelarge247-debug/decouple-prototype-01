@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-stage="signup">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Decouple — Proto 04 · Sign-up</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="proto/signup/su.css">
+<style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="proto/journey-store.js"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="proto/interview/iv-data.js"></script>
+<script src="proto/playback/pb-engine.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-ui.jsx"></script>
+<script type="text/babel" src="proto/signup/su-steps.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const J = window.Journey, Ic = window.DIc;
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "paper"
+}/*EDITMODE-END*/;
+const TKEY = "decouple.proto.suTheme";
+const STEPS = ["plan", "pay", "account", "done", "signin", "welcome"];
+const readStep = () => { const h = location.hash.replace("#", ""); return STEPS.includes(h) ? h : "plan"; };
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [mirror, setMirror] = useState(localStorage.getItem(TKEY));
+  useEffect(() => { if (!J.embedded) localStorage.setItem(TKEY, t.theme); }, [t.theme]);
+  useEffect(() => { const f = (e) => e.key === TKEY && setMirror(e.newValue); addEventListener("storage", f); return () => removeEventListener("storage", f); }, []);
+  const theme = J.embedded ? (mirror || t.theme) : t.theme;
+
+  const init = () => { const s = J.get(), d = s.discover || {}; return { tier: d.tier || "guided", payMode: d.payMode || "one", ...(s.signup || {}) }; };
+  const [st, setSt] = useState(init);
+  const set = (p) => { setSt((x) => ({ ...x, ...p })); J.set("signup", p); };
+  const [step, setStep] = useState(readStep);
+  useEffect(() => { const f = () => { setStep(readStep()); scrollTo(0, 0); }; addEventListener("hashchange", f); return () => removeEventListener("hashchange", f); }, []);
+  const go = (s) => { location.hash = "#" + s; };
+  const [exit, setExit] = useState(false);
+  const free = SUtierOf(st.tier).total === 0;
+  const list = free ? ["Plan", "Account", "Done"] : ["Plan", "Pay", "Account", "Done"];
+  const label = { plan: "Plan", pay: "Pay", account: "Account", done: "Done" }[step];
+  const bg = theme === "wash" ? "bg-wash" : "bg-paper";
+
+  if (exit) return <IVNeutral onBack={() => setExit(false)}/>;
+  return (
+    <div className={"site iv " + bg} data-screen-label={"Sign-up · " + step}>
+      <header className="iv-top">
+        <div className="l"><span className="wm" style={{ cursor: "default" }}>Decouple<i>.</i></span><small>{step === "signin" || step === "welcome" ? "Sign in" : "Secure checkout"}</small></div>
+        <div className="r">
+          {step !== "signin" && step !== "welcome" && !st.signedIn && <button className="pillbtn save" onClick={() => go("signin")}>Already have an account?</button>}
+          <button className="pillbtn exit" onClick={() => setExit(true)}><Ic.X s={12} c="#B91C1C"/> Quick exit</button>
+        </div>
+      </header>
+      <main className="su-body">
+        {label && <SUSteps list={list} cur={label}/>}
+        {step === "plan" && <SUPlan st={st} set={set} onNext={() => go(free ? "account" : "pay")}/>}
+        {step === "pay" && (st.paid ? <div className="narrow su-center"><h1 className="su-h" style={{ fontSize: 34 }}>You've already paid.</h1><div style={{ marginTop: 20 }}><button className="btn lg" onClick={() => go(st.signedIn ? "done" : "account")}>Continue <Ic.Arrow s={15}/></button></div></div>
+          : <SUPay st={st} set={set} onPaid={() => go("account")} onBack={() => go("plan")}/>)}
+        {step === "account" && <SUMagic st={st} set={set} title={free ? "Save your read to an account." : "Payment done. Now your account."} sub={free ? "Free, and no password. We'll email you a link that signs you in." : "We'll email a sign-in link to the address you paid with. No password to remember."} cta="Email me a sign-in link" onSignedIn={() => go("done")}/>}
+        {step === "done" && <SUDone st={st} set={set}/>}
+        {step === "signin" && <SUMagic st={st} set={set} signin title="Sign in to Decouple" sub="Enter your email and we'll send you a link that signs you in." cta="Send sign-in link" onSignedIn={() => go("welcome")}/>}
+        {step === "welcome" && <SUWelcomeBack st={st}/>}
+      </main>
+      <TweaksPanel>
+        <TweakSection label="Look & feel"/>
+        <TweakRadio label="Background" value={t.theme} options={[{ value: "paper", label: "Paper" }, { value: "wash", label: "Lilac" }]} onChange={(v) => setTweak("theme", v)}/>
+        <TweakSection label="Jump to"/>
+        <TweakButton label="Plan" onClick={() => go("plan")}/>
+        <TweakButton label="Sign in (returning)" onClick={() => go("signin")}/>
+        <TweakButton label="Reset sign-up" onClick={() => { J.set("signup", { paid: false, signedIn: false, invited: false, partnerEmail: "", ref: null, amount: null, method: null }); setSt({ ...init(), paid: false, signedIn: false, invited: false }); go("plan"); }}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

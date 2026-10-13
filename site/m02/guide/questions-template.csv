@@ -1,0 +1,53 @@
+id,section,type,label,helper,options,show_if,required,max,exclusive,placeholder,skip,version,active
+stage,about,cards,Where are you right now?,,"considering=Thinking about separating~Nothing's decided yet | decided=We've decided to separate~Still living under one roof | apart=We're living apart~Separated, nothing formal yet | filed=Divorce or dissolution has started~Application made, or about to be | agreed=We've mostly agreed~It needs writing up and making legal",,y,,,,,1,y
+status,about,cards,What's your legal status?,,"married=Married~Including separated, not yet divorced | civil=In a civil partnership~Registered partnership | cohab=Living together, not married~Cohabiting partners",,y,,,,,1,y
+years,about,seg,How long have you been together?,,u5=Under 5y | 5_10=5–10y | 10_20=10–20y | 20=20y+,,y,,,,,1,y
+where_uk,about,seg,Where do you live?,,ew=England or Wales | sc=Scotland | ni=Northern Ireland | else=Elsewhere,,y,,,,,1,y
+kids,kids,cards,Do you have children together?,,none=No children together | with=Yes — under 18 | grown=Yes — they're grown up now,,y,,,,,1,y
+ages,kids,chips,Roughly how old? Tap all that apply.,,u5=Under 5 | 5_11=5–11 | 11_16=11–16 | 16_18=16–18,kids = with,y,,,,,1,y
+kids_live,kids,cards,Where are they living day to day?,,me=Mostly with me | them=Mostly with my partner | shared=Roughly shared | unsettled=Not settled yet,kids = with,y,,,,,1,y
+kids_know,kids,seg,Do the children know?,,yes=Yes | partly=Partly | no=Not yet,kids = with,y,,,,,1,y
+living,home,cards,Where are you both living now?,,"together=Together, under one roof~Even if you’re separated | moved=One of us has moved out~Recently, or for a while | apart=We’ve lived apart for a while~Separate homes",,y,,,,,1,y
+home,home,cards,Your home,,"own_together=We own our home together~Joint mortgage or jointly owned | own_me=It's in my name~I own it, or the mortgage is mine | own_them=It's in my partner's name~They own it, or the mortgage is theirs | rent=We rent~Joint or sole tenancy",,y,,,,,1,y
+home_value,home,band,Roughly what's it worth?,,home,home starts with own,y,,,,,1,y
+mortgage,home,band,And what's left on the mortgage?,,mortgage,home starts with own,y,,,,,1,y
+cohab_home,home,note,"As you're not married, the law mainly looks at whose name the home is in, and what each of you paid towards it. We'll ask about that later.",,,status = cohab and home starts with own,y,,,,,1,y
+next_home,home,seg,Do you know where you’ll live afterwards?,,yes=Yes | some=Some idea | no=No idea yet,,y,,,,,1,y
+work,income,seg,Your work,,employed=Employed | self=Self-employed | none=Not working | retired=Retired,,y,,,,,1,y
+inc_me,income,band,"Your income, before tax",,income,,y,,,,Prefer not to say,1,y
+inc_them,income,band,"Your partner's income, roughly",,income,,y,,,,Not sure,1,y
+savings,assets,band,Savings & investments in joint names,,savings,status = cohab,y,,,,,1,y
+savings,assets,band,"Savings & investments, between you",,savings,status is not cohab,y,,,,,1,y
+savings_own,assets,band,And in your own name,,savings,status = cohab,y,,,,,1,y
+complex,assets,chips,Anything more complicated?,These can need specialist advice alongside Decouple.,business=A business | property=Another property | trust=A trust or inheritance | overseas=Assets overseas | none=None of these,,y,,none,,,1,y
+debt_kinds,debts,chips,What kinds?,,cards=Credit cards | loan=Personal loans | car=Car finance | overdraft=Overdraft | family=Owed to family | none=No debts,,y,,none,,,1,y
+debt_total,debts,band,"Roughly how much, in total?",,debt,debt_kinds is answered and debt_kinds lacks none,y,,,,,1,y
+debt_names,debts,seg,Whose names are they in?,,joint=Joint | me=Mine | them=Theirs | mixed=A mix,debt_kinds is answered and debt_kinds lacks none,y,,,,,1,y
+pen_me,pensions,band,"Your pensions, roughly",,pension,,y,,,,Not sure,1,y
+pen_them,pensions,band,Your partner's pensions,,pension,,y,,,,Not sure,1,y
+cohab_pen,pensions,note,Pensions usually aren't shared between unmarried couples — but they still matter for what's fair overall.,,,status = cohab,y,,,,,1,y
+cope,life,seg,How are you coping?,,ok=Okay | updown=Up and down | hard=Struggling,,y,,,,,1,y
+support,life,chips,Who do you have around you?,Tap any that apply.,family=Family | friends=Friends | therapy=A counsellor or therapist | gp=My GP | work=My employer | none=Nobody yet,,y,,none,,,1,y
+admin,life,chips,Have you started on any of these?,Optional. Anything you haven’t started goes on your checklist.,"accounts=Joint accounts and cards | bills=Bills, and who pays | post=Where post goes | will=Updating your will | benef=Pension and insurance beneficiaries | tell=Telling family and friends | school=Telling school or the GP",,n,,,,,1,y
+stand,where,cards,Has the decision been made?,,mutual=We both want to separate~Aligned on the decision | mine=It's my decision~My partner may not be there yet | theirs=It's their decision~I'm still coming to terms with it,,y,,,,,1,y
+comms,where,seg,How is communication between you?,,good=Civil | tense=Tense | hard=Very hard,,y,,,,,1,y
+goals,goals,chips,,,home=Stay in the family home | kids=Protect the children's stability | fair=A genuinely fair split | pension=Keep my pension secure | quick=Move on quickly and calmly | court=Stay out of court | security=Financial security | costs=Keep costs down,,y,3,,,,1,y
+name_me,names,text,Your first name,,,,y,,,e.g. Sarah,,1,y
+name_them,names,text,Your partner's first name,,,,y,,,e.g. Mark,,1,y
+clarity,ch:where,seg,"Before today, how clear were you on what happens next?",,1=Not at all | 2=A little | 3=Fairly | 4=Very,,n,,,,,1,y
+hardest,ch:where,chips,Which parts feel hardest right now?,Up to three.,"order=Knowing what to do, and when | fair=Knowing what’s fair | info=Getting the financial information | talk=Talking to my partner | legal=The legal side | cost=The cost | time=How long it takes | emo=The emotional side | kids=The children",,n,3,,,,1,y
+formE_feel,ch:picture,seg,How does gathering all of this sound?,,fine=Manageable | daunting=Daunting | new=I didn’t know about it,,n,,,,,1,y
+kids_hard,ch:kids,chips,What feels hardest about the children’s arrangements?,Tap any.,tell=Telling them | sched=Agreeing a schedule | money=Money for the children | talk=Communicating with my ex | move=Moving between homes | none=None of these,,n,,none,,,1,y
+range_useful,ch:fair,seg,How useful is it to see a likely range this early?,,1=Not useful | 2=Somewhat | 3=Very useful,,n,,,,,1,y
+route,ch:agree,cards,"If you were starting today, how would you most like to reach agreement?",,"diy=Just the two of us~On our own | online=Together, with a guided online service~Doing the work ourselves, with help | med=With a mediator~A neutral person in the room | sol=Each with a solicitor~Someone on my side | unsure=I don’t know yet",,n,,,,,1,y
+noprof,ch:agree,seg,How appealing is reaching agreement without a mediator or solicitor at all?,,1=Not at all | 2=Not very | 3=Maybe | 4=Quite | 5=Very,,n,,,,,1,y
+noprof_why,ch:agree,chips,What makes you feel that way?,Tap any.,money=It would save money | time=It would be quicker | calm=Less conflict | control=We’d stay in control | check=I’d still want it checked | wrong=I’d worry about mistakes | power=I’d worry they’d take advantage | complex=Ours is too complicated,,n,,,,,1,y
+trust,ch:legal,seg,Who would you trust to guide you through this?,,law=Only a lawyer | mostlaw=Mostly a lawyer | either=Either | mostonline=Mostly online | online=An online service,,n,,,,,1,y
+ai_ok,ch:legal,seg,And AI explaining your options?,,yes=Comfortable | check=If a person checks it | no=Not comfortable,,n,,,,,1,y
+trust_need,ch:legal,chips,What would you need to see to trust a service like this?,Up to three.,sol=A solicitor checks the agreement | how=How the figures are worked out | reg=Regulated or accredited | rev=Reviews from people like me | human=A real person to talk to | sec=Proof my data is secure | court=Courts approve its documents,,n,3,,,,1,y
+simplify,ch:you,long,"If one thing about separating could be made simpler, what would it be?",,,,n,,,In your own words,,1,y
+value,service,chips,What would make the biggest difference to you?,Up to two.,money=Saving money | time=Saving time | calm=Less conflict | control=Feeling in control | right=Knowing it’s done right | kids=Protecting the children from it,,n,2,,,,1,y
+expect,service,seg,What would you expect it to cost to sort the finances the usual way?,,u1k=Under £1k | 1_5=£1k to £5k | 5_15=£5k to £15k | 15=Over £15k | idk=No idea,,n,,,,,1,y
+time_worth,service,seg,How much time would it need to save to be worth paying for?,,wk=A few weeks | 3m=About 3 months | 6m=6 months or more | nm=Time doesn’t matter,,n,,,,,1,y
+partner,last,seg,Would your partner do something like this together with you?,,yes=Yes | prob=Probably | unsure=Not sure | probnot=Probably not | no=No,,n,,,,,1,y
+solo,last,seg,"If they wouldn’t at first, would you start on your own?",,yes=Yes | maybe=Maybe | no=No,,n,,,,,1,y

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Decouple — Site settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="settings/s.css">
+</head>
+<body>
+<header class="top" data-screen-label="Site settings">
+<span class="wm">Decouple<i>.</i></span>
+<div data-hubsw="site" data-date="October 2026"></div>
+<div class="top-r"><span id="chips" style="display:flex;gap:8px"></span><button class="tb" id="out" type="button">Sign out</button></div>
+</header>
+<main>
+<div class="head">
+<div class="kick">Site settings</div>
+<h1>What decouple.uk shows, and who can get in.</h1>
+<p>Changes take effect within a minute. Only you can see this page.</p>
+</div>
+<div class="banner" id="preview" hidden><b>Preview.</b><span>On decouple.uk, signed in, these switches control the live site. Here, changes are only kept in this browser. Test mode does work here: while it’s on, the guide and the protos in this browser send nothing.</span></div>
+<div class="grid">
+<section class="card">
+<div class="ch"><div><h2>Public site</h2><p>What people see at decouple.uk.</p></div><a class="btn ghost sm" href="/" target="_blank" rel="noopener">Open decouple.uk ↗</a></div>
+<div class="mode" role="radiogroup" aria-label="decouple.uk shows">
+<button class="mo" type="button" role="radio" data-m="guide"><span class="r"><b>The guide</b><span class="rd"></span></span><small>The free guide’s landing page. Starting it follows the tester-code setting.</small></button>
+<button class="mo" type="button" role="radio" data-m="holding"><span class="r"><b>Holding page</b><span class="rd"></span></span><small>“Coming soon” with an email sign-up. People with a code can still use the guide.</small></button>
+</div>
+<div class="row"><div><b>Guide needs a tester code</b><small id="code-help"></small></div><button class="sw" id="sw-code" type="button" role="switch" aria-label="Guide needs a tester code"></button></div>
+<div class="note" id="site-msg" role="status"></div>
+</section>
+<section class="card testc" id="test-card">
+<div class="ch"><div><h2>Test mode</h2><p>Try the guide without filling the results with your own answers.</p></div></div>
+<div class="row"><div><b>Don’t save anything I do</b><small id="test-help"></small></div><button class="sw" id="sw-test" type="button" role="switch" aria-label="Test mode"></button></div>
+<div class="note">The guide shows a small “Test mode” label whenever nothing is being sent.</div>
+</section>
+<section class="card span">
+<div class="ch"><div><h2>Tester codes</h2><p>Each code opens the guide for one person. Its label becomes their participant ID in Results. Send them the link and the code fills itself in. Turning a code off stops it working within a minute.</p></div>
+<div class="filt" role="tablist"><button type="button" data-f="active">Active · <span id="n-active" class="tab">0</span></button><button type="button" data-f="off">Off · <span id="n-off" class="tab">0</span></button><button type="button" data-f="all">All · <span id="n-all" class="tab">0</span></button></div></div>
+<form class="gen" id="gen">
+<label class="fld"><span>Label</span><input name="label" placeholder="e.g. P07, or Pilot · Hannah" maxlength="40" autocomplete="off"></label>
+<label class="fld"><span>How many</span><input name="count" type="number" min="1" max="20" value="1"></label>
+<label class="fld"><span>Expires</span><select name="exp"><option value="7">In 7 days</option><option value="30" selected>In 30 days</option><option value="90">In 90 days</option><option value="never">Never</option></select></label>
+<label class="chk" title="Answers from this code are never saved"><input type="checkbox" name="test"> Test code</label>
+<button class="btn" type="submit">Make code</button>
+</form>
+<div class="fresh" id="fresh"><div class="h"><span>New codes</span><span class="acts"><button class="btn sm" type="button" id="fresh-copy">Copy links</button><button class="btn sm ghost" type="button" id="fresh-x">Done</button></span></div><ul></ul></div>
+<div class="note" id="code-msg" role="status"></div>
+<div class="tbl" id="tbl"></div>
+<div class="note">Making several at once with a label like <code>P07</code> numbers them P07, P08, P09… A <b>test code</b> works like any other, but its answers are never saved. Use it on a phone or another device without signing in.</div>
+</section>
+<section class="card">
+<div class="ch"><div><h2>Questions</h2><p>After editing the “M02 Questions” tab in the spreadsheet, publish to put the changes live.</p></div></div>
+<div class="acts"><button class="btn" type="button" id="pub">Publish questions</button><a class="btn ghost" href="m02/guide/questions-template.csv" download>Download the template</a></div>
+<div class="note" id="q-msg" role="status"></div>
+</section>
+<section class="card">
+<div class="ch"><div><h2>Signing in</h2><p>There’s no sign-in button anywhere on the public site, on purpose.</p></div></div>
+<div class="note" style="font-size:13.5px;color:var(--sub)">Go to <code id="login-url">decouple.uk/studio</code>, or click the <b>Decouple.</b> wordmark at the bottom of the guide or holding page three times. You stay signed in for 30 days on that device.</div>
+</section>
+</div>
+</main>
+<script src="shared/dc-site.js"></script>
+<script src="hub/hub-switch.js"></script>
+<script src="settings/s.js"></script>
+</body>
+</html>

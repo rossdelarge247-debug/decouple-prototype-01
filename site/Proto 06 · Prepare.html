@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-stage="prepare">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Decouple — Proto 06 · Prepare</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="proto/onboard/ob.css">
+<link rel="stylesheet" href="proto/prepare/pp.css">
+<style>html,body{margin:0;background:#EFEAF6}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="proto/journey-store.js"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="proto/interview/iv-data.js"></script>
+<script src="proto/playback/pb-engine.js"></script>
+<script src="proto/prepare/pp-data.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-ui.jsx"></script>
+<script type="text/babel" src="proto/onboard/ob-cards.jsx"></script>
+<script type="text/babel" src="proto/prepare/pp-flow.jsx"></script>
+<script type="text/babel" src="proto/prepare/pp-paper.jsx"></script>
+<script type="text/babel" src="proto/prepare/pp-views.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+const J = window.Journey, PB = window.PB, Ic = window.DIc, PP = window.PP;
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "paper": "classic",
+  "bg": "lilac"
+}/*EDITMODE-END*/;
+const TKEY = "decouple.proto.ppTweaks";
+const STATES = [
+  ["s1", "Private · partner not invited"], ["s2", "Private · invited, not joined"], ["s3", "Private · partner joined, building theirs"],
+  ["s4", "Not ready to share (gaps)"], ["s5", "Ready to share"], ["s6", "Shared · waiting for partner"], ["s7", "Partner's picture & household → Proto 07"],
+];
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [mirror, setMirror] = useState(() => { try { return JSON.parse(localStorage.getItem(TKEY)); } catch (e) { return null; } });
+  useEffect(() => { if (!J.embedded) localStorage.setItem(TKEY, JSON.stringify(t)); }, [t]);
+  useEffect(() => { const f = (e) => { if (e.key === TKEY) try { setMirror(JSON.parse(e.newValue)); } catch (x) {} }; addEventListener("storage", f); return () => removeEventListener("storage", f); }, []);
+  const tw = J.embedded && mirror ? mirror : t;
+
+  const s0 = J.get(), a = ((s0.interview || {}).answers) || PB.EXAMPLE, N = PB.names(a);
+  const su = s0.signup || {}, banks = ((s0.onboard || {}).banks) || [];
+  const p0 = s0.prepare || {};
+  const [plan, setPlan] = useState(p0.plan || (su.tier && su.tier !== "free" ? su.tier : "guided"));
+  const [manual, setManual] = useState(p0.manual != null ? p0.manual : !banks.length);
+  const [phase, setPhase] = useState(p0.phase || "profile");
+  const [P, setP] = useState(p0.P || {});
+  const [pi, setPi] = useState(p0.pi || 0), [fi, setFi] = useState(p0.fi || 0), [pb, setPb] = useState(p0.pb || null);
+  const [res, setRes] = useState(p0.res || {}), [ev, setEv] = useState(p0.ev || {});
+  const [extra, setExtra] = useState(p0.extra || {});
+  const [ss, setSs] = useState(p0.ss || { share: "private", mark: su.invited ? "invited" : "none" });
+  const [view, setView] = useState(p0.view === "mark" || p0.view === "compare" ? "me" : p0.view || "me");
+  const [q, setQ] = useState(p0.q || {});
+  const [left, setLeft] = useState(0), [modal, setModal] = useState(null), [toast, setToast] = useState(null), [exit, setExit] = useState(false);
+  useEffect(() => { J.set("prepare", { plan, manual, phase, P, pi, fi, pb, res, ev, extra, ss, view, q }); }, [plan, manual, phase, P, pi, fi, pb, res, ev, extra, ss, view, q]);
+  useEffect(() => { scrollTo(0, 0); }, [phase, view]);
+
+  const kids = a.kids === "with";
+  const DEF_P = { housing: "mort_joint", payer: "me", work: "employed", car: "finance", pens: ["public"], ...(kids ? { kids: [{ name: "Emma", age: "7" }, { name: "Jake", age: "4" }], live: a.kids_live || "me" } : {}) };
+  const ko = { kids, list: P.kids || DEF_P.kids || [], live: P.live || a.kids_live || "me", them: N.them };
+  const bank = (banks.find((b) => !b.upload) || {}).name || "Barclays";
+  const list = useMemo(() => PP.cards(a, P, N, { manual, bank }), [JSON.stringify(P), manual]);
+  const pic = PP.picture(list, res, ev, extra, ko);
+  const say = (t1, t2) => { setToast([t1, t2]); setTimeout(() => setToast(null), 3200); };
+  const act = {
+    them: N.them,
+    move: (key, sec) => setExtra((x) => ({ ...x, moved: { ...(x.moved || {}), [key]: sec } })),
+    add: (sec, l, v) => setExtra((x) => ({ ...x, added: [...(x.added || []), { sec, l, v: v ? PP.gbp(v) : "—", n: v, key: "add" + Date.now() }] })),
+    upload: (sec) => { setExtra((x) => ({ ...x, uploads: { ...(x.uploads || {}), [sec]: ((x.uploads || {})[sec] || 0) + 1 } })); say("Evidence added", "Attached to this section of your Form E."); },
+    none: (sec, v) => setExtra((x) => ({ ...x, none: { ...(x.none || {}), [sec]: v } })),
+    sort: (card, cat) => setRes((r) => ({ ...r, [card]: { v: "recat", cat } })),
+    setMark: (m) => { setSs((s) => ({ ...s, mark: m })); if (m === "invited") say(`Invite sent to ${N.them}`, "They'll see nothing of yours until you share."); },
+    view: (v) => (v === "mark" || v === "compare" ? J.goStage("reconcile") : setView(v)), review: () => setModal("review"), toast: say,
+    fulfil: (id) => { setEv((x) => ({ ...x, [id]: "up" })); setRes((x) => ({ ...x, [id]: { v: "up" } })); say("Evidence added", "Attached to this section of your Form E."); },
+    export: () => say("Form E exported", "Pre-filled from your picture — ready for a mediator or solicitor."),
+    editKids: () => { setPhase("profile"); setPi(0); },
+  };
+
+  function fill(full, L = list) {
+    const r = {}, e = {};
+    L.forEach((c) => {
+      if (c.kind === "ev") { r[c.id] = { v: "later" }; e[c.id] = "later"; return; }
+      if (!full && (c.id === "o_amz" || c.id === "o_gift")) { r[c.id] = { v: "unsure" }; return; }
+      if (c.kind === "group") r[c.id] = { v: "yes" };
+      else if (c.kind === "amount") r[c.id] = { v: c.pre };
+      else r[c.id] = { v: (c.opts.find((o) => o[0] === "no") || c.opts[0])[0] };
+    });
+    if (ev.i_ev_pay === "up" || full) { r.i_ev_pay = { v: "up" }; e.i_ev_pay = "up"; }
+    setRes(r); setEv(e);
+    const pic2 = PP.picture(L, r, e, {}, ko);
+    const none = {}; pic2.secs.forEach((s) => { if (!pic2.rows[s.id].length && (full || s.id !== "other_prop")) none[s.id] = true; });
+    setExtra({ none }); setPhase("paper"); setPb(null);
+  }
+  function jump(id) {
+    const P2 = { ...DEF_P, ...P }; setP(P2);
+    const L = PP.cards(a, P2, N, { manual, bank });
+    const k = +id.slice(1);
+    if (k <= 3) { fill(true, L); setSs({ share: "private", mark: ["none", "invited", "joined"][k - 1] }); setView("me"); setExtra((x) => ({ ...x, none: { ...(x.none || {}), other_prop: false } })); }
+    if (k === 4) { fill(false, L); setSs({ share: "private", mark: "joined" }); setView("me"); }
+    if (k === 5) { fill(true, L); setSs({ share: "private", mark: "joined" }); setView("me"); }
+    if (k === 6) { fill(true, L); setSs({ share: "shared", mark: "joined" }); setView("me"); }
+    if (k >= 7) { fill(true, L); setSs({ share: "both", mark: "joined" }); setView("me"); setTimeout(() => J.goStage("reconcile"), 50); }
+  }
+
+  const profDone = PP.profileQs(a, N).filter((x) => !x.when || x.when(P)).every((x) => P[x.id] != null || (x.id === "kids" && ko.list.length) || (x.id === "live" && ko.live));
+  const nest = [
+    { k: "setup", l: "Setup", done: profDone, go: () => { setPhase("profile"); setPi(0); setView("me"); } },
+    ...PP.FLOW.map(([id, l]) => { const cs = list.filter((c) => c.sec === id), n = cs.filter((c) => res[c.id]).length; return cs.length && { k: id, l, done: n === cs.length, part: n > 0 && n < cs.length, sm: n < cs.length ? `${cs.length - n} left` : "", go: () => { setPhase("flow"); setFi(list.indexOf(cs[0])); setPb(null); setView("me"); } }; }).filter(Boolean),
+    { k: "paper", l: "Your picture", done: pic.ready, part: !pic.ready && phase === "paper", sm: `${pic.pct}%`, go: () => setPhase("paper") },
+  ];
+  const curK = phase === "profile" ? "setup" : phase === "paper" ? "paper" : (pb || (list[fi] || {}).sec);
+  const rail = <OBRail plan={plan} active="prepare" sub={
+    <div className="ph-nest">{nest.map((x) => <button key={x.k} className={(x.k === curK ? "on " : "") + (x.done ? "dn" : x.part ? "pt" : "")} aria-current={x.k === curK ? "step" : undefined} onClick={x.go}><span className="k">{x.done && <Ic.Check s={9} w={3.2} c="#FFF"/>}</span>{x.l}{x.sm && <small>{x.sm}</small>}</button>)}</div>
+  }/>;
+
+  if (exit) return <IVNeutral onBack={() => setExit(false)}/>;
+  let body;
+  if (phase === "profile") body = <PPProfile qs={PP.profileQs(a, N)} P={P} setP={setP} i={pi} setI={setPi} onExit={() => { setLeft(list.length + 5 - pi); setPhase("resume"); }} onDone={() => { setPhase("flow"); setFi(0); setPb(null); }}/>;
+  else if (phase === "flow") body = <PPFlow list={list} res={res} setRes={setRes} ev={ev} setEv={setEv} fi={fi} setFi={setFi} pb={pb} setPb={setPb} pic={pic} onFinish={() => setPhase("paper")} onExit={(n) => { setLeft(n); setPhase("resume"); }}/>;
+  else if (phase === "resume") body = <PPResume left={left || list.length - fi} N={N} onResume={() => setPhase(fi || pb || Object.keys(res).length ? "flow" : "profile")}/>;
+  else body = <PPPaperView N={N} pic={pic} act={act} none={extra.none || {}} ss={ss} plan={plan} banks={banks} manual={manual}/>;
+
+  return (
+    <div className={"site ob pp " + (tw.bg === "paper" ? "bg-paper" : "bg-lilac")} data-screen-label={"Prepare · " + (phase === "paper" ? view : phase)}>
+      <OBTop N={N} onExit={() => setExit(true)}/>
+      <div className={"ob-shell two" + (phase === "paper" ? " wide" : "")}>
+        {rail}
+        <main className={"pp-stage ph-" + phase}>{body}</main>
+      </div>
+      {modal === "review" && <PPReview N={N} pic={pic} mark={ss.mark} onClose={() => setModal(null)} onSend={() => { setSs((s) => ({ ...s, share: "shared" })); setModal(null); say(`Shared with ${N.them}`, "They can query anything — nothing can be changed but by you."); }}/>}
+      {toast && <div className="pp-toast" role="status"><b>{toast[0]}</b>{toast[1] && <span>{toast[1]}</span>}</div>}
+      <TweaksPanel>
+        <TweakSection label="Look & feel"/>
+        <TweakRadio label="Background" value={t.bg} options={[{ value: "lilac", label: "Lilac" }, { value: "paper", label: "Paper" }]} onChange={(v) => setTweak("bg", v)}/>
+        <TweakSection label="Sharing state"/>
+        <TweakSelect label="Jump to state" value="" options={[{ value: "", label: "Choose a state…" }, ...STATES.map(([v, l]) => ({ value: v, label: l }))]} onChange={(v) => v && jump(v)}/>
+        <TweakSection label="Setup"/>
+        <TweakRadio label="Data" value={manual ? "manual" : "bank"} options={[{ value: "bank", label: "Bank connected" }, { value: "manual", label: "No bank (manual)" }]} onChange={(v) => { setManual(v === "manual"); setFi(0); setPb(null); }}/>
+        <TweakRadio label="Plan" value={plan} options={[{ value: "picture", label: "£99" }, { value: "guided", label: "£499" }, { value: "complete", label: "£999" }]} onChange={setPlan}/>
+        <TweakSection label="Jump to"/>
+        <TweakButton label="Setup questions" onClick={() => { setPhase("profile"); setPi(0); setView("me"); }}/>
+        <TweakButton label="Sorting flow (start)" onClick={() => { if (!Object.keys(P).length) setP(DEF_P); setPhase("flow"); setFi(0); setPb(null); setView("me"); }}/>
+        <TweakButton label="Save & exit prompt" onClick={() => { setLeft(Math.max(1, list.length - fi)); setPhase("resume"); setView("me"); }}/>
+        <TweakButton label="Reset Prepare" onClick={() => { setP({}); setPi(0); setFi(0); setPb(null); setRes({}); setEv({}); setExtra({}); setSs({ share: "private", mark: "none" }); setView("me"); setQ({}); setPhase("profile"); }}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
