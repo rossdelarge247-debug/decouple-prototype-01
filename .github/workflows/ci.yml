@@ -1,0 +1,32 @@
+name: CI
+
+# The site: typecheck, tests, the build, and a check that the generated files are committed.
+# The archived prototype has its own workflow, archive-ci.yml. Gitleaks runs in gitleaks.yml.
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'archive/**'
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'archive/**'
+
+jobs:
+  site:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Generated files are committed
+        run: git diff --exit-code -- lib/generated
+      - name: Nothing left over in dist
+        run: '! grep -rlE "text/babel|unpkg\.com|fonts\.googleapis\.com" dist --include=*.html'

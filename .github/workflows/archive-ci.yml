@@ -1,18 +1,18 @@
 name: CI (archive/prototype-01)
 
 # The archived prototype stays green on its own: the jobs run inside its folder and
-# only when something in it changes. The root has no CI until the new work arrives.
+# only when something in it changes. The site at the root has its own workflow, ci.yml.
 
 on:
   pull_request:
     paths:
       - 'archive/prototype-01/**'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/archive-ci.yml'
   push:
     branches: [main]
     paths:
       - 'archive/prototype-01/**'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/archive-ci.yml'
 
 concurrency:
   group: ci-${{ github.ref }}
