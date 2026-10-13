@@ -11,4 +11,4 @@ archived; the work done in Claude Design is arriving and will become the main wo
 | `incoming/` | A quarantine for the Claude Design export. Read `incoming/README.md` before adding or taking anything. |
 | the root | Reserved for the new main work. Until it has a build, `vercel.json` skips every deployment and no CI runs here. |
 
-The tag `prototype-01-root-layout` marks the last commit with the prototype at the root.
+The last commit with the prototype at the root is `972a92c`; the tag `prototype-01-root-layout` points at it.
