@@ -1,6 +1,7 @@
-/* Site settings (spec §4): mode, requireCode and testMode, read from Edge Config and cached for
-   60 seconds per instance. Written through the Vercel REST API (spec §7, /api/admin/site). */
-import { createClient } from '@vercel/edge-config'
+/* Site settings (spec §4): mode, requireCode and testMode, read from the Global Config store
+   (Vercel renamed Edge Config in 2026; the old names still work) and cached for 60 seconds per
+   instance. Written through the Vercel REST API (spec §7, /api/admin/site). */
+import { createClient } from '@vercel/global-config'
 import { env, type Env } from './env.js'
 
 export interface Settings {
@@ -47,10 +48,16 @@ type Reader = () => Promise<unknown>
 let cache: { at: number; value: Settings } | null = null
 let reader: Reader | null = null
 
+/** the connection string Vercel adds when the store is connected, under either name */
+export function connectionString(e: Env = env()): string | null {
+  return e.GLOBAL_CONFIG || e.EDGE_CONFIG || null
+}
+
 function defaultReader(e: Env = env()): Reader {
   return async () => {
-    if (!e.EDGE_CONFIG) return null
-    const client = createClient(e.EDGE_CONFIG)
+    const conn = connectionString(e)
+    if (!conn) return null
+    const client = createClient(conn)
     return client.getAll(['mode', 'requireCode', 'testMode'])
   }
 }
@@ -79,12 +86,15 @@ export async function readSettings(now: number = Date.now(), ttlMs: number = SET
   return value
 }
 
-/* The store's id, from EDGE_CONFIG_ID or from the connection string Vercel adds when the store is connected */
-export function edgeConfigId(e: Env = env()): string | null {
-  if (e.EDGE_CONFIG_ID) return e.EDGE_CONFIG_ID.trim()
-  if (!e.EDGE_CONFIG) return null
+/* The store's id: GLOBAL_CONFIG_ID or EDGE_CONFIG_ID when set, otherwise the first path segment of
+   the connection string (https://global-config.vercel.com/<id>?token=…) */
+export function storeId(e: Env = env()): string | null {
+  const given = e.GLOBAL_CONFIG_ID || e.EDGE_CONFIG_ID
+  if (given) return given.trim()
+  const conn = connectionString(e)
+  if (!conn) return null
   try {
-    const m = new URL(e.EDGE_CONFIG).pathname.match(/^\/(ecfg_[A-Za-z0-9]+)/)
+    const m = new URL(conn).pathname.match(/^\/([A-Za-z0-9_-]+)/)
     return m ? m[1] : null
   } catch {
     return null
@@ -93,12 +103,12 @@ export function edgeConfigId(e: Env = env()): string | null {
 
 /* Upsert the changed keys in the Edge Config store, then return the merged settings */
 export async function writeSettings(patch: Partial<Settings>, e: Env = env()): Promise<Settings> {
-  const id = edgeConfigId(e)
+  const id = storeId(e)
   const token = e.VERCEL_API_TOKEN
-  if (!id || !token) throw new Error('Edge Config writes are not configured: connect the store (EDGE_CONFIG) and set VERCEL_API_TOKEN.')
+  if (!id || !token) throw new Error('Settings writes are not configured: connect the Global Config store (GLOBAL_CONFIG) and set VERCEL_API_TOKEN.')
   const current = await readSettings()
   const next: Settings = { ...current, ...patch }
-  const u = new URL(`https://api.vercel.com/v1/edge-config/${encodeURIComponent(id)}/items`)
+  const u = new URL(`https://api.vercel.com/v1/global-config/${encodeURIComponent(id)}/items`)
   if (e.VERCEL_TEAM_ID) u.searchParams.set('teamId', e.VERCEL_TEAM_ID)
   const res = await fetch(u, {
     method: 'PATCH',

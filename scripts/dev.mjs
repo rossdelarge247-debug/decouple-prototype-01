@@ -2,7 +2,7 @@
 /* Local emulation of how Vercel serves the site: middleware.ts in front, then dist/ or api/.
    npm run build && npm run dev   →  http://localhost:3000
    Reads .env.local if present. With MOCK=1 (the default when APPS_SCRIPT_URL is not set) the
-   Google script, Edge Config, the Vercel API, Resend and Turnstile are mocked in this process,
+   Google script, Global Config, the Vercel API, Resend and Turnstile are mocked in this process,
    so the spec §11 checks that do not need Vercel itself can be run here. State: GET /__mock. */
 import { createRequire } from 'node:module'
 import { createServer } from 'node:http'
@@ -102,8 +102,7 @@ if (MOCK) {
   Object.assign(process.env, {
     APPS_SCRIPT_URL: 'https://script.google.com/macros/s/mock/exec',
     APPS_SCRIPT_SECRET: 'mock',
-    EDGE_CONFIG: 'https://edge-config.vercel.com/ecfg_mock?token=mock',
-    EDGE_CONFIG_ID: 'ecfg_mock',
+    GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_mock?token=mock',
     VERCEL_API_TOKEN: 'mock',
     RESEND_API_KEY: 'mock',
     TURNSTILE_SECRET_KEY: 'mock',
@@ -115,9 +114,9 @@ if (MOCK) {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
     const host = new URL(url).host
     if (host === 'script.google.com') return mockScript(url, init)
-    if (host === 'edge-config.vercel.com') return jsonRes(mock.settings)
+    if (host === 'global-config.vercel.com' || host === 'edge-config.vercel.com') return jsonRes(mock.settings)
     if (host === 'api.vercel.com') {
-      if (url.includes('/edge-config/')) {
+      if (url.includes('/global-config/') || url.includes('/edge-config/')) {
         for (const it of JSON.parse(String(init?.body || '{}')).items || []) mock.settings[it.key] = it.value
         return jsonRes({ status: 'ok' })
       }
