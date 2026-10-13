@@ -32,6 +32,10 @@ https://vercel.com/rossdelarge247-debugs-projects/decouple-prototype-01/settings
 
 Then remove `TINK_CLIENT_ID`, `TINK_CLIENT_SECRET` and `ANTHROPIC_API_KEY` from Production, and rotate them at Tink and Anthropic: the app that used them is retired. Deployments › the latest › Redeploy, so the functions pick everything up.
 
+## Checking the connections
+
+Signed in, open `/api/admin/diagnose` on the site. It lists which variables are present and missing, reads the Global Config store, checks the API token can reach it, calls the Google script, and says what the switches still need. It never shows a value. If a switch fails with "Couldn't reach the site", this page says why.
+
 ## Domain
 
 1. Settings › Domains: decouple.uk is the primary domain; `www.decouple.uk` redirects to it (Edit › Redirect to decouple.uk, 308).
