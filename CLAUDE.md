@@ -1,56 +1,19 @@
 # Claude Code — Decouple
 
-Read `docs/BRIEF.md` first. It is the product, the journey, the non-negotiables, the
-experience pillars and the bar. This file only says how to work in this repository.
+This repository is between two generations of the product. Three folders, three rules.
 
-## How to work
+- `archive/prototype-01/` is the first prototype, frozen on 13 October 2026. It is
+  complete and runnable on its own, and its own `CLAUDE.md` and `docs/` apply inside
+  it. Change nothing there unless the task is explicitly about the archive.
+- `incoming/` is a quarantine for files exported from Claude Design. Read from it and
+  port from it; delete each file once it has been ported. Nothing imports from it and
+  nothing deploys from it.
+- The root is reserved for the work that replaces the prototype. Until it arrives there
+  is no app, no CI for the root, and no deployment: `vercel.json` skips every build.
 
-- **Build vertically.** One journey a real person completes on real data before any
-  breadth. The current phase and the next outcome are named in `docs/SESSION-CONTEXT.md`.
-- **One outcome per session, a fresh session each time.** The repository is the only
-  memory: git, SESSION-CONTEXT, the last handoff, the golden path's failing step. A
-  session that reaches context summarisation was too big; say so in the handoff.
-- **Definition of done per session:** one sentence, "a user can now … in the preview",
-  verified by clicking it in the Vercel preview.
-- **The bar is the golden path.** `tests/e2e/golden-path.e2e.ts` encodes the script in
-  the brief and fails at the first unbuilt step. Each session moves that point.
-- **One pass per screen.** The owner's reference screens (`docs/design-reference/`)
-  are inspiration, never a bar: look once, compare and contrast, build, ship, and
-  record in the handoff what was taken and what was changed. Tokens, real data, wire
-  it. Polish once, against the whole journey, when the journey works.
-- **Decisions are the human's.** At a fork, ask with `AskUserQuestion`, record the
-  answer in one line in `docs/SESSION-CONTEXT.md`, continue. Never write a spec to
-  avoid asking.
-- **The floor is CI:** lint, typecheck, unit tests, production build. Nothing else.
-  No hooks, personas, workflows, review loops, loop cards or specs.
-- **Budget:** five sessions to the kill criterion in the brief. Then judge.
-
-## Docs per session
-
-Update `docs/SESSION-CONTEXT.md` (under 60 lines) and write `docs/HANDOFF-N.md`
-(under 25 lines: what a user can now do, decisions taken, what broke, next).
-
-## Startup
-
-1. `npm ci`. For e2e in the Claude sandbox: `PW_CHROMIUM=/opt/pw-browsers/chromium npm run e2e:a11y`.
-   Elsewhere `npx playwright install chromium` once.
-2. Read `docs/SESSION-CONTEXT.md`.
-3. Confirm the session's one outcome with the user, then build.
-
-## Technical rules
-
-- Reuse the engine in `src/lib/bank` and `src/lib/ai` verbatim. Fix bugs in place;
-  do not rewrite. AI extracts facts; the app generates questions.
-- Anthropic SDK: `output_config.format`, not `response_format`; every JSON schema
-  object carries `additionalProperties: false`; 90s SDK timeout, 300s route
-  `maxDuration`.
-- The previous prototype's visual design is not used. Create design tokens from the
-  product owner's reference screens at the first screen build, in
-  `src/styles/tokens.ts` and `src/app/globals.css`, with a parity test. Never inline
-  a colour or font after that.
-- Effects (storage, network, time) sit behind interfaces so logic is testable
-  without mocking the world. Tests where there is logic; not for pure-visual UI.
-- Comments say why, never what, and never carry session provenance.
-- Production is https://decouple-prototype-01.vercel.app. Tink credentials are Vercel
-  env vars and only the production callback is whitelisted in the Tink console.
-- Diagnose before fixing: read the error, the log, the live DOM. Don't guess.
+When the Claude Design export lands, read `incoming/README.md`, then confirm with the
+owner how it becomes the root before moving a file: the export may be a runnable app
+or designs to build from, and that decision is theirs. The product brief and journey
+still govern: `archive/prototype-01/docs/BRIEF.md` and `JOURNEY.md`, with the decisions
+recorded in `archive/prototype-01/docs/SESSION-CONTEXT.md`, stand until the owner says
+otherwise. The way of working for the new generation is written when the work starts.

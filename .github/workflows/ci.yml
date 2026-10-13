@@ -1,13 +1,26 @@
-name: CI
+name: CI (archive/prototype-01)
+
+# The archived prototype stays green on its own: the jobs run inside its folder and
+# only when something in it changes. The root has no CI until the new work arrives.
 
 on:
   pull_request:
+    paths:
+      - 'archive/prototype-01/**'
+      - '.github/workflows/ci.yml'
   push:
     branches: [main]
+    paths:
+      - 'archive/prototype-01/**'
+      - '.github/workflows/ci.yml'
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: archive/prototype-01
 
 jobs:
   floor:
@@ -19,6 +32,7 @@ jobs:
         with:
           node-version: '20'
           cache: npm
+          cache-dependency-path: archive/prototype-01/package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
@@ -34,6 +48,7 @@ jobs:
         with:
           node-version: '20'
           cache: npm
+          cache-dependency-path: archive/prototype-01/package-lock.json
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run build
