@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { DEFAULTS, clearSettingsCache, normaliseSettings, parsePatch, readSettings, useSettingsReader } from '../lib/settings.js'
+import { DEFAULTS, clearSettingsCache, connectionString, normaliseSettings, parsePatch, readSettings, storeId, useSettingsReader } from '../lib/settings.js'
 
 afterEach(() => useSettingsReader(null))
 
@@ -8,6 +8,18 @@ describe('site settings', () => {
     expect(normaliseSettings(null)).toEqual(DEFAULTS)
     expect(normaliseSettings({ mode: 'guide', requireCode: false, testMode: 'yes' })).toEqual({ mode: 'guide', requireCode: false, testMode: false })
     expect(normaliseSettings({ mode: 'other' }).mode).toBe('holding')
+  })
+
+  it('finds the store id and connection string under the new and the old names', () => {
+    expect(storeId({ GLOBAL_CONFIG_ID: 'ecfg_abc' })).toBe('ecfg_abc')
+    expect(storeId({ EDGE_CONFIG_ID: 'ecfg_old' })).toBe('ecfg_old')
+    expect(storeId({ GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_xyz123?token=t' })).toBe('ecfg_xyz123')
+    expect(storeId({ EDGE_CONFIG: 'https://edge-config.vercel.com/ecfg_xyz123?token=t' })).toBe('ecfg_xyz123')
+    expect(storeId({ GLOBAL_CONFIG: 'not a url' })).toBeNull()
+    expect(storeId({})).toBeNull()
+    expect(connectionString({ GLOBAL_CONFIG: 'g', EDGE_CONFIG: 'e' })).toBe('g')
+    expect(connectionString({ EDGE_CONFIG: 'e' })).toBe('e')
+    expect(connectionString({})).toBeNull()
   })
 
   it('validates a patch from the owner', () => {

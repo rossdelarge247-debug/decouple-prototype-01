@@ -194,12 +194,12 @@ describe('owner-only routes', () => {
 
   it('writes settings through the Vercel API when configured', async () => {
     const fetch = mockFetch(() => ({ status: 'ok' }))
-    Object.assign(process.env, { EDGE_CONFIG_ID: 'ecfg_1', VERCEL_API_TOKEN: 'tok' })
+    Object.assign(process.env, { GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_1?token=t', VERCEL_API_TOKEN: 'tok', VERCEL_TEAM_ID: 'team_9' })
     const owner = await cookieFor('owner')
     const r = await sitePost(post('/api/admin/site', { mode: 'guide', testMode: true }, owner))
     expect(await r.json()).toEqual({ mode: 'guide', requireCode: true, testMode: true })
     const [url, init] = fetch.mock.calls[0]
-    expect(String(url)).toBe('https://api.vercel.com/v1/edge-config/ecfg_1/items')
+    expect(String(url)).toBe('https://api.vercel.com/v1/global-config/ecfg_1/items?teamId=team_9')
     expect(init?.method).toBe('PATCH')
     expect(JSON.parse(String(init?.body))).toEqual({ items: [{ operation: 'upsert', key: 'mode', value: 'guide' }, { operation: 'upsert', key: 'testMode', value: true }] })
   })
@@ -228,5 +228,26 @@ describe('owner-only routes', () => {
     process.env.DEPLOY_HOOK_URL = 'https://api.vercel.com/v1/integrations/deploy/prj_x/abc'
     expect((await publish(post('/api/admin/publish', {}, owner))).status).toBe(200)
     expect(fetch.mock.calls[0][1]?.method).toBe('POST')
+  })
+})
+
+describe('/api/admin/diagnose', () => {
+  it('is owner-only and reports names and outcomes, never values', async () => {
+    const { GET: diagnose } = await import('../api/admin/diagnose.js')
+    expect((await diagnose(req('/api/admin/diagnose'))).status).toBe(401)
+    mockFetch((url) => (url.includes('api.vercel.com') ? { id: 'ecfg_1' } : url.includes('global-config.vercel.com') ? { mode: 'guide', requireCode: false, testMode: false } : { ok: true, codes: [{ code: 'A-B-01' }] }))
+    Object.assign(process.env, SCRIPT, { GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_1?token=secret-token', VERCEL_API_TOKEN: 'vcp_secret' })
+    const r = await diagnose(req('/api/admin/diagnose', { cookie: await cookieFor('owner') }))
+    expect(r.status).toBe(200)
+    const text = await r.text()
+    expect(text).not.toContain('secret-token')
+    expect(text).not.toContain('vcp_secret')
+    expect(text).not.toContain('shh')
+    const d = JSON.parse(text)
+    expect(d.variables.present).toContain('GLOBAL_CONFIG')
+    expect(d.variables.missing).toContain('RESEND_API_KEY')
+    expect(d.store).toMatchObject({ connected: true, id: 'ecfg_1', read: 'ok', settings: { mode: 'guide', requireCode: false, testMode: false } })
+    expect(d.vercelApi.check).toMatch(/^ok/)
+    expect(d.script).toMatchObject({ configured: true, check: 'ok', codes: 1 })
   })
 })

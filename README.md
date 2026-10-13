@@ -10,7 +10,7 @@ handoff is `docs/HANDOFF-SITE-1.md`. The earlier prototype lives on in `archive/
 | `site/` | The exported pages, read-only. Changed only through `SYNC.md`. |
 | `middleware.ts` | Who may see what: the allow-list, the aliases, the sessions, the 404. |
 | `api/` | Vercel Functions: login, tester codes, answers, sign-ups, the guide email, results, the owner's switches. |
-| `lib/` | Pure, tested logic: cookie signing, code checks, answer cleaning, settings, the build transform. |
+| `lib/` | Pure, tested logic: cookie signing, code checks, answer cleaning, the settings in Vercel's Global Config store, the build transform. |
 | `scripts/build.mjs` | `site/` → `dist/`: compiled JSX, production React, self-hosted fonts, cache-busting, the public allow-list. |
 | `scripts/dev.mjs` | Runs the site locally the way Vercel routes it, with every outside service mocked. |
 | `pages-src/` | The two pages built here, not in the design project: the login and the 404. |
