@@ -1,8 +1,8 @@
-import { mayAnswer, unauthorised, who } from '../lib/api.ts'
-import { cleanAnswers } from '../lib/clean.ts'
-import { bad, json, readJson } from '../lib/http.ts'
-import { answersLimiter } from '../lib/ratelimit.ts'
-import { ScriptError, scriptPost } from '../lib/script.ts'
+import { mayAnswer, unauthorised, who } from '../lib/api.js'
+import { cleanAnswers } from '../lib/clean.js'
+import { bad, json, readJson } from '../lib/http.js'
+import { answersLimiter } from '../lib/ratelimit.js'
+import { ScriptError, scriptPost } from '../lib/script.js'
 
 export async function POST(request: Request): Promise<Response> {
   const w = await who(request)

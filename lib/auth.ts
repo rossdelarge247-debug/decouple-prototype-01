@@ -1,10 +1,10 @@
 /* Who is asking (spec §3): the sessions from the cookies, the tester code re-checked against the
    codes list, and whether this request is in test mode. Used by the middleware and every function. */
-import { env, sessionSecret, type Env } from './env.ts'
-import { createCodeStore, normaliseRows, parseFallback, type CodeRow, type CodeStore } from './codes.ts'
-import { scriptConfigured, scriptGet, scriptPost } from './script.ts'
-import { readSessions, sessionKey, type Session } from './session.ts'
-import { readSettings, type Settings } from './settings.ts'
+import { env, sessionSecret, type Env } from './env.js'
+import { createCodeStore, normaliseRows, parseFallback, type CodeRow, type CodeStore } from './codes.js'
+import { scriptConfigured, scriptGet, scriptPost } from './script.js'
+import { readSessions, sessionKey, type Session } from './session.js'
+import { readSettings, type Settings } from './settings.js'
 
 let store: CodeStore | null = null
 

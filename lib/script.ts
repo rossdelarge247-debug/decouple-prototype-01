@@ -1,5 +1,5 @@
 /* The Google Apps Script web app (spec §6): one GET and one POST, both carrying the shared secret. */
-import { env, type Env } from './env.ts'
+import { env, type Env } from './env.js'
 
 export class ScriptError extends Error {
   status: number

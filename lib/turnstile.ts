@@ -1,5 +1,5 @@
 /* Cloudflare Turnstile: proves a visitor is a person when there is no tester or owner session. */
-import { env, type Env } from './env.ts'
+import { env, type Env } from './env.js'
 
 export async function verifyTurnstile(token: unknown, ip: string | undefined, e: Env = env()): Promise<boolean> {
   const secret = e.TURNSTILE_SECRET_KEY

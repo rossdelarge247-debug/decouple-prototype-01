@@ -1,6 +1,6 @@
 /* Shared by the functions in api/: who is asking, and the two gates most routes need. */
-import { whoami, type Who } from './auth.ts'
-import { clientIp, json } from './http.ts'
+import { whoami, type Who } from './auth.js'
+import { clientIp, json } from './http.js'
 
 /** the functions read settings at most 5 s old, so test mode and the code switch bite quickly */
 export const FUNCTION_SETTINGS_TTL_MS = 5_000

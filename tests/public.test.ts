@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { isPublicPath, loadPublicList, normalisePath } from '../lib/public.ts'
-import { PUBLIC_PATHS } from '../lib/generated/public.ts'
+import { isPublicPath, loadPublicList, normalisePath } from '../lib/public.js'
+import { PUBLIC_PATHS } from '../lib/generated/public.js'
 
 describe('the public allow-list', () => {
   it('matches encoded and decoded forms of the same path', () => {

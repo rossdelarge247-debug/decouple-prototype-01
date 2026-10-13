@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { CODE_RE, createCodeStore, findCode, isLive, normaliseCode, normaliseRow, normaliseRows, parseFallback } from '../lib/codes.ts'
+import { CODE_RE, createCodeStore, findCode, isLive, normaliseCode, normaliseRow, normaliseRows, parseFallback } from '../lib/codes.js'
 
 describe('tester codes', () => {
   it('normalises what the sheet returns', () => {

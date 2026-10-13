@@ -1,8 +1,8 @@
-import { mayAnswer, unauthorised, who } from '../lib/api.ts'
-import { EMAIL_RE, stripControl } from '../lib/clean.ts'
-import { guideEmail, sendEmail, validGuideLink } from '../lib/email.ts'
-import { bad, json, readJson } from '../lib/http.ts'
-import { emailLimiter } from '../lib/ratelimit.ts'
+import { mayAnswer, unauthorised, who } from '../lib/api.js'
+import { EMAIL_RE, stripControl } from '../lib/clean.js'
+import { guideEmail, sendEmail, validGuideLink } from '../lib/email.js'
+import { bad, json, readJson } from '../lib/http.js'
+import { emailLimiter } from '../lib/ratelimit.js'
 
 export async function POST(request: Request): Promise<Response> {
   const w = await who(request)

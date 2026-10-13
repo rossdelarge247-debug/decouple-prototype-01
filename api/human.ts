@@ -1,7 +1,7 @@
-import { sessionSecret } from '../lib/env.ts'
-import { bad, clientIp, json, readJson } from '../lib/http.ts'
-import { humanCookie } from '../lib/session.ts'
-import { verifyTurnstile } from '../lib/turnstile.ts'
+import { sessionSecret } from '../lib/env.js'
+import { bad, clientIp, json, readJson } from '../lib/http.js'
+import { humanCookie } from '../lib/session.js'
+import { verifyTurnstile } from '../lib/turnstile.js'
 
 export async function POST(request: Request): Promise<Response> {
   const secret = sessionSecret()

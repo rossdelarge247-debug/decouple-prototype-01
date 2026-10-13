@@ -1,8 +1,8 @@
-import { createCodeStore, parseFallback, type CodeRow } from '../lib/codes.ts'
-import { useCodeStore } from '../lib/auth.ts'
-import { clearSettingsCache, useSettingsReader, type Settings } from '../lib/settings.ts'
-import { COOKIE, sign } from '../lib/session.ts'
-import { answersLimiter, emailLimiter, loginLimiter } from '../lib/ratelimit.ts'
+import { createCodeStore, parseFallback, type CodeRow } from '../lib/codes.js'
+import { useCodeStore } from '../lib/auth.js'
+import { clearSettingsCache, useSettingsReader, type Settings } from '../lib/settings.js'
+import { COOKIE, sign } from '../lib/session.js'
+import { answersLimiter, emailLimiter, loginLimiter } from '../lib/ratelimit.js'
 
 export const SECRET = 'test-secret-for-the-site-cookies'
 

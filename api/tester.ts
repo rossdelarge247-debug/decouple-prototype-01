@@ -1,7 +1,7 @@
-import { noteCodeUsed, redeemable } from '../lib/auth.ts'
-import { sessionSecret } from '../lib/env.ts'
-import { bad, json, readJson } from '../lib/http.ts'
-import { testerCookie } from '../lib/session.ts'
+import { noteCodeUsed, redeemable } from '../lib/auth.js'
+import { sessionSecret } from '../lib/env.js'
+import { bad, json, readJson } from '../lib/http.js'
+import { testerCookie } from '../lib/session.js'
 
 export async function POST(request: Request): Promise<Response> {
   const secret = sessionSecret()

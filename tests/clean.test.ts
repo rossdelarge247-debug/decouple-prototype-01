@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MAX_ANSWER, blockedQid, cleanAnswers, cleanSignup, stripControl } from '../lib/clean.ts'
+import { MAX_ANSWER, blockedQid, cleanAnswers, cleanSignup, stripControl } from '../lib/clean.js'
 
 const base = () => ({
   batchKey: 'b1',

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { DEFAULTS, clearSettingsCache, normaliseSettings, parsePatch, readSettings, useSettingsReader } from '../lib/settings.ts'
+import { DEFAULTS, clearSettingsCache, normaliseSettings, parsePatch, readSettings, useSettingsReader } from '../lib/settings.js'
 
 afterEach(() => useSettingsReader(null))
 

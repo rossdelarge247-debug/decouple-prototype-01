@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COOKIE, DAYS_30, clearCookie, fromBase64Url, humanCookie, ownerCookie, parseCookies, readSessions, serializeCookie, sessionKey, sign, testerCookie, toBase64Url, verify } from '../lib/session.ts'
+import { COOKIE, DAYS_30, clearCookie, fromBase64Url, humanCookie, ownerCookie, parseCookies, readSessions, serializeCookie, sessionKey, sign, testerCookie, toBase64Url, verify } from '../lib/session.js'
 
 const SECRET = 'a-test-secret-of-sufficient-length'
 

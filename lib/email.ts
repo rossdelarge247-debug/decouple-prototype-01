@@ -1,5 +1,5 @@
 /* The guide email (spec §7), sent through Resend. The body is a fixed template: only the link varies. */
-import { env, siteOrigin, type Env } from './env.ts'
+import { env, siteOrigin, type Env } from './env.js'
 
 export const SUBJECT = 'Your guide'
 export const MAX_LINK = 8 * 1024

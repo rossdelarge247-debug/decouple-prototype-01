@@ -1,6 +1,6 @@
-import { unauthorised, who } from '../../lib/api.ts'
-import { env } from '../../lib/env.ts'
-import { json } from '../../lib/http.ts'
+import { unauthorised, who } from '../../lib/api.js'
+import { env } from '../../lib/env.js'
+import { json } from '../../lib/http.js'
 
 export async function POST(request: Request): Promise<Response> {
   const w = await who(request)

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import middleware, { cacheFor } from '../middleware.ts'
-import { cookieFor, req, setup } from './helpers.ts'
+import middleware, { cacheFor } from '../middleware.js'
+import { cookieFor, req, setup } from './helpers.js'
 
 const GUIDE = '/Marketing%2002%20%C2%B7%20Divorce%20Guide.html'
 const HOLDING = '/Marketing%2001%20%C2%B7%20Holding%20Page.html'

@@ -1,6 +1,6 @@
-import { unauthorised, who } from '../../lib/api.ts'
-import { bad, json, readJson } from '../../lib/http.ts'
-import { parsePatch, readSettings, writeSettings } from '../../lib/settings.ts'
+import { unauthorised, who } from '../../lib/api.js'
+import { bad, json, readJson } from '../../lib/http.js'
+import { parsePatch, readSettings, writeSettings } from '../../lib/settings.js'
 
 export async function GET(request: Request): Promise<Response> {
   const w = await who(request)

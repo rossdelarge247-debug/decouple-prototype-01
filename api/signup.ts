@@ -1,7 +1,7 @@
-import { who } from '../lib/api.ts'
-import { cleanSignup } from '../lib/clean.ts'
-import { bad, json, readJson } from '../lib/http.ts'
-import { ScriptError, scriptPost } from '../lib/script.ts'
+import { who } from '../lib/api.js'
+import { cleanSignup } from '../lib/clean.js'
+import { bad, json, readJson } from '../lib/http.js'
+import { ScriptError, scriptPost } from '../lib/script.js'
 
 export async function POST(request: Request): Promise<Response> {
   const w = await who(request)

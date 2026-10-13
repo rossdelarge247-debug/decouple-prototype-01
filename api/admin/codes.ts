@@ -1,8 +1,8 @@
-import { codeStore } from '../../lib/auth.ts'
-import { unauthorised, who } from '../../lib/api.ts'
-import { CODES_PER_REQUEST, CODE_RE, LABEL_MAX, normaliseCode, normaliseRows } from '../../lib/codes.ts'
-import { bad, json, readJson } from '../../lib/http.ts'
-import { ScriptError, scriptGet, scriptPost } from '../../lib/script.ts'
+import { codeStore } from '../../lib/auth.js'
+import { unauthorised, who } from '../../lib/api.js'
+import { CODES_PER_REQUEST, CODE_RE, LABEL_MAX, normaliseCode, normaliseRows } from '../../lib/codes.js'
+import { bad, json, readJson } from '../../lib/http.js'
+import { ScriptError, scriptGet, scriptPost } from '../../lib/script.js'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 

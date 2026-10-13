@@ -1,7 +1,7 @@
 /* Site settings (spec §4): mode, requireCode and testMode, read from Edge Config and cached for
    60 seconds per instance. Written through the Vercel REST API (spec §7, /api/admin/site). */
 import { createClient } from '@vercel/edge-config'
-import { env, type Env } from './env.ts'
+import { env, type Env } from './env.js'
 
 export interface Settings {
   mode: 'guide' | 'holding'

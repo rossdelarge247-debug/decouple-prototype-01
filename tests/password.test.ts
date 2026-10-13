@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { describe, expect, it } from 'vitest'
-import { hashPassword, verifyPassword } from '../lib/password.ts'
+import { hashPassword, verifyPassword } from '../lib/password.js'
 
 describe('owner password', () => {
   it('hashes with scrypt and verifies', () => {

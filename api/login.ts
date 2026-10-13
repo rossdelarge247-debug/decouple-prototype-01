@@ -1,8 +1,8 @@
-import { env, sessionSecret } from '../lib/env.ts'
-import { bad, clientIp, json, readJson, sleep } from '../lib/http.ts'
-import { verifyPassword } from '../lib/password.ts'
-import { loginLimiter } from '../lib/ratelimit.ts'
-import { ownerCookie } from '../lib/session.ts'
+import { env, sessionSecret } from '../lib/env.js'
+import { bad, clientIp, json, readJson, sleep } from '../lib/http.js'
+import { verifyPassword } from '../lib/password.js'
+import { loginLimiter } from '../lib/ratelimit.js'
+import { ownerCookie } from '../lib/session.js'
 
 export async function POST(request: Request): Promise<Response> {
   const secret = sessionSecret()

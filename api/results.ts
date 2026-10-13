@@ -1,6 +1,6 @@
-import { unauthorised, who } from '../lib/api.ts'
-import { json } from '../lib/http.ts'
-import { ScriptError, scriptGet } from '../lib/script.ts'
+import { unauthorised, who } from '../lib/api.js'
+import { json } from '../lib/http.js'
+import { ScriptError, scriptGet } from '../lib/script.js'
 
 export async function GET(request: Request): Promise<Response> {
   const w = await who(request)

@@ -3,14 +3,14 @@
    files, and everything else needs the owner's session or returns a plain 404.
    Web APIs only (fetch, crypto.subtle), so it runs on the Node runtime or the edge alike. */
 import { next, rewrite } from '@vercel/functions/middleware'
-import { ALIASES, FILES, decodePath, encodePath, isProtoPath } from './lib/aliases.ts'
-import { noteCodeUsed, redeemable, whoami } from './lib/auth.ts'
-import { loginPath, sessionSecret, testersCanOpenProtos } from './lib/env.ts'
-import { NOT_FOUND_HTML } from './lib/generated/not-found.ts'
-import { PUBLIC_PATHS } from './lib/generated/public.ts'
-import { clientIp, securityHeaders } from './lib/http.ts'
-import { isPublicPath, loadPublicList } from './lib/public.ts'
-import { testerCookie } from './lib/session.ts'
+import { ALIASES, FILES, decodePath, encodePath, isProtoPath } from './lib/aliases.js'
+import { noteCodeUsed, redeemable, whoami } from './lib/auth.js'
+import { loginPath, sessionSecret, testersCanOpenProtos } from './lib/env.js'
+import { NOT_FOUND_HTML } from './lib/generated/not-found.js'
+import { PUBLIC_PATHS } from './lib/generated/public.js'
+import { clientIp, securityHeaders } from './lib/http.js'
+import { isPublicPath, loadPublicList } from './lib/public.js'
+import { testerCookie } from './lib/session.js'
 
 export const config = { runtime: 'nodejs' }
 
