@@ -3,8 +3,8 @@ node_modules/
 dist/
 .dev/
 .next/
-out/
-build/
+/out/
+/build/
 coverage/
 playwright-report/
 test-results/
