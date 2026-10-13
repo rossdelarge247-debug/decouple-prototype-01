@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { devMode } from '@/lib/dev-mode'
 import { stubSessionProvider } from './stub'
 import { AuthUnavailable, type NewSession, type Session, type SessionProvider } from './types'
 
@@ -8,9 +9,9 @@ export { AuthUnavailable } from './types'
 // Every screen and route reads the user through this seam. The stub sits behind it
 // until Reconcile needs two real parties; a real provider replaces resolveProvider.
 
-/** The stub may run anywhere except production without a real provider configured. */
+/** The stub may run anywhere except production, unless a provider is configured or dev mode is on. */
 export function stubAllowed(env: Record<string, string | undefined> = process.env): boolean {
-  return env.VERCEL_ENV !== 'production' || !!env.AUTH_PROVIDER
+  return env.VERCEL_ENV !== 'production' || !!env.AUTH_PROVIDER || devMode(env)
 }
 
 function resolveProvider(): SessionProvider {

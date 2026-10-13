@@ -19,14 +19,14 @@ The golden path fails at the Share button on `/build/picture`. Phase: **Reconcil
 5. Settle: "A party can propose with option cards, the other can counter, and version
    4 is accepted and signed."
 6. Finalise: "Pre-flight passes and the print-and-post pack renders."
-Kill criterion: by the sixth merged outcome, two parties reach an agreed schedule and
-one signed version; if not, the brief is at fault. **Next: outcome 3**, the share.
+Kill criterion: by outcome 6, an agreed schedule and one signed version. **Next: outcome 3.**
 
 ## Deployment
 
 Production https://decouple-prototype-01.vercel.app; every branch gets a preview. The Tink
 callback is whitelisted for production only; elsewhere the five test scenarios stand in.
-`TINK_CLIENT_ID`, `TINK_CLIENT_SECRET` and `ANTHROPIC_API_KEY` are Vercel env vars.
+Vercel env vars: `TINK_CLIENT_ID`, `TINK_CLIENT_SECRET`, `ANTHROPIC_API_KEY`, and for now
+`DECOUPLE_DEV_MODE=1`, which lets the stub sign anyone in on production behind a visible strip.
 
 ## Decisions on record
 
@@ -37,10 +37,10 @@ callback is whitelisted for production only; elsewhere the five test scenarios s
   arithmetic only, magic-link invitee, selective sharing, honest pricing): LOCKED in JOURNEY.
 - Session 1: landing shows the conventional £14,561 only. Golden path extended with
   Sarah's clicks, no assertion changed. Safety messages deterministic; O3 and flags never
-  reach the model. The stub refuses in production unless `AUTH_PROVIDER` is set.
-- Session 2: golden path extended with the profile and confirm clicks. Tier 1 is the
-  spec's 0.90. Bank data is a gzip, chunked httpOnly cookie behind `BuildStore` until
-  server-side storage exists (a production gate). Your Picture drew on the tabbed paper.
+  reach the model. The stub refuses in production unless `AUTH_PROVIDER` or dev mode is set.
+- Session 2: golden path extended with the profile and confirm clicks. Tier 1 is the spec's
+  0.90. Bank data is a gzip, chunked cookie behind `BuildStore` until server-side storage
+  exists (a production gate). Your Picture drew on the tabbed paper. Dev mode until real auth.
 - Where things live: tokens `src/styles/tokens.ts` + `globals.css`; strings `src/copy/`;
   session `src/lib/session`; Build domain and store `src/lib/build`; loader `src/app/build/state.ts`.
 

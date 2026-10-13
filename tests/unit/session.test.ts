@@ -67,4 +67,12 @@ describe('the exit endpoint', () => {
     expect(beacon.status).toBe(204)
     expect(beacon.headers.getSetCookie()).toHaveLength(2)
   })
+
+  it('runs in production only when dev mode is switched on by name', async () => {
+    const { stubAllowed } = await import('@/lib/session')
+    expect(stubAllowed({ VERCEL_ENV: 'production' })).toBe(false)
+    expect(stubAllowed({ VERCEL_ENV: 'production', DECOUPLE_DEV_MODE: '1' })).toBe(true)
+    expect(stubAllowed({ VERCEL_ENV: 'production', DECOUPLE_DEV_MODE: 'true' })).toBe(false)
+    expect(stubAllowed({ VERCEL_ENV: 'preview' })).toBe(true)
+  })
 })
