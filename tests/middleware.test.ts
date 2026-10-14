@@ -39,6 +39,16 @@ describe('middleware: straight through', () => {
   })
 })
 
+describe('middleware: the host', () => {
+  it('sends www to the bare domain, keeping the path and query', async () => {
+    const r = await middleware(new Request('https://www.decouple.uk/guide?code=FERN-LARK-27'))
+    expect(r.status).toBe(308)
+    expect(r.headers.get('location')).toBe('https://decouple.uk/guide?code=FERN-LARK-27')
+    expect(r.headers.get('set-cookie')).toBeNull()
+    expect(isNext(await middleware(req('/api/session')))).toBe(true)
+  })
+})
+
 describe('middleware: the front door', () => {
   it('shows the holding page by default and the guide when the mode says so', async () => {
     const r = await middleware(req('/'))

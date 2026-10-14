@@ -5,7 +5,7 @@
 import { next, rewrite } from '@vercel/functions/middleware'
 import { ALIASES, FILES, decodePath, encodePath, isProtoPath } from './lib/aliases.js'
 import { noteCodeUsed, redeemable, whoami } from './lib/auth.js'
-import { loginPath, sessionSecret, testersCanOpenProtos } from './lib/env.js'
+import { loginPath, sessionSecret, siteOrigin, testersCanOpenProtos } from './lib/env.js'
 import { NOT_FOUND_HTML } from './lib/generated/not-found.js'
 import { PUBLIC_PATHS } from './lib/generated/public.js'
 import { clientIp, securityHeaders } from './lib/http.js'
@@ -31,8 +31,8 @@ function notFound(): Response {
   })
 }
 
-function redirect(location: string, extra: Record<string, string> = {}): Response {
-  return new Response(null, { status: 302, headers: { ...securityHeaders(true), location, ...extra } })
+function redirect(location: string, extra: Record<string, string> = {}, status = 302): Response {
+  return new Response(null, { status, headers: { ...securityHeaders(true), location, ...extra } })
 }
 
 function serve(file: string, url: URL, headers: Record<string, string>): Response {
@@ -45,6 +45,11 @@ export default async function middleware(request: Request): Promise<Response> {
   const decoded = decodePath(path)
   const open = securityHeaders(false)
   const closed = securityHeaders(true)
+
+  /* 0. www goes to the bare domain, whatever the domain settings say: the guide builds its email
+     link from the address it is on, and the server accepts links on the site origin only */
+  const origin = siteOrigin()
+  if (url.host === `www.${new URL(origin).host}`) return redirect(`${origin}${url.pathname}${url.search}`, {}, 308)
 
   /* 1. straight through */
   if (path.startsWith('/api/')) return next({ headers: open })
