@@ -31,6 +31,7 @@
 <script type="text/babel" src="proto/playback/pb-blocks.jsx"></script>
 <script type="text/babel" src="m02/guide/g-intake.jsx"></script>
 <script type="text/babel" src="m02/guide/g-landings.jsx"></script>
+<script type="text/babel" src="m02/guide/g-landings2.jsx"></script>
 <script type="text/babel" src="m02/guide/g-gate.jsx"></script>
 <script type="text/babel" src="m02/guide/tweaks-panel.jsx"></script>
 <script type="text/babel" src="m02/guide/g-chapters.jsx"></script>
@@ -95,8 +96,13 @@ function App() {
   else if (phase === "build" || phase === "stop") pct = 100;
   else if (phase === "guide") pct = ((Math.min(s.ch, list.length - 1) + 1) / list.length) * 100;
   else if (phase === "full") pct = 100;
-  const LANDS = window.GLANDS, lv = s.lvFixed || ((s.lvRotate || t.rotate) ? s.lvRand : t.landing) || "a", L = LANDS[lv] || LANDS.a;
-  useEffect(() => { if (phase === "landing" && !s.viewed) { track("Landing", [["landing_view", "Saw the landing page", "event", L.name]], lv); up({ viewed: true }); } }, [phase]);
+  /* which landing: ?landing= in the link, then Site settings (on decouple.uk, or this browser's preview), then Tweaks */
+  const localSite = () => { try { return JSON.parse(localStorage.getItem("decouple.site.v1")) || {}; } catch (e) { return {}; } };
+  const siteLv = site ? site.landing : site === null ? localSite().landing : null;
+  const pref = s.lvFixed || (s.lvRotate ? "random" : null) || siteLv || (t.rotate ? "random" : t.landing) || "a";
+  const LANDS = window.GLANDS, lv = pref === "random" ? s.lvRand : pref, L = LANDS[lv] || LANDS.a;
+  const setLocalLanding = (v) => { if (site) return; try { localStorage.setItem("decouple.site.v1", JSON.stringify({ ...localSite(), landing: v })); } catch (e) {} };
+  useEffect(() => { if (phase === "landing" && site !== undefined && !s.viewed) { track("Landing", [["landing_view", "Saw the landing page", "event", L.name]], lv); up({ viewed: true }); } }, [phase, site === undefined]);
   const needCode = (x) => !!(x && x.requireCode && !x.tester && !x.owner);
   const gateNext = (o, x) => (needCode(x) ? "code" : o.consent == null ? "consent" : "iv");
   const start = (pre) => {
@@ -119,9 +125,9 @@ function App() {
   const tweaks = (
     <TweaksPanel title="Tweaks · M02">
       <TweakSection label="Landing screen"/>
-      <TweakSelect label="Design" value={t.landing} options={Object.entries(LANDS).map(([k, v]) => ({ value: k, label: v.name }))} onChange={(v) => { setTweak("landing", v); if (phase !== "landing") up({ phase: "landing" }); }}/>
-      <TweakToggle label="Rotate at random for visitors" value={t.rotate} onChange={(v) => setTweak("rotate", v)}/>
-      {s.lvFixed && <div style={{ fontSize: 11.5, color: "#78716C", lineHeight: 1.4 }}>The link sets ?landing={s.lvFixed}, which overrides this.</div>}
+      <TweakSelect label="Design" value={pref === "random" ? t.landing : pref} options={Object.entries(LANDS).map(([k, v]) => ({ value: k, label: v.name }))} onChange={(v) => { setTweak("landing", v); setLocalLanding(v); if (phase !== "landing") up({ phase: "landing" }); }}/>
+      <TweakToggle label="Rotate at random for visitors" value={pref === "random"} onChange={(v) => { setTweak("rotate", v); setLocalLanding(v ? "random" : t.landing); }}/>
+      <div style={{ fontSize: 11.5, color: "#78716C", lineHeight: 1.4 }}>{s.lvFixed ? `The link sets ?landing=${s.lvFixed}, which overrides this.` : "Same setting as Site settings › Guide landing page."}</div>
       <TweakSection label="Before the interview"/>
       <TweakButton label="Show the tester-code screen" onClick={() => up({ phase: "code" })}/>
       <TweakButton label="Show the consent screen" onClick={() => up({ phase: "consent" })}/>
@@ -130,6 +136,7 @@ function App() {
   );
   const label = { landing: "Landing", code: "Tester code", consent: "Consent", iv: "Interview · " + s.pos, build: "Building guide", stop: "Safety stop", guide: "Guide · " + ((list[s.ch] || {}).id || ""), full: "Full guide" }[phase];
 
+  if (phase === "landing" && site === undefined) return <div className="site bg-wash" style={{ minHeight: "100vh" }}></div>;
   if (phase === "landing") return (
     <div className={"site " + L.bg} data-screen-label={"M02 · Landing " + L.name}>
       <header className="nav"><span className="wm" style={{ cursor: "default" }}>Decouple<i>.</i></span><div className="nav-right" style={{ display: "flex" }}>{testPill}<button className="pillbtn exit" onClick={exit}><Ic.X s={12} c="#B91C1C"/> Quick exit</button><button className="btn g-navcta" onClick={() => start()}>Get my free guide <Ic.Arrow s={14}/></button></div></header>

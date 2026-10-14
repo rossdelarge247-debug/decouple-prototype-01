@@ -58,7 +58,7 @@
 
   function Top({ N, onExit, children }) {
     const [o, setO] = useState(false), ref = React.useRef(null), x = J.get(), su = x.signup || {};
-    const me = (N && N.Me) || "Sarah", full = su.name || (me === "Sarah" ? "Sarah Mitchell" : me), mail = su.email || `${me.toLowerCase()}.mitchell@gmail.com`;
+    const me = (N && N.Me) || "Sarah", full = su.name || (me === "Sarah" ? "Sarah Mitchell" : me), mail = su.email || `${me.toLowerCase()}.mitchell@example.com`;
     useEffect(() => { if (!o) return; const f = (e) => { if (ref.current && !ref.current.contains(e.target)) setO(false); }, k = (e) => e.key === "Escape" && setO(false); addEventListener("mousedown", f); addEventListener("keydown", k); return () => { removeEventListener("mousedown", f); removeEventListener("keydown", k); }; }, [o]);
     const go = (h) => { setO(false); if (document.documentElement.dataset.stage === "dashboard") location.hash = h; else J.goStage("dashboard", h); };
     const home = dashOn() && document.documentElement.dataset.stage !== "onboard";

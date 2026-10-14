@@ -11,6 +11,7 @@ export async function GET(request: Request): Promise<Response> {
     testing: w.testing,
     mode: w.settings.mode,
     requireCode: w.settings.requireCode,
+    landing: w.settings.landing,
     turnstileSiteKey: env().TURNSTILE_SITE_KEY || '',
   }
   if (w.tester && w.label !== undefined) out.label = w.label

@@ -9,7 +9,7 @@ window.RSample = function () {
   const W = {}, wts = (k, n) => W[k] || (W[k] = Array.from({ length: n }, () => 0.3 + rnd() * rnd() * 3));
 
   /* ── M02 · Divorce guide ── */
-  const START = { a: 0.36, b: 0.49, c: 0.3, d: 0.41, e: 0.44 };
+  const START = { a: 0.36, b: 0.49, c: 0.3, d: 0.41, e: 0.44, f: 0.53, g: 0.45, h: 0.39, i: 0.47 };
   const MUSTP = { shared: 0.62, bank: 0.47, vault: 0.55, formE: 0.6, parent: 0.52, coparent: 0.3, housing: 0.46, mortgage: 0.53, fair: 0.67, ai: 0.26, agree: 0.5, med: 0.38, docs: 0.61, sol: 0.57, after: 0.33, care: 0.29 };
   const TIERW = { A: [0.22, 0.46, 0.2, 0.12], B: [0.34, 0.3, 0.1, 0.26] }, BASE = [190, 640, 1250];
   const SAY = ["Knowing what order to do things in. Everyone tells you something different.", "One place for all the paperwork, instead of emails and spreadsheets.", "Being able to talk about money without it turning into a row.", "Understanding what’s fair without paying a solicitor £300 an hour to tell me.", "The pensions. I had no idea they were even part of it.", "Not having to repeat everything to five different people.", "Knowing what the children will go through and how to tell them.", "Just knowing how long it will all take.", "Getting him to actually share the bank statements.", "Something that explains the legal words in plain English.", "Feeling like someone is on both our sides, not just one.", "Knowing whether we can do it ourselves or need lawyers.", "The cost. I can’t afford two solicitors on top of two homes.", "Being told what to do this week, not everything at once."];
@@ -20,7 +20,7 @@ window.RSample = function () {
     return wpick(o, wts(q.id, o.length))[0];
   };
   for (let i = 0; i < 480; i++) {
-    const sid = "m02-s" + i.toString(36).padStart(4, "0"), ver = rnd() < 0.5 ? "A" : "B", lv = "abcde"[Math.floor(rnd() * 5)];
+    const sid = "m02-s" + i.toString(36).padStart(4, "0"), ver = rnd() < 0.5 ? "A" : "B", lv = "abcdefghi"[Math.floor(rnd() * 9)];
     let t = now - Math.pow(rnd(), 1.25) * 28 * DAY;
     const P = (sec) => `M02 Guide · ${sec} · ${ver} · L-${lv}`, tick = () => (t += 15000 + rnd() * 60000);
     const post = (sec, k, q, type, a) => add(sid, "anon", P(sec), "m02." + k, q, type, a, tick());

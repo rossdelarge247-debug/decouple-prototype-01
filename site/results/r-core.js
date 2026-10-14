@@ -8,12 +8,13 @@ window.R = (function () {
   /* one entry per test. `tab` = the sheet tab name; `re` matches the PROTO column */
   const TESTS = [
     { id: "m02", code: "M02", name: "Divorce guide", sub: "Landing, interview, guide with questions woven in", kind: "Experiment", re: /^M02 Guide/i, tab: "M02 Guide", rx: "^M02 Guide" },
+    { id: "mvp", code: "MVP", name: "MVP prototypes", sub: "End-of-prototype questions for the MVP journeys", kind: "Questionnaire", re: /^MVP \d{2} /, tab: "MVP testing", rx: "^MVP [0-9]{2} " },
     { id: "proto", code: "UT", name: "Prototype testing", sub: "End-of-prototype questions and check-ins, Protos 01–10", kind: "Questionnaire", re: /^\d{2} /, tab: "Prototype testing", rx: "^[0-9]{2} " },
     { id: "m02v1", code: "M02 v1", name: "Free tool (first version)", sub: "Retired. Kept for earlier answers", kind: "Experiment", re: /^M02 Free tool/i, tab: "M02 Free tool", rx: "^M02 Free tool" },
     { id: "m01", code: "M01", name: "Holding page", sub: "Sign-ups and where people are", kind: "Sign-ups", re: /^M01/i, tab: "M01 Holding", rx: "^M01" },
   ];
   const OTHER = { id: "other", code: "?", name: "Unsorted", sub: "Rows that match no test", kind: "Other" };
-  const LANDS = { a: "A · Chapters (original)", b: "B · First question", c: "C · A letter", d: "D · Questions people ask", e: "E · See your guide" };
+  const LANDS = { a: "A · Chapters (original)", b: "B · First question", c: "C · A letter", d: "D · Questions people ask", e: "E · See your guide", f: "F · Where are you? (instant help)", g: "G · Facts, not noise", h: "H · One step at a time", i: "I · What to do first" };
   const testOf = (proto) => TESTS.find((t) => t.re.test(proto || "")) || OTHER;
   /* rows from /api/results on decouple.uk: {sid,pid,test,step,price,landing,qid,qv,q,type,a,at,device} */
   const protoOf = (x) => x.test === "M02 Guide" ? `M02 Guide · ${x.step} · ${x.price || ""} · L-${x.landing || "a"}` : x.test === "Prototype testing" ? x.step : `${x.test} · ${x.step}`;

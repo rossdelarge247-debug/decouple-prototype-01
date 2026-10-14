@@ -37,6 +37,11 @@
 <div class="note">The guide shows a small “Test mode” label whenever nothing is being sent.</div>
 </section>
 <section class="card span">
+<div class="ch"><div><h2>Guide landing page</h2><p>Which design people see first when they open the guide. A link with <code>?landing=</code> still overrides this.</p></div></div>
+<div class="lands" id="lands" role="radiogroup" aria-label="Guide landing page"></div>
+<div class="note" id="land-msg" role="status"></div>
+</section>
+<section class="card span">
 <div class="ch"><div><h2>Tester codes</h2><p>Each code opens the guide for one person. Its label becomes their participant ID in Results. Send them the link and the code fills itself in. Turning a code off stops it working within a minute.</p></div>
 <div class="filt" role="tablist"><button type="button" data-f="active">Active · <span id="n-active" class="tab">0</span></button><button type="button" data-f="off">Off · <span id="n-off" class="tab">0</span></button><button type="button" data-f="all">All · <span id="n-all" class="tab">0</span></button></div></div>
 <form class="gen" id="gen">

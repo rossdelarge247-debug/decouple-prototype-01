@@ -74,5 +74,17 @@ all,5,pb-5,probe,What are you looking for right now?,,,y
 10,1,db-r1,recap,Came back to your dashboard,,,y
 10,2,db-q1,ease7,How easy was it to see what to do next?,,y,y
 10,3,db-q2,rating5,How useful was the evidence vault?,,y,y
-10,4,db-q3,yesno,Would you use the journal and AI companion?,,n,y`
+10,4,db-q3,yesno,Would you use the journal and AI companion?,,n,y
+mvp01,0,m1-in,intro,"A simpler idea: no bank connection. Fill in your side of a financial statement with exact figures, invite your partner, then check both sides together and agree it's complete.",10 min,,y
+mvp01,1,m1-r1,recap,Filled in your side of the statement with exact figures and where they came from,,,y
+mvp01,2,m1-r2,recap,Saw both sides together and sorted out what was missing or didn't match,,,y
+mvp01,3,m1-r3,recap,Agreed it was complete and saw the documents it produces,,,y
+mvp01,4,m1-q1,ease7,How easy was it to give exact figures for each thing?,,y,y
+mvp01,5,m1-q2,choice,"Where you couldn't give an exact figure, what did you do?",Guessed|Ticked 'don't know yet'|Stopped to look it up|Didn't notice,n,y
+mvp01,6,m1-q3,rating5,How useful were the flags (missing / doesn't match) for spotting problems?,,y,y
+mvp01,7,m1-q4,yesno,Would you be comfortable inviting your partner to this?,,y,y
+mvp01,8,m1-q5,choice,Which would you take to the next step?,Open financial statement|D81 figures|Form E draft|None of these,n,y
+mvp01,9,m1-q6,rating5,"Compared with sending spreadsheets by email, how much better is this?",,y,y
+mvp01,10,m1-q7,choice,What would you pay for this on its own?,Nothing|Up to £50|£50–£150|£150–£300|More than £300,n,y
+mvp01,11,m1-q8,yesno,Would you want this before (or instead of) the full Decouple journey?,,n,y`
 };

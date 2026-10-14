@@ -4,13 +4,21 @@
 import { createClient } from '@vercel/global-config'
 import { env, type Env } from './env.js'
 
+export type Landing = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'random'
+
+export const LANDINGS: readonly Landing[] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'random']
+
 export interface Settings {
   mode: 'guide' | 'holding'
   requireCode: boolean
   testMode: boolean
+  /** which of the guide's landing designs visitors see, or one of the nine at random */
+  landing: Landing
 }
 
-export const DEFAULTS: Readonly<Settings> = { mode: 'holding', requireCode: true, testMode: false }
+export const DEFAULTS: Readonly<Settings> = { mode: 'holding', requireCode: true, testMode: false, landing: 'a' }
+
+const isLanding = (v: unknown): v is Landing => typeof v === 'string' && (LANDINGS as readonly string[]).includes(v)
 export const SETTINGS_TTL_MS = 60_000
 
 export function normaliseSettings(raw: unknown): Settings {
@@ -19,6 +27,7 @@ export function normaliseSettings(raw: unknown): Settings {
     mode: r.mode === 'guide' ? 'guide' : 'holding',
     requireCode: typeof r.requireCode === 'boolean' ? r.requireCode : DEFAULTS.requireCode,
     testMode: typeof r.testMode === 'boolean' ? r.testMode : DEFAULTS.testMode,
+    landing: isLanding(r.landing) ? r.landing : DEFAULTS.landing,
   }
 }
 
@@ -39,6 +48,10 @@ export function parsePatch(body: unknown): { ok: true; patch: Partial<Settings> 
     if (typeof b.testMode !== 'boolean') return { ok: false, error: 'testMode must be true or false.' }
     patch.testMode = b.testMode
   }
+  if ('landing' in b) {
+    if (!isLanding(b.landing)) return { ok: false, error: 'landing must be "a" to "i" or "random".' }
+    patch.landing = b.landing
+  }
   if (!Object.keys(patch).length) return { ok: false, error: 'Nothing to change.' }
   return { ok: true, patch }
 }
@@ -58,7 +71,7 @@ function defaultReader(e: Env = env()): Reader {
     const conn = connectionString(e)
     if (!conn) return null
     const client = createClient(conn)
-    return client.getAll(['mode', 'requireCode', 'testMode'])
+    return client.getAll(['mode', 'requireCode', 'testMode', 'landing'])
   }
 }
 

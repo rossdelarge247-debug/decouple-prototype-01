@@ -49,7 +49,7 @@ export async function GET(request: Request): Promise<Response> {
   let store: Record<string, unknown> = { connected: !!conn, id, read: 'skipped: no connection string' }
   if (conn) {
     try {
-      const raw = await timed(8000, createClient(conn).getAll(['mode', 'requireCode', 'testMode']))
+      const raw = await timed(8000, createClient(conn).getAll(['mode', 'requireCode', 'testMode', 'landing']))
       store = { connected: true, id, read: 'ok', raw, settings: normaliseSettings(raw) }
     } catch (err) {
       store = { connected: true, id, read: 'failed', error: message(err) }

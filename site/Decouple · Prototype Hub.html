@@ -55,7 +55,8 @@ section{padding:112px 0}
 .span{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:14px 20px;border-radius:14px;background:var(--vs);font-size:13.5px;color:#3B0764}.span .chip{--c:var(--v);background:#FFF;margin:0}
 .span b{font-weight:600}
 /* protos */
-.protos{display:grid;gap:28px}
+.protos{display:grid;gap:28px}.protos[hidden],.ptn[hidden]{display:none}
+.ptbar{display:flex;justify-content:space-between;align-items:center;gap:14px 24px;flex-wrap:wrap;margin:-28px 0 28px}.ptbar .ptabs,.ptbar .fliptool{margin:0}.ptbar .ptn{margin-left:6px}
 .pc{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:0;background:#FFF;border:1px solid var(--line);border-radius:24px;overflow:hidden;transition:box-shadow .25s,transform .25s}
 .pc:hover{box-shadow:0 24px 60px -24px rgba(40,20,80,.22)}
 .card:nth-child(even) .front{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}.card:nth-child(even) .front .shot{order:2}
@@ -151,6 +152,10 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 @media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
 @media (max-width:1000px){.front,.card:nth-child(even) .front{grid-template-columns:1fr}.card:nth-child(even) .front .shot{order:0}.bg,.bt3{grid-template-columns:1fr}.jy{grid-template-columns:1fr 1fr}.tb{grid-template-columns:1fr 1fr}.tc.big{grid-column:1/-1}.top nav{display:none}}
 @media (max-width:720px){.wrap{padding:0 20px}.top{padding:0 20px}.top .tag{display:none}.sh,.dl,.tests{grid-template-columns:1fr}.sh{gap:16px}.facts{grid-template-columns:1fr 1fr}.facts div:nth-child(3){padding-left:0;border-left:0}.jy,.tb{grid-template-columns:1fr}.bd{padding:24px 24px}.shot{padding:20px}section{padding:80px 0}.tt{padding:24px 22px 22px 70px}.tt:before{left:22px}.tt .where{position:static;display:block;margin-bottom:6px}}
+.ptabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 18px}
+.top nav a,.hsw-b{white-space:nowrap}.top nav{gap:20px;min-width:0}.top .hsw{flex-shrink:0}
+@media (max-width:1380px){.top nav{gap:16px}.top nav a{font-size:12.5px}.hsw-l{display:none}}
+@media (max-width:1240px){.top nav{display:none}.ttg{margin-left:auto}}.ptabs button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:#FFF;font-size:14px;font-weight:600;color:var(--sub)}.ptabs button:hover{border-color:#C4B5FD}.ptabs button.on{background:var(--ink);border-color:var(--ink);color:#FFF}.ptabs button i{font-style:normal;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(0,0,0,.07)}.ptabs button.on i{background:rgba(255,255,255,.18)}.ptabs .ptn{margin-left:10px;font-size:13px;color:var(--mute)}.q.legal{background:rgba(252,165,165,.16);color:#FCA5A5}
 </style>
 <script src="hub/hub-switch.js" defer></script>
 </head>
@@ -193,8 +198,9 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 <section id="protos" style="padding-top:0">
 <div class="wrap">
 <div class="sh rv"><div><div class="kick">The prototypes</div><h2>Ten stages, <em>all clickable.</em></h2></div><p>Each opens with our demo couple, Sarah and Mark: married 14 years, two children, a house, two pensions. Tweaks (bottom right in each prototype) jump to key moments and switch design options. Flip any card for its open edges: scenarios not yet covered, key questions, gaps and the MVP bet.</p></div>
-<div class="fliptool"><span>Show</span><div class="seg" role="group" aria-label="Card side"><button type="button" class="on" data-side="0">What’s built</button><button type="button" data-side="1">Open edges</button></div></div>
-<div class="protos">
+<div class="ptbar"><div class="ptabs" role="tablist" aria-label="Prototype sets"><button type="button" role="tab" aria-selected="true" class="on" data-pt="full">Full vision<i>10</i></button><button type="button" role="tab" aria-selected="false" data-pt="mvp">MVP<i>1</i></button><span class="ptn" data-ptn="full">The complete product: bank connection, guided settlement, court documents.</span><span class="ptn" data-ptn="mvp" hidden>Much simpler tools we could launch first, each tested alongside the full vision.</span></div>
+<div class="fliptool"><span>Show</span><div class="seg" role="group" aria-label="Card side"><button type="button" class="on" data-side="0">What’s built</button><button type="button" data-side="1">Open edges</button></div></div></div>
+<div class="protos" data-pt="full">
 
 <article class="card rv" id="p01" style="--t1:#EFE6FB;--t2:#F6F4F2"><div class="flip">
 <div class="pc face front">
@@ -434,6 +440,33 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 </div></article>
 
 </div>
+
+<div class="protos" data-pt="mvp" hidden>
+<article class="card rv" id="mvp01" style="--t1:#E0F2FE;--t2:#F3EEFE"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="MVP 01 · Shared Statement.html"><div class="fr"><img src="atlas/hub/mvp01.png" alt="Shared statement: four things to sort out" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">MVP 01</span><span class="pill ph1">Disclosure</span><span class="pill rev">Ready for testing</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Questions &amp; assumptions</button></div>
+<h3>Shared statement<small>Financial disclosure, without a bank connection</small></h3>
+<p class="d">The open financial statement mediators ask for, built by the couple. Each person enters exact figures and where they came from. Then both sides sit in one document: what’s missing or doesn’t match is flagged and sorted out in comments. When both agree, it produces an open financial statement, the figures for a D81, or a Form E draft.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Start</span><i>→</i><span>Your side (wizard)</span><i>→</i><span>Your statement</span><i>→</i><span>Safety check &amp; invite</span><i>→</i><span>Shared statement</span><i>→</i><span>Both agree</span><i>→</i><span>Documents</span></div></div>
+<div><div class="lbl">Reuses</div><ul class="sc"><li>The Proto 02 question engine and safety check, for the wizard</li><li>The two-sided document from Protos 07 and 09, with comments</li><li>The full vision’s screens, type and colours</li></ul></div>
+<div><div class="lbl">Leaves out on purpose</div><ul class="sc"><li>Bank connection: figures are typed in, with a source and a date</li><li>Settlement proposals, court filing and the dashboard</li><li>The mediator’s view, which comes later</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Sarah’s figures are filled in. On the waiting screen, “Skip ahead” brings in Mark’s side with four flags to sort out. Tweaks jump to any screen, or start blank.</span><a class="go" href="MVP 01 · Shared Statement.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">MVP 01</span><span class="bk">Questions &amp; assumptions</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Shared statement<small>What we need to learn before building it</small></h3>
+<div class="bg">
+<div><div class="lbl">Assumptions</div><ul class="ol"><li>Couples will give exact figures, with dates and documents, without a bank connection doing it for them</li><li>A shared document with flags beats spreadsheets by email, enough to pay for</li><li>The person who starts will invite their partner, and the partner will fill in their side</li><li>Mediators and solicitors will accept a statement the couple built themselves</li><li>“Missing” flags, from “what do you think they have?”, catch the things that unravel agreements</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Where do people stall on accuracy: finding figures, dates, or documents?</li><li><b class="q ux">UX</b>Does “fill in yours before you see theirs” feel fair, or like being kept in the dark?</li><li><b class="q ux">UX</b>Is “what do you think they have?” helpful, or does it feel like spying?</li><li><b class="q biz">Business</b>Is this worth paying for on its own, and how much? Per couple, or per person?</li><li><b class="q biz">Business</b>Does it lead into the full journey, or replace it for simpler cases?</li><li><b class="q legal">Legal</b>Can a couple-built, both-confirmed statement stand in for a mediator’s open financial statement? What wording should the “both satisfied” step use?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>The partner’s own journey: arriving from an invite, on a phone</li><li>Sign-up and accounts: where they sit, and when we ask</li><li>Secure document storage, and deleting it afterwards</li><li>Updating figures after both have agreed</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>A shared, flagged statement gets couples to complete disclosure faster than spreadsheets, with fewer gaps</p></div><div><small>We’ll test it with</small><p>Moderated sessions as Sarah, next to Protos 06–07, plus five mediator interviews</p></div><div><small>We’re right if</small><p>≥70% finish their side with exact figures, ≥4/5 on usefulness of the flags, and mediators say they’d accept it</p></div></div></div>
+</div>
+</div></article>
+</div>
 </div>
 </section>
 
@@ -513,11 +546,13 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 (function(){var els=document.querySelectorAll('.rv');if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;}var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{rootMargin:'0px 0px -8% 0px'});els.forEach(function(e){io.observe(e)});setTimeout(function(){els.forEach(function(e){e.classList.add('in')})},2500);})();
 </script>
 <script>
-(function(){var cards=[].slice.call(document.querySelectorAll('.card')),seg=[].slice.call(document.querySelectorAll('.seg button'));
+(function(){var all=[].slice.call(document.querySelectorAll('.card')),seg=[].slice.call(document.querySelectorAll('.fliptool .seg button'));
+var vis=function(){return all.filter(function(c){return !c.closest('.protos[hidden]')})};
 function set(c,on){c.classList.toggle('flipped',on);c.querySelector('.front').setAttribute('aria-hidden',on);c.querySelector('.back').setAttribute('aria-hidden',!on)}
-function sync(){var n=cards.filter(function(c){return c.classList.contains('flipped')}).length;seg[0].classList.toggle('on',n===0);seg[1].classList.toggle('on',n===cards.length)}
+function sync(){var cards=vis(),n=cards.filter(function(c){return c.classList.contains('flipped')}).length;seg[0].classList.toggle('on',n===0);seg[1].classList.toggle('on',n===cards.length&&n>0)}
+window.hubFlipSync=sync;var cards=all;
 cards.forEach(function(c){c.querySelectorAll('.flipb').forEach(function(b){b.addEventListener('click',function(){set(c,!c.classList.contains('flipped'));sync()})})});
-seg.forEach(function(b){b.addEventListener('click',function(){var on=b.dataset.side==='1';cards.forEach(function(c){set(c,on)});sync()})});})();
+seg.forEach(function(b){b.addEventListener('click',function(){var on=b.dataset.side==='1';vis().forEach(function(c){set(c,on)});sync()})});})();
 </script>
 <script src="proto/ut/ut-questions.js"></script>
 <script src="proto/ut/ut.js"></script>
@@ -535,6 +570,11 @@ $('uttpl').onclick=function(){dl('Decouple testing questions.csv',U.defaults.CSV
 $('utsheetb').onclick=async function(){var v=$('utsheet').value.trim(),m=$('utsheetm');U.set({sheet:v});if(!v){m.textContent='Using the built-in questions.';m.className='utmsg';return}m.textContent='Checking…';m.className='utmsg';var rows=await U.load();m.textContent=U.source()==='sheet'?'Connected: '+rows.filter(function(r){return r.type!=='recap'}).length+' questions found.':'Couldn\'t read that link. Check it\'s published as CSV. Using the built-in questions for now.';m.className='utmsg'+(U.source()==='sheet'?'':' bad')};
 $('utfmb').onclick=function(){var v=$('utfm').value.trim(),m=$('utfmm');U.set({form:v});var f=U.formMap(),need=['SID','PID','PROTO','QID','QUESTION','TYPE','ANSWER','TIME','DEVICE'];if(!v){m.textContent='Answers will only be saved in the browser.';m.className='utmsg';return}if(!f){m.textContent='That doesn\'t look like a Google Form link.';m.className='utmsg bad';return}var miss=need.filter(function(k){return !f.m[k]});m.textContent=miss.length?'Connected, but missing: '+miss.join(', ')+'. Those fields won\'t be sent.':'Connected: all nine fields found.';m.className='utmsg'+(miss.length?' bad':'')};
 U.subscribe(render);render();})();
+</script>
+<script>
+(function(){var tabs=document.querySelectorAll('.ptabs [data-pt]');function show(k){tabs.forEach(function(b){var on=b.dataset.pt===k;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});document.querySelectorAll('.protos[data-pt]').forEach(function(p){p.hidden=p.dataset.pt!==k;p.querySelectorAll('.rv').forEach(function(e){e.classList.add('in')})});document.querySelectorAll('[data-ptn]').forEach(function(n){n.hidden=n.dataset.ptn!==k});if(window.hubFlipSync)window.hubFlipSync()}
+tabs.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.pt);history.replaceState(null,'',b.dataset.pt==='mvp'?'#mvp':'#protos')})});
+if(location.hash==='#mvp'||location.hash==='#mvp01'){show('mvp');var s=document.getElementById('protos');if(s)window.scrollTo(0,s.getBoundingClientRect().top+scrollY-70)}})();
 </script>
 </body>
 </html>
