@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Enter your code</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17141F;--sub:#5C5668;--line:#E6E2EE;--v:#7C3AED;--paper:#F7F5F2}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:15px/1.5 Inter,-apple-system,"Segoe UI",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.r-lock{min-height:100vh;display:grid;place-items:center;padding:24px;background:#17141F;position:relative;overflow:hidden}
+.r-lock:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 82% 10%,rgba(124,58,237,.38),transparent 60%),radial-gradient(ellipse 50% 60% at 6% 100%,rgba(4,120,87,.22),transparent 60%)}
+.r-lock-c{position:relative;width:100%;max-width:400px;display:grid;gap:12px;padding:34px 32px 28px;border-radius:24px;background:#FFF;box-shadow:0 40px 100px -20px rgba(0,0,0,.5)}
+.wm{font-weight:700;font-size:21px;letter-spacing:-.02em;color:var(--ink)}
+.wm i{font-style:normal;color:var(--v)}
+h1{margin:4px 0 0;font:400 32px/1.1 'Source Serif Pro',Georgia,serif;letter-spacing:-.015em}
+p{margin:0 0 6px;font-size:13.5px;line-height:1.5;color:var(--sub)}
+label{font:600 12px Inter,sans-serif;color:var(--sub)}
+input{width:100%;height:48px;padding:0 14px;border:1.5px solid var(--line);border-radius:12px;font:15px Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;outline:0;color:var(--ink)}
+input::placeholder{text-transform:none;letter-spacing:0;color:#A39DAF}
+input:focus{border-color:var(--v)}
+button{height:48px;padding:0 18px;border:0;border-radius:12px;background:var(--v);color:#FFF;font:600 15px Inter,sans-serif;cursor:pointer}
+button[disabled]{opacity:.6;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--v);outline-offset:2px}
+.err{min-height:18px;font-size:12.5px;color:#B91C1C}
+</style>
+</head>
+<body>
+<div class="r-lock">
+<form class="r-lock-c" id="f" novalidate>
+<span class="wm">Decouple<i>.</i></span>
+<h1>Enter your code</h1>
+<p>It's in the message you were sent.</p>
+<label for="c">Code</label>
+<input id="c" name="code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="For example, FERN-LARK-27" autofocus required>
+<div class="err" id="err" role="alert" aria-live="polite"></div>
+<button type="submit" id="go">Continue</button>
+</form>
+</div>
+<script>
+(function(){
+var f=document.getElementById('f'),c=document.getElementById('c'),err=document.getElementById('err'),go=document.getElementById('go');
+var WRONG='That code is not right, or it has expired.';
+if(new URLSearchParams(location.search).get('code_error')){err.textContent=WRONG;history.replaceState(null,'','/take-part')}
+f.addEventListener('submit',async function(e){
+e.preventDefault();err.textContent='';var code=c.value.trim();if(!code){err.textContent='Enter your code.';c.focus();return}
+go.disabled=true;go.textContent='Checking…';
+try{var r=await fetch('/api/tester',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({code:code})});
+if(r.ok){location.replace('/take-part');return}
+err.textContent=r.status===404?WRONG:r.status===503?'This is not set up yet.':'Something went wrong. Try again.'}
+catch(x){err.textContent='Could not reach the site. Try again.'}
+go.disabled=false;go.textContent='Continue';c.select()});
+})();
+</script>
+</body>
+</html>

@@ -28,13 +28,15 @@ Vercel renamed Edge Config to Global Config in 2026; the spec's "Edge Config" is
 
 https://vercel.com/rossdelarge247-debugs-projects/decouple-prototype-01/settings/environment-variables, each for Production and Preview:
 
-`SITE_ORIGIN` `https://decouple.uk` · `LOGIN_PATH` `/studio` · `OWNER_PASSWORD_HASH` from `npm run hash-password` · `SESSION_SECRET` from `openssl rand -hex 32` · `TESTER_CODES` (optional fallback) · `TESTERS_CAN_OPEN_PROTOS` `false` · `APPS_SCRIPT_URL` and `APPS_SCRIPT_SECRET` from `apps-script/SETUP.md` · `RESEND_API_KEY` · `MAIL_FROM` `Decouple <hello@decouple.uk>` · `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` from Cloudflare › Turnstile › Add widget (domain decouple.uk, managed mode) · `VERCEL_API_TOKEN` · `VERCEL_TEAM_ID` · `DEPLOY_HOOK_URL` (`GLOBAL_CONFIG` comes from the Connect step; `GLOBAL_CONFIG_ID` only if you prefer to set it by hand).
+`SITE_ORIGIN` `https://decouple.uk` · `LOGIN_PATH` `/studio` · `OWNER_PASSWORD_HASH` from `npm run hash-password` · `SESSION_SECRET` from `openssl rand -hex 32` · `TESTER_CODES` (optional fallback) · `APPS_SCRIPT_URL` and `APPS_SCRIPT_SECRET` from `apps-script/SETUP.md` · `RESEND_API_KEY` · `MAIL_FROM` `Decouple <hello@decouple.uk>` · `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` from Cloudflare › Turnstile › Add widget (domain decouple.uk, managed mode) · `VERCEL_API_TOKEN` · `VERCEL_TEAM_ID` · `DEPLOY_HOOK_URL` (`GLOBAL_CONFIG` comes from the Connect step; `GLOBAL_CONFIG_ID` only if you prefer to set it by hand).
 
-Then remove `TINK_CLIENT_ID`, `TINK_CLIENT_SECRET` and `ANTHROPIC_API_KEY` from Production, and rotate them at Tink and Anthropic: the app that used them is retired. Deployments › the latest › Redeploy, so the functions pick everything up.
+For the AI proxy (`/api/claude`, spec §7): `ANTHROPIC_API_KEY` (a new key made for this site, not the retired app's), `CLAUDE_MODEL` and `CLAUDE_MONTHLY_CAP_USD`. Until all three are set the AI features say they are unavailable. The proxy keeps its monthly spend estimate in the Global Config store as `aiSpend`, so it needs `VERCEL_API_TOKEN` too.
+
+Then remove `TINK_CLIENT_ID` and `TINK_CLIENT_SECRET` from Production, and any `ANTHROPIC_API_KEY` left from the old app, and rotate them at Tink and Anthropic: the app that used them is retired. `TESTERS_CAN_OPEN_PROTOS` is retired too (export 2026-10-14d): delete it if it is there. Deployments › the latest › Redeploy, so the functions pick everything up.
 
 ## Checking the connections
 
-Signed in, open `/api/admin/diagnose` on the site. It lists which variables are present and missing, reads the Global Config store, checks the API token can reach it, calls the Google script, and says what the switches still need. It never shows a value. If a switch fails with "Couldn't reach the site", this page says why.
+Signed in, open `/api/admin/diagnose` on the site. It lists which variables are present and missing, reads the Global Config store, checks the API token can reach it, calls the Google script, says whether the AI proxy is set up and what it has spent this month, and says what the switches still need. It never shows a value. If a switch fails with "Couldn't reach the site", this page says why.
 
 ## Domain
 

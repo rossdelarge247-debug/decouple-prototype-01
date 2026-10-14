@@ -1,6 +1,6 @@
 # Decouple site · build and housework spec
 
-For Claude Code. Owned by the design project; last updated 14 Oct 2026 (export `2026-10-14a`). Changes since the last export are listed in that export's `CHANGES.md`. The owner is Ross. There is one login, Ross's. Domain: **decouple.uk** (already connected to Vercel). Contact: **hello@decouple.uk**.
+For Claude Code. Owned by the design project; last updated 14 Oct 2026 (export `2026-10-14d`). Changes since the last export are listed in that export's `CHANGES.md`. The owner is Ross. There is one login, Ross's. Domain: **decouple.uk** (already connected to Vercel). Contact: **hello@decouple.uk**.
 
 ---
 
@@ -9,8 +9,8 @@ For Claude Code. Owned by the design project; last updated 14 Oct 2026 (export `
 | Area | Who | What |
 |---|---|---|
 | **Public** | Anyone | `/`: the M02 guide's landing page, or the M01 holding page (switchable). `/privacy`. |
-| **Testers** | Anyone with a tester code | Everything in the guide after the landing page. |
-| **Owner** | Ross, signed in | Prototype hub, Marketing hub, Results, Site settings, Protos 01–10, MVP 01, and every other file. |
+| **Testers** | Anyone with a tester code | Everything in the guide after the landing page. If their code has a `track`, also the participant hub (`/take-part`) and the prototypes in that track. Never the hubs. |
+| **Owner** | Ross, signed in | Prototype hub, Marketing hub, Results, Site settings, Protos 01–10, MVP 00–07, and every other file. |
 
 - The guide's landing page is public. Starting the guide needs a tester code, until the owner turns that off (`requireCode`). The page asks for the code; the server enforces it, because answers and email need a tester or owner session.
 - Holding mode only changes `/`, which then shows the holding page. `/guide` always serves the guide file, so emailed guide links keep working. Without a code, nobody can start the guide there while `requireCode` is on.
@@ -31,7 +31,9 @@ The files in `site/` keep their names, spaces and `·` included, because the pag
 | `/hub/marketing` | `Decouple · Marketing Hub.html` | Owner |
 | `/hub/results` | `Decouple · Results.html` | Owner |
 | `/hub/site` | `Decouple · Site Settings.html` (site settings: public mode, tester codes, test mode) | Owner |
-| `/p/01` … `/p/10` | `Proto 01 · Discover.html` … `Proto 10 · Dashboard.html` | Owner (testers too if `TESTERS_CAN_OPEN_PROTOS=true`) |
+| `/p/01` … `/p/10` | `Proto 01 · Discover.html` … `Proto 10 · Dashboard.html` | Owner, and testers whose track includes it (§4.4) |
+| `/take-part` | `Decouple · Take Part.html` (the participant hub) | Testers whose code has a `track`, and the owner. Rewrite. |
+| `/p/mvp00` … `/p/mvp07` | `MVP 00 · Public Site.html`, `MVP 01 · Toolkit.html`, `MVP 02 · Right for Us.html`, `MVP 03 · To-do & Journal.html`, `MVP 04 · Parenting Plan.html`, `MVP 05 · Financial Statement.html`, `MVP 06 · Split Planner.html`, `MVP 07 · Ask.html` | Owner, and testers whose track includes it (§4.4). Redirect, like `/p/01`. MVP 00 is a prototype, **not** a public page. |
 
 ## 3. Sessions
 
@@ -46,17 +48,18 @@ The files in `site/` keep their names, spaces and `·` included, because the pag
 For each request:
 1. **Allow straight through:**
    - `/api/*`: each function does its own checks.
-   - `LOGIN_PATH`, `/holding`, `/privacy`, `/favicon.ico`.
+   - `LOGIN_PATH`, `/holding`, `/privacy`, `/favicon.ico`, `/robots.txt`, `/sitemap.xml`.
    - Every path in `dist/_public.json`, which the build generates (§5).
 2. **`/` or `/guide`:**
-   - Read the site settings from Global Config, formerly Edge Config (`mode`, `requireCode`, `testMode`, `landing`), cached for 60 seconds per instance. Defaults: `{ mode: "holding", requireCode: true, testMode: false, landing: "a" }`.
+   - Read the site settings from Global Config, formerly Edge Config (`mode`, `requireCode`, `testMode`, `landing`, `indexing`), cached for 60 seconds per instance. Defaults: `{ mode: "holding", requireCode: true, testMode: false, landing: "a", indexing: false }`.
    - If `?code=` is present: check it (§3). If it's valid, set `dc_tester` and send a 302 to `/` with the code removed. If not, send a 302 to `/?code_error=1`.
+   - **`/take-part`** works the same way: `/take-part?code=<valid>` sets `dc_tester` and redirects to `/take-part`. Without a tester or owner session (or with an invalid code), serve the small code page (§8), never a 404, so participants who lose their cookie can type the code in.
    - At `/`: serve the guide when mode = guide, or the request has a tester or owner session. Otherwise serve the holding page. `/guide` always serves the guide.
    - The owner can preview with `/?view=holding` or `/?view=guide`.
 3. **Aliases:** rewrite or redirect the addresses in §2 to their files, as §2 says. The destinations need encoding, e.g. `/Decouple%20%C2%B7%20Results.html`.
-4. **Everything else:** owner session required. Testers may open the proto files only if `TESTERS_CAN_OPEN_PROTOS=true`: the 10 Proto HTML files and everything under `proto/`. Without a session, return 404 with the 404 page.
+4. **Everything else:** owner session required. **Testers and tracks.** Each tester code has a `track` (§3). A tester whose track is not empty may open `/take-part`, the prototype pages in their track, and everything under `proto/`, `mvp/`, `shared/` and `take-part/`. Track tokens map to files: `p01`…`p10` → `Proto 01 · …` … `Proto 10 · …`; `m00`…`m07` → `MVP 00 · …` … `MVP 07 · …`; `full` = all ten Protos; `mvp` = all eight MVPs. Read the track from the cached codes list using the session's `c`. An empty track means the guide only, as before. **`TESTERS_CAN_OPEN_PROTOS` is retired**: remove it. The hubs (`/hub`, `/hub/*`, and their files) are always owner-only. Without a session, return 404 with the 404 page.
 5. **Headers on every response:**
-   - `X-Robots-Tag: noindex, nofollow` on everything, for now.
+   - `X-Robots-Tag: noindex, nofollow` on everything, except: when `indexing` is true, `/` and `/privacy` get no robots header. `/guide` always keeps it (it duplicates `/`). The pages carry no robots meta tag of their own, so this header decides.
    - `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera, mic, geolocation off) and `X-Frame-Options: DENY`.
    - Private responses also get `Cache-Control: private, no-store`.
 
@@ -74,9 +77,19 @@ For each request:
 5. **Cache-busting:** add `?v=<content hash>` to every local JS and CSS reference. Serve `dist/**/*.{js,css,woff2,png}` with `Cache-Control: public, max-age=31536000, immutable` and HTML with `no-cache`.
 6. **Public allow-list:** scan the guide, the holding page and the privacy page, after rewriting, for every local `src` and `href`, and every `url()` in their CSS. Write the list to `dist/_public.json`. The middleware imports it, so nothing else is public.
 7. **Questions:** if `APPS_SCRIPT_URL` is set, fetch `?action=questions` and write `dist/m02/guide/questions.json` (an array of row objects keyed by the tab's column names). If the fetch fails or the tab is empty, write an empty list. The page then uses its built-in questions, with no failed request.
-8. **Fail the build** if any HTML still contains `text/babel`, `unpkg.com` or `fonts.googleapis.com`, or if a local reference doesn't resolve.
+8. **Minify all JS and CSS**, not just compiled JSX, and strip comments. Comments in the public files describe the prototypes and how things work.
+9. **Canonical:** add `<link rel="canonical" href="https://decouple.uk/">` to the guide and the holding page, and `https://decouple.uk/privacy` to the privacy page.
+10. **Fail the build** if any HTML still contains `text/babel`, `unpkg.com` or `fonts.googleapis.com`, or if a local reference doesn't resolve.
 
 Target: a Lighthouse mobile performance score of 90 or more for `/`.
+
+### 5.1 Search engines
+
+Both files are served by a function, from the `indexing` setting.
+- **`/robots.txt`**, `indexing` false: `User-agent: *` and `Disallow: /`.
+- **`/robots.txt`**, `indexing` true: `User-agent: *`, `Allow: /$`, `Allow: /privacy$`, one `Allow:` line for each path in `_public.json` (so crawlers can render the page), then `Disallow: /` and `Sitemap: https://decouple.uk/sitemap.xml`. **Never name a private path** (the hubs, the protos, `LOGIN_PATH`): robots.txt is public, and listing them would point people to them.
+- **`/sitemap.xml`**: `/` and `/privacy` when `indexing` is true. 404 otherwise.
+- Private pages keep `noindex, nofollow` and return 404 without a session (§1), so nothing private can be indexed even if it's linked from elsewhere.
 
 ## 6. Google script (`apps-script/Code.gs` + `apps-script/SETUP.md`)
 
@@ -84,7 +97,8 @@ Target: a Lighthouse mobile performance score of 90 or more for `/`.
 - **Tabs** are created with headers if they're missing:
   - `M02 Guide` and `Prototype testing`: `received_at, batch_key, sid, pid, test, step, price, landing, qid, qv, question, type, answer, device`
   - `Signups`: `received_at, email, stage, source, sid`
-  - `Codes`: `code, label, active, test, expires, created, uses, last_used`
+  - `Codes`: `code, label, active, test, expires, created, uses, last_used, track, mode` (add the last two to an existing tab)
+  - `Participants`: `received_at, pid, sid, email, followup, voucher`. **Never returned by any read action.**
   - `M02 Questions`: the header `id, section, type, label, helper, options, show_if, required, max, exclusive, placeholder, skip, version, active`. Ross imports `site/m02/guide/questions-template.csv` into it once; SETUP.md says how.
   - Any other `test` value gets its own tab, named after it.
 - **`doPost`, `kind: "answers"`:** take a `LockService` lock. Drop the batch if its `batch_key` was seen in the last 6 hours (CacheService). Otherwise append one row per answer to the test's tab. Return `{ok:true}`.
@@ -104,7 +118,7 @@ All JSON. Reject any body over 64 KB.
 
 | Route | Who | In | Does | Out |
 |---|---|---|---|---|
-| `GET /api/session` | Anyone | — | Reads the cookies and site settings | `{owner, tester, human, testing, label?, mode, requireCode, landing, turnstileSiteKey}` |
+| `GET /api/session` | Anyone | — | Reads the cookies and site settings | `{owner, tester, human, testing, label?, track?, trackMode?, mode, requireCode, landing, turnstileSiteKey}`. `track` and `trackMode` (the code's `mode`: `un` or `mod`) for testers only. |
 | `POST /api/login` | Anyone | `{password}` | §3 | 200 and sets `dc_owner`, or 401 |
 | `POST /api/logout` | Anyone | — | Clears `dc_owner` and `dc_tester` | 200 |
 | `POST /api/tester` | Anyone | `{code}` | Checks the code (§3) | 200 `{label}` and sets `dc_tester`, or 404 |
@@ -113,8 +127,10 @@ All JSON. Reject any body over 64 KB.
 | `POST /api/signup` | Human | `{email, stage?, source, sid, hp}` | Checks the email, then sends `kind: "signup"`. Sources: `holding:<utm_source>`, `guide`, `guide-optin`. `stage` can be a `;` list. | 200, 400 or 403 |
 | `POST /api/email` | Same as `/api/answers` | `{email, link, sid}` | Sends the guide email (below) | 200, 400, 401 or 429 |
 | `GET /api/results` | Owner | `?test=&since=` | Passes the request to `action=results` | `{rows:[{sid,pid,test,step,price,landing,qid,qv,q,type,a,at,device}], signups}` |
-| `GET` and `POST /api/admin/site` | Owner | `{mode?: "guide"\|"holding", requireCode?: boolean, testMode?: boolean, landing?: "a"…"i"\|"random"}` | Reads or writes the Edge Config items through the Vercel REST API (`EDGE_CONFIG_ID`, `VERCEL_API_TOKEN`) | `{mode, requireCode, testMode, landing}` |
-| `GET` and `POST /api/admin/codes` | Owner | POST: `{action: "create", codes:[{code, label, expires, test}]}`, `{action: "update", code, active?, label?, expires?, test?}` or `{action: "delete", code}` | Passes the change to the script's `kind: "codes"` (GET reads `action=codes`). On create, check the format `^[A-Z]{2,6}-[A-Z]{2,6}-\d{2}$`, labels of 40 characters at most, and at most 20 codes per request. The page makes the code strings. | `{codes:[{code,label,active,test,expires,created,uses,last_used}]}` |
+| `GET` and `POST /api/admin/site` | Owner | `{mode?: "guide"\|"holding", requireCode?: boolean, testMode?: boolean, landing?: "a"…"i"\|"random", indexing?: boolean}` | Reads or writes the Edge Config items through the Vercel REST API (`EDGE_CONFIG_ID`, `VERCEL_API_TOKEN`) | `{mode, requireCode, testMode, landing, indexing}` |
+| `GET` and `POST /api/admin/codes` | Owner | POST: `{action: "create", codes:[{code, label, expires, test, track, mode}]}`, `{action: "update", code, active?, label?, expires?, test?, track?, mode?}` or `{action: "delete", code}` | Passes the change to the script's `kind: "codes"` (GET reads `action=codes`). On create, check the format `^[A-Z]{2,6}-[A-Z]{2,6}-\d{2}$`, labels of 40 characters at most, `track` matching `^(|full|mvp|[pm]\d{2}(,[pm]\d{2})*)| `GET` and `POST /api/admin/codes` | Owner | POST: `{action: "create", codes:[{code, label, expires, test, track, mode}]}`, `{action: "update", code, active?, label?, expires?, test?, track?, mode?}` or `{action: "delete", code}` | Passes the change to the script's `kind: "codes"` (GET reads `action=codes`). On create, check the format `^[A-Z]{2,6}-[A-Z]{2,6}-\d{2}$`, , `mode` of `un` or `mod`, and at most 20 codes per request. The page makes the code strings. | `{codes:[{code,label,active,test,expires,created,uses,last_used,track,mode}]}` |
+| `POST /api/participant` | Tester (or owner) | `{sid, followup, voucher, email, hp}` | The participant hub's thank-you step. Checks `email` when given. Sends `kind: "participant"` to the script, which appends to `Participants` with the tester's label as `pid`. Test codes and test mode: 200 `{ok, test}`, nothing stored. At most 3 per `sid`. | 200, 400 or 401 |
+| `POST /api/claude` | Owner or tester | `{system, messages:[{role, content}], max_tokens}` | The AI proxy (below) | 200 `{text}`; 400 bad shape; 401 no session; 429 over the rate limit; 503 no key or over the monthly cap |
 | `POST /api/admin/publish` | Owner | — | Calls `DEPLOY_HOOK_URL`, which rebuilds and so picks up edited questions | `{ok}` |
 
 **Cleaning answers:**
@@ -122,9 +138,18 @@ All JSON. Reject any body over 64 KB.
 - At most 80 rows. Each `a` at most 2,000 characters, with control characters removed.
 - **Never store** any row whose `qid` is in `safe`, `safe2`, `name_me` or `name_them`, or contains `email`. Strip these server-side even though the pages already never send them.
 - `pid`: the client's `pid` (trimmed to 40 characters) when the session is the owner's, because testing-mode sessions type in a participant ID. Otherwise the tester's label, or `"anon"`.
-- `test` must be `M02 Guide`, `Prototype testing` or `M01 Holding`. Return 400 for anything else; new tests are added here deliberately.
+- `test` must be `M02 Guide`, `Prototype testing`, `M01 Holding`, `Screener` (the participant hub), or match `^MVP \d{2} · [A-Za-z&' -]{1,40}$` (one per MVP prototype, e.g. `MVP 05 · Financial statement`; each gets its own tab, as §6 already does for other values). Return 400 for anything else; new tests are added here deliberately.
 
 **Rate limits:** at most 120 answer batches per hour per session, and 3 emails per `sid` per day. In-memory is fine for now, because sessions already gate it.
+
+**The AI proxy (`/api/claude`):**
+- Used by Ask (MVP 07), the journal companion (MVP 03) and Protos 08 and 10. `shared/dc-site.js` defines `window.claude.complete` on the site and posts here; the pages are unchanged.
+- Calls the Anthropic Messages API with `ANTHROPIC_API_KEY` and `CLAUDE_MODEL`. No tools, no web access, no streaming. Returns the reply text as `{text}`.
+- Limits: `max_tokens` at most 1,200; at most 20 messages; `system` at most 8,000 characters; body at most 64 KB. 40 calls per hour per session.
+- **Spend cap:** estimate cost from the usage the API returns, keep a running total per calendar month (Global Config item `aiSpend: {month, usd}`, written at most once a minute per instance), and return 503 once it passes `CLAUDE_MONTHLY_CAP_USD`.
+- **Never log content.** Log only time, route, session role, token counts and status.
+- Works in test mode too: it stores nothing.
+- For now the pages send their own system prompts, which is acceptable while only the owner and testers can reach it. **Before any AI feature is public**, move the prompts to the server (pages send `{mode, ctx, messages}`). That needs a page change from the design project first.
 
 **The guide email (Resend):**
 - From `MAIL_FROM` (`Decouple <hello@decouple.uk>`), reply-to `hello@decouple.uk`.
@@ -145,20 +170,24 @@ The design project owns every other page. The client side of the API is `site/sh
   - Copy the look of the Results lock screen in `site/results/r.css` (`.r-lock`, `.r-lock-c`): a dark background, a white card, Source Serif heading "Sign in", one password field, a button, and an error line.
   - Afterwards go to `?next=` (same-site paths only) or `/hub`.
   - noindex. No mention of what's behind it.
+- **`/take-part` code page:** the same look as `/studio`. Heading "Enter your code", one field, a button, and an error line. It posts to `/api/tester`, then reloads `/take-part`. No mention of what's behind it. noindex.
 - **404 page:** the same type, light background. Text: "This page doesn't exist." Link: "Go to Decouple".
 
 ## 9. Environment variables (Vercel; never in git)
 
-`SITE_ORIGIN=https://decouple.uk` · `LOGIN_PATH=/studio` · `OWNER_PASSWORD_HASH` · `SESSION_SECRET` (32+ random bytes) · `TESTER_CODES` (fallback) · `TESTERS_CAN_OPEN_PROTOS=false` · `APPS_SCRIPT_URL` · `APPS_SCRIPT_SECRET` · `RESEND_API_KEY` · `MAIL_FROM` · `TURNSTILE_SITE_KEY` · `TURNSTILE_SECRET_KEY` · `EDGE_CONFIG` (the connection string, added when the store is connected) · `EDGE_CONFIG_ID` · `VERCEL_API_TOKEN` (scoped to this project) · `DEPLOY_HOOK_URL`.
+`SITE_ORIGIN=https://decouple.uk` · `LOGIN_PATH=/studio` · `OWNER_PASSWORD_HASH` · `SESSION_SECRET` (32+ random bytes) · `TESTER_CODES` (fallback) · `APPS_SCRIPT_URL` · `APPS_SCRIPT_SECRET` · `RESEND_API_KEY` · `MAIL_FROM` · `TURNSTILE_SITE_KEY` · `TURNSTILE_SECRET_KEY` · `EDGE_CONFIG` (the connection string, added when the store is connected) · `EDGE_CONFIG_ID` · `VERCEL_API_TOKEN` (scoped to this project) · `DEPLOY_HOOK_URL`.
 
-**Remove** from the production environment: `TINK_CLIENT_ID`, `TINK_CLIENT_SECRET` and `ANTHROPIC_API_KEY`. Ask Ross first. Suggest rotating them, since the app is retired.
+**For `/api/claude`:** `ANTHROPIC_API_KEY` (a new key, just for this; rotate the old app's key), `CLAUDE_MODEL` (agree with Ross), `CLAUDE_MONTHLY_CAP_USD` (e.g. 50).
+
+**Remove** from the production environment: `TINK_CLIENT_ID` and `TINK_CLIENT_SECRET`. Ask Ross first. Suggest rotating them, since the app is retired.
 
 ## 10. Things to tell Ross
 
 - **Vercel's Hobby plan is for non-commercial use only.** A company's marketing and testing site should be on Pro ($20 a month).
 - **Resend:** add decouple.uk in Resend, then add its DNS records (SPF, DKIM, and DMARC on `_dmarc`). If Vercel manages the DNS, they go in Vercel › Domains.
 - **hello@decouple.uk needs a real mailbox** to receive replies, from any provider. Resend only sends.
-- Protos 08 and 10 call `window.claude.complete`, which exists only inside the design tool. On the site, check those features fail quietly, and list where they do. Don't fix the pages: report back. A small owner-only `/api/claude` proxy is a possible next step; don't build it now.
+- **AI features** (Protos 08 and 10, MVP 03 and MVP 07) now reach `/api/claude` through `shared/dc-site.js`. Agree the model, the monthly cap and the provider's data terms (no training on inputs, retention) with Ross before setting the key. Until the key is set they fail quietly, with a message saying so.
+- **Participants:** a tester code with a `track` opens the participant hub at `/take-part` (consent, screener, then only that track). Make them in Site settings. `TESTERS_CAN_OPEN_PROTOS` is gone.
 
 ## 11. Checks before merging (in the Vercel preview)
 
@@ -172,6 +201,10 @@ The design project owns every other page. The client side of the API is `site/sh
 6. `/api/email` sends to Ross's address. Check the subject and template, and the 429 on the fourth email.
 7. `dist/` has no `text/babel`, `unpkg.com` or `fonts.googleapis.com`. Lighthouse mobile on `/` scores 90 or more.
 8. The headers in §4 are present. Private responses aren't cached.
+9. Search (§5.1): with `indexing` off, `/robots.txt` is `Disallow: /` and `/` has the noindex header. Turn it on in Site settings: within a minute `/` and `/privacy` lose the header, `/guide` keeps it, and robots.txt and the sitemap name no private path. Turn it back off. Logged out, `/proto/ut/ut-questions.js` returns 404.
+10. **MVP prototypes and tracks:** owner opens `/p/mvp00` and walks MVP 00 → 01 → each tool with no failed requests. Make a code with track `mvp`: its link opens `/take-part`, the tester can open MVP pages, and `/p/01` and `/hub` give 404. A code with track `p03,m05` opens only those two. A code with no track sees the guide only. In testing mode, finishing a part lands rows on that MVP's own tab (e.g. `MVP 05 · Financial statement`). `/api/answers` with `test` = `MVP 99 · <b>` returns 400.
+11. **`/api/claude`:** no session → 401. As a tester, MVP 07 · Ask answers a question. The 41st call in an hour → 429. The logs hold no message content.
+12. **Participant hub:** `/take-part` with no session shows the code page. In it: consent, screener (rows land on the `Screener` tab; the wellbeing answer never arrives), the session list, then the thank-you step (a row in `Participants`, nothing on the answer tabs, and `/api/results` never returns it).
 
 Then switch mode back to **holding** before the production deploy. The guide goes public only when the next export lands, with consent and the tester-code screen.
 

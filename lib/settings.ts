@@ -1,5 +1,5 @@
-/* Site settings (spec §4): mode, requireCode and testMode, read from the Global Config store
-   (Vercel renamed Edge Config in 2026; the old names still work) and cached for 60 seconds per
+/* Site settings (spec §4): mode, requireCode, testMode, landing and indexing, read from the Global
+   Config store (Vercel renamed Edge Config in 2026; the old names still work) and cached for 60 seconds per
    instance. Written through the Vercel REST API (spec §7, /api/admin/site). */
 import { createClient } from '@vercel/global-config'
 import { env, type Env } from './env.js'
@@ -14,9 +14,14 @@ export interface Settings {
   testMode: boolean
   /** which of the guide's landing designs visitors see, or one of the nine at random */
   landing: Landing
+  /** search engines may list / and /privacy (spec §5.1). Nothing else, ever. */
+  indexing: boolean
 }
 
-export const DEFAULTS: Readonly<Settings> = { mode: 'holding', requireCode: true, testMode: false, landing: 'a' }
+export const DEFAULTS: Readonly<Settings> = { mode: 'holding', requireCode: true, testMode: false, landing: 'a', indexing: false }
+
+/** the items read from the store */
+export const SETTINGS_KEYS = ['mode', 'requireCode', 'testMode', 'landing', 'indexing'] as const
 
 const isLanding = (v: unknown): v is Landing => typeof v === 'string' && (LANDINGS as readonly string[]).includes(v)
 export const SETTINGS_TTL_MS = 60_000
@@ -28,10 +33,11 @@ export function normaliseSettings(raw: unknown): Settings {
     requireCode: typeof r.requireCode === 'boolean' ? r.requireCode : DEFAULTS.requireCode,
     testMode: typeof r.testMode === 'boolean' ? r.testMode : DEFAULTS.testMode,
     landing: isLanding(r.landing) ? r.landing : DEFAULTS.landing,
+    indexing: r.indexing === true,
   }
 }
 
-/* A patch from the owner: only the three keys, only the right types */
+/* A patch from the owner: only the known keys, only the right types */
 export function parsePatch(body: unknown): { ok: true; patch: Partial<Settings> } | { ok: false; error: string } {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return { ok: false, error: 'Expected an object.' }
   const b = body as Record<string, unknown>
@@ -52,6 +58,10 @@ export function parsePatch(body: unknown): { ok: true; patch: Partial<Settings> 
     if (!isLanding(b.landing)) return { ok: false, error: 'landing must be "a" to "i" or "random".' }
     patch.landing = b.landing
   }
+  if ('indexing' in b) {
+    if (typeof b.indexing !== 'boolean') return { ok: false, error: 'indexing must be true or false.' }
+    patch.indexing = b.indexing
+  }
   if (!Object.keys(patch).length) return { ok: false, error: 'Nothing to change.' }
   return { ok: true, patch }
 }
@@ -71,7 +81,7 @@ function defaultReader(e: Env = env()): Reader {
     const conn = connectionString(e)
     if (!conn) return null
     const client = createClient(conn)
-    return client.getAll(['mode', 'requireCode', 'testMode', 'landing'])
+    return client.getAll([...SETTINGS_KEYS])
   }
 }
 
@@ -114,21 +124,38 @@ export function storeId(e: Env = env()): string | null {
   }
 }
 
-/* Upsert the changed keys in the Edge Config store, then return the merged settings */
-export async function writeSettings(patch: Partial<Settings>, e: Env = env()): Promise<Settings> {
+/** whether the store can be written: its id and the API token */
+export function storeWritable(e: Env = env()): boolean {
+  return !!(storeId(e) && e.VERCEL_API_TOKEN)
+}
+
+/* Upsert items in the store through the Vercel REST API */
+export async function upsertItems(items: Record<string, unknown>, e: Env = env()): Promise<void> {
   const id = storeId(e)
   const token = e.VERCEL_API_TOKEN
   if (!id || !token) throw new Error('Settings writes are not configured: connect the Global Config store (GLOBAL_CONFIG) and set VERCEL_API_TOKEN.')
-  const current = await readSettings()
-  const next: Settings = { ...current, ...patch }
   const u = new URL(`https://api.vercel.com/v1/global-config/${encodeURIComponent(id)}/items`)
   if (e.VERCEL_TEAM_ID) u.searchParams.set('teamId', e.VERCEL_TEAM_ID)
   const res = await fetch(u, {
     method: 'PATCH',
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ items: Object.entries(patch).map(([key, value]) => ({ operation: 'upsert', key, value })) }),
+    body: JSON.stringify({ items: Object.entries(items).map(([key, value]) => ({ operation: 'upsert', key, value })) }),
   })
   if (!res.ok) throw new Error(`Vercel returned ${res.status} writing the settings.`)
+}
+
+/* One item, read fresh from the store (no cache), or undefined when there is no store */
+export async function readItem(key: string, e: Env = env()): Promise<unknown> {
+  const conn = connectionString(e)
+  if (!conn) return undefined
+  return createClient(conn).get(key)
+}
+
+/* Upsert the changed keys in the Edge Config store, then return the merged settings */
+export async function writeSettings(patch: Partial<Settings>, e: Env = env()): Promise<Settings> {
+  const current = await readSettings()
+  const next: Settings = { ...current, ...patch }
+  await upsertItems(patch, e)
   cache = { at: Date.now(), value: next }
   return next
 }

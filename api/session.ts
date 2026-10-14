@@ -15,5 +15,10 @@ export async function GET(request: Request): Promise<Response> {
     turnstileSiteKey: env().TURNSTILE_SITE_KEY || '',
   }
   if (w.tester && w.label !== undefined) out.label = w.label
+  /* testers only: the participant hub shows the prototypes in the track, run the way mode says */
+  if (w.tester) {
+    out.track = w.track ?? ''
+    out.trackMode = w.trackMode || 'un'
+  }
   return json(out)
 }

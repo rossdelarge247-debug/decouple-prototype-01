@@ -34,10 +34,12 @@ variables from spec §9 in `.env.local` (never committed).
 ## How a request is served
 
 1. The middleware lets `/api/*`, the login path, `/holding`, `/privacy` and every path in the
-   public allow-list through.
+   public allow-list through, and answers `/robots.txt` and `/sitemap.xml` from the indexing switch.
 2. `/` shows the guide or the holding page, by the mode switch and the visitor's session.
    `/guide` always shows the guide. `?code=` redeems a tester code.
-3. The aliases in spec §2 map to files. Everything else needs the owner's session, or returns a
-   plain 404.
+3. `/take-part` is the participant hub for a tester whose code has a track, or a small code page
+   without a session. `?code=` works there too.
+4. The aliases in spec §2 map to files. Everything else needs the owner's session, or a tester
+   whose track includes it (`lib/tracks.ts`), or returns a plain 404.
 
 Two things differ from the spec, and why, are in `docs/HANDOFF-SITE-1.md`.

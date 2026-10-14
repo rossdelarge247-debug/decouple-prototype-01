@@ -1,4 +1,4 @@
-/* MVP 01 · your statement, the invite, the shared statement, agreeing, and the outputs */
+/* MVP 05 · your statement, the invite, the shared statement, agreeing, and the outputs */
 (function () {
   const { useState, useEffect, useMemo } = React;
   const Ic = window.DIc, MS = window.MS;
@@ -36,6 +36,7 @@
             {!!(st.hints || []).length && <div className="ms-sec private"><div className="ms-sec-h"><h3>What you think {N.them} has</h3><span><Ic.Lock s={11}/> Never shared</span></div>{st.hints.map((h) => <div key={h.id} className="ms-ln solo"><span className="l"><b>{h.label}</b><small>Your guess</small></span><span className="v">{h.guess ? "~" + MS.gbp(h.guess) : "Not sure"}</span><span></span></div>)}</div>}
           </div>
           <aside className="ms-rail">
+            <window.KitFakeDoor id="docs" compact/>
             <div className="ms-card">
               <div className="ms-card-h"><b>Documents to add</b><span>{docs} of {need}</span></div>
               <div className="ms-bar"><i style={{ width: (need ? (docs / need) * 100 : 100) + "%" }}></i></div>
@@ -223,7 +224,7 @@
     return (
       <div className="ms-wrap">
         <div className="ms-head"><div><div className="kick">Agreed by {N.me} and {N.them}</div><h1 className="serif">Your statement is <span className="em">complete.</span></h1><p>Take it to a mediator, use it for a consent order, or keep it ready. If anything changes, update it and you’ll both be asked to confirm again.</p></div><div className="ms-head-a"><button className="btn lg" onClick={onFinish}>Finish <Ic.Arrow s={15}/></button></div></div>
-        <div className="ms-outs">{OUT.map((o) => <div key={o.id} className="ms-out"><div className="ms-out-p" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><b>{o.t}</b><p>{o.d}</p><small>For: {o.for}</small><div className="ms-row"><button className="btn sm" onClick={() => setDoc(o)}>Preview</button><button className="btn sm ghost" onClick={() => setToast("In the real product this downloads a PDF.")}>Download PDF</button></div></div>)}</div>
+        <window.KitPay pack="disclosure" onPreview={(t) => { const o = OUT.find((x) => x.t === t); if (o) setDoc(o); else setToast("In the real product this downloads a PDF."); }}/>
         {toast && <div className="ms-toast" onAnimationEnd={() => setToast("")}>{toast}</div>}
         {doc && (
           <div className="ms-scrim" onClick={(e) => e.target === e.currentTarget && setDoc(null)}>

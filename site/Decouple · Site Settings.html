@@ -29,6 +29,7 @@
 <button class="mo" type="button" role="radio" data-m="holding"><span class="r"><b>Holding page</b><span class="rd"></span></span><small>“Coming soon” with an email sign-up. People with a code can still use the guide.</small></button>
 </div>
 <div class="row"><div><b>Guide needs a tester code</b><small id="code-help"></small></div><button class="sw" id="sw-code" type="button" role="switch" aria-label="Guide needs a tester code"></button></div>
+<div class="row"><div><b>Show in search engines</b><small id="index-help"></small></div><button class="sw" id="sw-index" type="button" role="switch" aria-label="Show in search engines"></button></div>
 <div class="note" id="site-msg" role="status"></div>
 </section>
 <section class="card testc" id="test-card">
@@ -42,13 +43,16 @@
 <div class="note" id="land-msg" role="status"></div>
 </section>
 <section class="card span">
-<div class="ch"><div><h2>Tester codes</h2><p>Each code opens the guide for one person. Its label becomes their participant ID in Results. Send them the link and the code fills itself in. Turning a code off stops it working within a minute.</p></div>
+<div class="ch"><div><h2>Tester codes</h2><p>Each code is for one person. Its label becomes their participant ID in Results. With no prototypes, the code opens the guide. With prototypes, its link opens the participant hub (Take part): consent, a short screener, then only the prototypes you chose. Turning a code off stops it working within a minute.</p></div>
 <div class="filt" role="tablist"><button type="button" data-f="active">Active · <span id="n-active" class="tab">0</span></button><button type="button" data-f="off">Off · <span id="n-off" class="tab">0</span></button><button type="button" data-f="all">All · <span id="n-all" class="tab">0</span></button></div></div>
 <form class="gen" id="gen">
 <label class="fld"><span>Label</span><input name="label" placeholder="e.g. P07, or Pilot · Hannah" maxlength="40" autocomplete="off"></label>
 <label class="fld"><span>How many</span><input name="count" type="number" min="1" max="20" value="1"></label>
 <label class="fld"><span>Expires</span><select name="exp"><option value="7">In 7 days</option><option value="30" selected>In 30 days</option><option value="90">In 90 days</option><option value="never">Never</option></select></label>
 <label class="chk" title="Answers from this code are never saved"><input type="checkbox" name="test"> Test code</label>
+<label class="fld"><span>Prototypes</span><select name="track"><option value="">None (guide only)</option><option value="mvp">MVP · all 8</option><option value="full">Full vision · all 10</option><option value="custom">Choose…</option></select></label>
+<label class="fld" id="trk-c" hidden><span>Which</span><input name="custom" placeholder="e.g. 03, 06, M05" autocomplete="off"></label>
+<label class="fld"><span>Session</span><select name="mode"><option value="un">On their own</option><option value="mod">With me</option></select></label>
 <button class="btn" type="submit">Make code</button>
 </form>
 <div class="fresh" id="fresh"><div class="h"><span>New codes</span><span class="acts"><button class="btn sm" type="button" id="fresh-copy">Copy links</button><button class="btn sm ghost" type="button" id="fresh-x">Done</button></span></div><ul></ul></div>

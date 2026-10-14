@@ -62,7 +62,13 @@ Tabs, with header rows, the first time each is needed:
 
 - `M02 Guide` and `Prototype testing`: one row per answer. Any other test the site sends gets its own tab, named after it.
 - `Signups`: `received_at, email, stage, source, sid`
-- `Codes`: `code, label, active, test, expires, created, uses, last_used`. Managed from Site settings on the site. You can also edit it by hand: `active` TRUE/FALSE, `expires` as `YYYY-MM-DD` or empty.
+- `Codes`: `code, label, active, test, expires, created, uses, last_used, track, mode`. Managed from Site settings on the site. You can also edit it by hand: `active` TRUE/FALSE, `expires` as `YYYY-MM-DD` or empty, `track` empty (the guide only), `full`, `mvp` or a list like `p03,m05`, `mode` `un` (on their own) or `mod` (with you). A tab made before export 2026-10-14d gets the last two headers added on its first use.
+- `Participants`: `received_at, pid, sid, email, followup, voucher`, from the participant hub's thank-you step. No read ever returns it: only you see it, in the sheet.
 - `M02 Questions`: the questions the guide asks.
+- `Screener` and one tab per MVP prototype (`MVP 05 · Financial statement` and so on), like any other test.
 
-Results read through the site never include email addresses.
+Results read through the site never include email addresses, and never anything from `Participants`, `Signups` or `Codes`.
+
+## After a change to `Code.gs`
+
+Paste the whole new file over the old one (step 1), save, then Deploy › Manage deployments › the pencil icon › Version: New version › Deploy. The URL stays the same, so Vercel needs nothing.

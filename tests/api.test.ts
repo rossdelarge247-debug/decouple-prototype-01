@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { POST as answers } from '../api/answers.js'
 import { POST as email } from '../api/email.js'
 import { POST as login } from '../api/login.js'
+import { POST as participant } from '../api/participant.js'
 import { POST as logout } from '../api/logout.js'
 import { GET as results } from '../api/results.js'
 import { GET as session } from '../api/session.js'
@@ -52,6 +53,16 @@ describe('/api/session', () => {
     expect(o).toMatchObject({ owner: true, testing: true })
     const off = await (await session(req('/api/session', { cookie: await cookieFor('tester', { l: 'Old', c: 'CLAY-RIVER-81' }) }))).json()
     expect(off.tester).toBe(false)
+    expect(off.track).toBeUndefined()
+  })
+
+  it('gives testers their track and session type, and nobody else (spec §7)', async () => {
+    const chosen = await (await session(req('/api/session', { cookie: await cookieFor('tester', { l: 'P03', c: 'ASH-FINCH-55' }) }))).json()
+    expect(chosen).toMatchObject({ tester: true, label: 'P03', track: 'p03,m05', trackMode: 'mod' })
+    const guideOnly = await (await session(req('/api/session', { cookie: await cookieFor('tester', { l: 'P01', c: 'FERN-LARK-27' }) }))).json()
+    expect(guideOnly).toMatchObject({ track: '', trackMode: 'un' })
+    const owner = await (await session(req('/api/session', { cookie: await cookieFor('owner') }))).json()
+    expect('track' in owner || 'trackMode' in owner).toBe(false)
   })
 })
 
@@ -175,6 +186,44 @@ describe('/api/signup and /api/email', () => {
   })
 })
 
+describe('/api/participant', () => {
+  const body = { sid: 'S-1', followup: true, voucher: 'Love2shop', email: ' You@Example.com ', hp: '' }
+
+  it('needs a tester or the owner, checks the email, and sends kind participant with the label as pid', async () => {
+    const fetch = mockFetch(() => ({ ok: true }))
+    Object.assign(process.env, SCRIPT)
+    const tester = await cookieFor('tester', { l: 'P02', c: 'OAK-WREN-40' })
+    expect((await participant(post('/api/participant', body))).status).toBe(401)
+    expect((await participant(post('/api/participant', body, await cookieFor('human')))).status).toBe(401)
+    expect((await participant(post('/api/participant', { ...body, email: 'nope' }, tester))).status).toBe(400)
+    expect((await participant(post('/api/participant', { ...body, email: '' }, tester))).status).toBe(400)
+    expect((await participant(post('/api/participant', { ...body, followup: 'yes' }, tester))).status).toBe(400)
+    expect((await participant(post('/api/participant', { ...body, sid: '' }, tester))).status).toBe(400)
+    expect(fetch).not.toHaveBeenCalled()
+    const r = await participant(post('/api/participant', body, tester))
+    expect(r.status).toBe(200)
+    expect(JSON.parse(String(fetch.mock.calls[0][1]?.body))).toEqual({ kind: 'participant', secret: 'shh', sid: 'S-1', pid: 'P02', followup: true, voucher: 'Love2shop', email: 'you@example.com' })
+    expect((await participant(post('/api/participant', { sid: 'S-2', followup: false, voucher: '', email: '', hp: '' }, tester))).status).toBe(200)
+    expect((await participant(post('/api/participant', { ...body, hp: 'bot' }, tester))).status).toBe(200)
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('stores nothing for a test code or in test mode, and allows three per sid', async () => {
+    const fetch = mockFetch(() => ({ ok: true }))
+    Object.assign(process.env, SCRIPT)
+    expect(await (await participant(post('/api/participant', body, await cookieFor('tester', { l: 'Me', c: 'MINT-OWL-12', t: 1 })))).json()).toEqual({ ok: true, test: true })
+    setup({ testMode: true })
+    Object.assign(process.env, SCRIPT)
+    expect(await (await participant(post('/api/participant', body, await cookieFor('owner')))).json()).toEqual({ ok: true, test: true })
+    expect(fetch).not.toHaveBeenCalled()
+    setup()
+    Object.assign(process.env, SCRIPT)
+    const tester = await cookieFor('tester', { l: 'P02', c: 'OAK-WREN-40' })
+    for (let i = 0; i < 3; i++) expect((await participant(post('/api/participant', body, tester))).status).toBe(200)
+    expect((await participant(post('/api/participant', body, tester))).status).toBe(429)
+  })
+})
+
 describe('owner-only routes', () => {
   it('refuse everyone else', async () => {
     const tester = await cookieFor('tester', { l: 'P01', c: 'FERN-LARK-27' })
@@ -194,7 +243,7 @@ describe('owner-only routes', () => {
     expect(r.rows).toHaveLength(1)
     expect(r.signups.count).toBe(1)
     expect((await results(req('/api/results?since=yesterday', { cookie: owner }))).status).toBe(400)
-    expect(await (await siteGet(req('/api/admin/site', { cookie: owner }))).json()).toEqual({ mode: 'holding', requireCode: true, testMode: false, landing: 'a' })
+    expect(await (await siteGet(req('/api/admin/site', { cookie: owner }))).json()).toEqual({ mode: 'holding', requireCode: true, testMode: false, landing: 'a', indexing: false })
     expect((await sitePost(post('/api/admin/site', { mode: 'open' }, owner))).status).toBe(400)
     expect((await sitePost(post('/api/admin/site', { mode: 'guide' }, owner))).status).toBe(502)
   })
@@ -203,16 +252,17 @@ describe('owner-only routes', () => {
     const fetch = mockFetch(() => ({ status: 'ok' }))
     Object.assign(process.env, { GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_1?token=t', VERCEL_API_TOKEN: 'tok', VERCEL_TEAM_ID: 'team_9' })
     const owner = await cookieFor('owner')
-    const r = await sitePost(post('/api/admin/site', { mode: 'guide', testMode: true, landing: 'random' }, owner))
-    expect(await r.json()).toEqual({ mode: 'guide', requireCode: true, testMode: true, landing: 'random' })
+    const r = await sitePost(post('/api/admin/site', { mode: 'guide', testMode: true, landing: 'random', indexing: true }, owner))
+    expect(await r.json()).toEqual({ mode: 'guide', requireCode: true, testMode: true, landing: 'random', indexing: true })
     const [url, init] = fetch.mock.calls[0]
     expect(String(url)).toBe('https://api.vercel.com/v1/global-config/ecfg_1/items?teamId=team_9')
     expect(init?.method).toBe('PATCH')
-    expect(JSON.parse(String(init?.body))).toEqual({ items: [{ operation: 'upsert', key: 'mode', value: 'guide' }, { operation: 'upsert', key: 'testMode', value: true }, { operation: 'upsert', key: 'landing', value: 'random' }] })
+    expect(JSON.parse(String(init?.body))).toEqual({ items: [{ operation: 'upsert', key: 'mode', value: 'guide' }, { operation: 'upsert', key: 'testMode', value: true }, { operation: 'upsert', key: 'landing', value: 'random' }, { operation: 'upsert', key: 'indexing', value: true }] })
+    expect((await sitePost(post('/api/admin/site', { indexing: 'yes' }, owner))).status).toBe(400)
   })
 
   it('validates code operations before passing them to the script', async () => {
-    const fetch = mockFetch(() => ({ ok: true, codes: [{ code: 'FERN-LARK-27', label: 'P01', active: 'TRUE', test: false, expires: '' }] }))
+    const fetch = mockFetch(() => ({ ok: true, codes: [{ code: 'FERN-LARK-27', label: 'P01', active: 'TRUE', test: false, expires: '', track: 'MVP', mode: 'mod' }] }))
     Object.assign(process.env, SCRIPT)
     const owner = await cookieFor('owner')
     expect((await codesPost(post('/api/admin/codes', { action: 'create', codes: [{ code: 'bad code', label: '' }] }, owner))).status).toBe(400)
@@ -223,8 +273,16 @@ describe('owner-only routes', () => {
     expect((await codesPost(post('/api/admin/codes', { action: 'update', code: 'A-B-01', expires: '3 Nov' }, owner))).status).toBe(400)
     const r = await codesPost(post('/api/admin/codes', { action: 'create', codes: [{ code: 'fern-lark-27', label: 'P01', expires: '2026-11-03', test: false }] }, owner))
     expect(r.status).toBe(200)
-    expect(await r.json()).toEqual({ codes: [{ code: 'FERN-LARK-27', label: 'P01', active: true, test: false, expires: '' }] })
-    expect(JSON.parse(String(fetch.mock.calls[0][1]?.body))).toMatchObject({ kind: 'codes', op: 'create', codes: [{ code: 'FERN-LARK-27', label: 'P01', expires: '2026-11-03', test: false }] })
+    expect(await r.json()).toEqual({ codes: [{ code: 'FERN-LARK-27', label: 'P01', active: true, test: false, expires: '', track: 'mvp', mode: 'mod' }] })
+    expect(JSON.parse(String(fetch.mock.calls[0][1]?.body))).toMatchObject({ kind: 'codes', op: 'create', codes: [{ code: 'FERN-LARK-27', label: 'P01', expires: '2026-11-03', test: false, track: '', mode: '' }] })
+    /* tracks and session types (spec §7) */
+    for (const track of ['all', 'p3', 'p03,', 'full,p03', 'x03']) expect((await codesPost(post('/api/admin/codes', { action: 'create', codes: [{ code: 'AA-BB-01', track }] }, owner))).status, track).toBe(400)
+    expect((await codesPost(post('/api/admin/codes', { action: 'create', codes: [{ code: 'AA-BB-01', track: 'mvp', mode: 'later' }] }, owner))).status).toBe(400)
+    await codesPost(post('/api/admin/codes', { action: 'create', codes: [{ code: 'AA-BB-01', track: 'MVP', mode: '' }, { code: 'AA-BB-02', track: 'p03,m05', mode: 'mod' }, { code: 'AA-BB-03', track: '', mode: 'mod' }] }, owner))
+    expect(JSON.parse(String(fetch.mock.calls[1][1]?.body)).codes.map((c: { track: string; mode: string }) => [c.track, c.mode])).toEqual([['mvp', 'un'], ['p03,m05', 'mod'], ['', '']])
+    await codesPost(post('/api/admin/codes', { action: 'update', code: 'A-B-01', track: 'full', mode: 'mod' }, owner))
+    expect(JSON.parse(String(fetch.mock.calls[2][1]?.body))).toMatchObject({ op: 'update', code: 'A-B-01', track: 'full', mode: 'mod' })
+    expect((await codesPost(post('/api/admin/codes', { action: 'update', code: 'A-B-01', track: 'everything' }, owner))).status).toBe(400)
     expect((await codesGet(req('/api/admin/codes', { cookie: owner }))).status).toBe(200)
   })
 
@@ -255,7 +313,7 @@ describe('/api/admin/diagnose', () => {
     expect(d.email.test).toMatch(/email=1/)
     expect(d.variables.present).toContain('GLOBAL_CONFIG')
     expect(d.variables.missing).toContain('RESEND_API_KEY')
-    expect(d.store).toMatchObject({ connected: true, id: 'ecfg_1', read: 'ok', settings: { mode: 'guide', requireCode: false, testMode: false, landing: 'a' } })
+    expect(d.store).toMatchObject({ connected: true, id: 'ecfg_1', read: 'ok', settings: { mode: 'guide', requireCode: false, testMode: false, landing: 'a', indexing: false } })
     expect(d.vercelApi.check).toMatch(/^ok/)
     expect(d.script).toMatchObject({ configured: true, check: 'ok', codes: 1 })
   })

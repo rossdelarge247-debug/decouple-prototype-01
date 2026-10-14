@@ -1,6 +1,10 @@
 /* Tester codes (spec §3 and §6). The "Codes" tab of the sheet, read through the Google script and
    cached for 60 seconds. TESTER_CODES ("CODE:label,CODE2:label2") is the fallback when the script
-   is unreachable. A code works if active is true and expires is empty or today or later. */
+   is unreachable. A code works if active is true and expires is empty or today or later.
+   A code's track says which prototypes its tester may open (lib/tracks.ts); mode is how the session
+   runs: "un" on their own, "mod" with Ross. */
+import { normaliseMode, normaliseTrack, type TrackMode } from './tracks.js'
+
 export interface CodeRow {
   code: string
   label: string
@@ -8,6 +12,9 @@ export interface CodeRow {
   test: boolean
   /** YYYY-MM-DD, or "" for never */
   expires: string
+  /** "" for the guide only, "full", "mvp" or a list like "p03,m05" */
+  track: string
+  mode: TrackMode
   created?: string
   uses?: number
   last_used?: string
@@ -54,6 +61,8 @@ export function normaliseRow(raw: unknown): CodeRow | null {
     active: truthy(r.active),
     test: truthy(r.test),
     expires: dateOnly(r.expires),
+    track: normaliseTrack(r.track),
+    mode: normaliseMode(r.mode),
   }
   if (r.created != null && r.created !== '') row.created = String(r.created)
   if (r.uses != null && r.uses !== '') row.uses = Number(r.uses) || 0
@@ -81,7 +90,7 @@ export function parseFallback(s: string | undefined | null): CodeRow[] {
       const i = part.indexOf(':')
       const code = normaliseCode(i < 0 ? part : part.slice(0, i))
       const label = i < 0 ? '' : part.slice(i + 1).trim().slice(0, LABEL_MAX)
-      return { code, label, active: true, test: false, expires: '' }
+      return { code, label, active: true, test: false, expires: '', track: '', mode: '' as const }
     })
     .filter((r) => r.code)
 }

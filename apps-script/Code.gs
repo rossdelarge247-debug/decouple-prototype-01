@@ -5,9 +5,11 @@
 
 var ANSWER_HEADERS = ['received_at', 'batch_key', 'sid', 'pid', 'test', 'step', 'price', 'landing', 'qid', 'qv', 'question', 'type', 'answer', 'device'];
 var SIGNUP_HEADERS = ['received_at', 'email', 'stage', 'source', 'sid'];
-var CODE_HEADERS = ['code', 'label', 'active', 'test', 'expires', 'created', 'uses', 'last_used'];
+var CODE_HEADERS = ['code', 'label', 'active', 'test', 'expires', 'created', 'uses', 'last_used', 'track', 'mode'];
+var PARTICIPANT_HEADERS = ['received_at', 'pid', 'sid', 'email', 'followup', 'voucher'];
 var QUESTION_HEADERS = ['id', 'section', 'type', 'label', 'helper', 'options', 'show_if', 'required', 'max', 'exclusive', 'placeholder', 'skip', 'version', 'active'];
-var KNOWN_TESTS = ['M02 Guide', 'Prototype testing'];
+/* Tabs that are never answers: results never read them. Participants is never returned by any read. */
+var PRIVATE_TABS = ['Signups', 'Codes', 'M02 Questions', 'Participants'];
 var SIX_HOURS = 21600;
 
 /* ── plumbing ── */
@@ -42,7 +44,8 @@ function bool_(v) {
   var s = String(v == null ? '' : v).trim().toLowerCase();
   return s === 'true' || s === 'yes' || s === '1' || s === 'y';
 }
-/* A tab, created with its header row if it is missing */
+/* A tab, created with its header row if it is missing. Headers added since the tab was made (the
+   Codes tab's track and mode) are added to the right of the existing ones. */
 function tab_(name, headers) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(name);
@@ -50,8 +53,20 @@ function tab_(name, headers) {
   if (sh.getLastRow() === 0 && headers) {
     sh.appendRow(headers);
     sh.setFrozenRows(1);
+  } else if (headers) {
+    var cols = Math.max(sh.getLastColumn(), 1);
+    var have = sh.getRange(1, 1, 1, cols).getValues()[0].map(function (h) { return String(h).trim(); });
+    var missing = headers.filter(function (h) { return have.indexOf(h) < 0; });
+    if (missing.length) sh.getRange(1, have.filter(String).length + 1, 1, missing.length).setValues([missing]);
   }
   return sh;
+}
+/* Header name → column number (1-based), from the tab's own header row */
+function cols_(sh) {
+  var head = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), 1)).getValues()[0];
+  var out = {};
+  head.forEach(function (h, i) { if (String(h).trim()) out[String(h).trim()] = i + 1; });
+  return out;
 }
 /* Every data row of a tab as an object keyed by the header row */
 function rows_(sh) {
@@ -105,6 +120,7 @@ function doPost(e) {
     if (body.kind === 'signup') return out_(signup_(body));
     if (body.kind === 'codes') return out_({ ok: true, codes: codesOp_(body) });
     if (body.kind === 'code_used') return out_({ ok: true, codes: codeUsed_(body.code) });
+    if (body.kind === 'participant') return out_(participant_(body));
     return refuse_('Unknown kind');
   } catch (err) {
     return refuse_(String(err && err.message ? err.message : err));
@@ -149,6 +165,19 @@ function signup_(b) {
   }
 }
 
+/* kind: "participant": the participant hub's thank-you step. Never returned by any read. */
+function participant_(b) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sh = tab_('Participants', PARTICIPANT_HEADERS);
+    appendRows_(sh, [[new Date(), String(b.pid || ''), String(b.sid || ''), String(b.email || ''), b.followup === true, String(b.voucher || '')]]);
+    return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 /* The Codes tab as the site expects it */
 function codes_() {
   var sh = tab_('Codes', CODE_HEADERS);
@@ -161,7 +190,9 @@ function codes_() {
       expires: day_(r.expires),
       created: iso_(r.created),
       uses: Number(r.uses) || 0,
-      last_used: iso_(r.last_used)
+      last_used: iso_(r.last_used),
+      track: String(r.track || '').trim().toLowerCase(),
+      mode: String(r.mode || '').trim().toLowerCase()
     };
   }).filter(function (r) { return r.code; });
 }
@@ -179,6 +210,8 @@ function codesOp_(b) {
   lock.waitLock(10000);
   try {
     var sh = tab_('Codes', CODE_HEADERS);
+    var col = cols_(sh);
+    var width = sh.getLastColumn();
     if (b.op === 'create') {
       var existing = {};
       codes_().forEach(function (r) { existing[r.code] = true; });
@@ -188,18 +221,24 @@ function codesOp_(b) {
         if (!code) throw new Error('A code is empty');
         if (existing[code]) throw new Error(code + ' already exists');
         existing[code] = true;
-        rows.push([code, String(c.label || ''), true, !!c.test, c.expires ? String(c.expires) : '', new Date(), 0, '']);
+        var v = { code: code, label: String(c.label || ''), active: true, test: !!c.test, expires: c.expires ? String(c.expires) : '', created: new Date(), uses: 0, last_used: '', track: String(c.track || ''), mode: String(c.mode || '') };
+        var row = [];
+        for (var i = 1; i <= width; i++) row.push('');
+        Object.keys(v).forEach(function (k) { if (col[k]) row[col[k] - 1] = v[k]; });
+        rows.push(row);
       });
       appendRows_(sh, rows);
-      if (rows.length) sh.getRange(sh.getLastRow() - rows.length + 1, 5, rows.length, 1).setNumberFormat('@');
+      if (rows.length) ['expires', 'track', 'mode'].forEach(function (k) { sh.getRange(sh.getLastRow() - rows.length + 1, col[k], rows.length, 1).setNumberFormat('@'); });
     } else if (b.op === 'update') {
       var code = String(b.code || '').trim().toUpperCase();
       var at = codeRow_(sh, code);
       if (!at) throw new Error(code + ' was not found');
-      if ('active' in b) sh.getRange(at, 3).setValue(!!b.active);
-      if ('test' in b) sh.getRange(at, 4).setValue(!!b.test);
-      if ('label' in b) sh.getRange(at, 2).setValue(String(b.label || ''));
-      if ('expires' in b) { sh.getRange(at, 5).setNumberFormat('@'); sh.getRange(at, 5).setValue(b.expires ? String(b.expires) : ''); }
+      if ('active' in b) sh.getRange(at, col.active).setValue(!!b.active);
+      if ('test' in b) sh.getRange(at, col.test).setValue(!!b.test);
+      if ('label' in b) sh.getRange(at, col.label).setValue(String(b.label || ''));
+      ['expires', 'track', 'mode'].forEach(function (k) {
+        if (k in b) { sh.getRange(at, col[k]).setNumberFormat('@'); sh.getRange(at, col[k]).setValue(b[k] ? String(b[k]) : ''); }
+      });
     } else if (b.op === 'delete') {
       var del = String(b.code || '').trim().toUpperCase();
       var row = codeRow_(sh, del);
@@ -222,9 +261,10 @@ function codeUsed_(code) {
     var sh = tab_('Codes', CODE_HEADERS);
     var at = codeRow_(sh, c);
     if (at) {
-      var uses = Number(sh.getRange(at, 7).getValue()) || 0;
-      sh.getRange(at, 7).setValue(uses + 1);
-      sh.getRange(at, 8).setValue(new Date());
+      var col = cols_(sh);
+      var uses = Number(sh.getRange(at, col.uses).getValue()) || 0;
+      sh.getRange(at, col.uses).setValue(uses + 1);
+      sh.getRange(at, col.last_used).setValue(new Date());
     }
     return codes_();
   } finally {
@@ -242,13 +282,14 @@ function questions_() {
   });
 }
 
-/* action=results&test=…&since=ISO: the answer rows plus a sign-up summary. Email addresses are never returned. */
+/* action=results&test=…&since=ISO: the answer rows plus a sign-up summary. Email addresses are never
+   returned, and neither is anything in Participants, Signups or Codes. */
 function results_(test, since) {
   var from = since ? new Date(since) : null;
   if (from && isNaN(from.getTime())) from = null;
   var rows = [];
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var names = test ? [String(test)] : ss.getSheets().map(function (s) { return s.getName(); }).filter(function (n) { return n !== 'Signups' && n !== 'Codes' && n !== 'M02 Questions'; });
+  var names = (test ? [String(test)] : ss.getSheets().map(function (s) { return s.getName(); })).filter(function (n) { return PRIVATE_TABS.indexOf(n) < 0; });
   names.forEach(function (name) {
     var sh = ss.getSheetByName(name);
     if (!sh) return;

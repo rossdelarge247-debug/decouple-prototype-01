@@ -16,6 +16,7 @@
     "check": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
     "@vercel/functions": "^3.9.11",
     "@vercel/global-config": "^1.5.1"
   },

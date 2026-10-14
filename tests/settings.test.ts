@@ -6,7 +6,9 @@ afterEach(() => useSettingsReader(null))
 describe('site settings', () => {
   it('normalises whatever Edge Config holds', () => {
     expect(normaliseSettings(null)).toEqual(DEFAULTS)
-    expect(normaliseSettings({ mode: 'guide', requireCode: false, testMode: 'yes' })).toEqual({ mode: 'guide', requireCode: false, testMode: false, landing: 'a' })
+    expect(normaliseSettings({ mode: 'guide', requireCode: false, testMode: 'yes' })).toEqual({ mode: 'guide', requireCode: false, testMode: false, landing: 'a', indexing: false })
+    expect(normaliseSettings({ indexing: true }).indexing).toBe(true)
+    expect(normaliseSettings({ indexing: 'true' }).indexing).toBe(false)
     expect(normaliseSettings({ mode: 'other' }).mode).toBe('holding')
     expect(normaliseSettings({ landing: 'random' }).landing).toBe('random')
     expect(normaliseSettings({ landing: 'i' }).landing).toBe('i')

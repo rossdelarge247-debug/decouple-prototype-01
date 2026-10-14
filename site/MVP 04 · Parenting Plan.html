@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-stage="mvp04">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decouple — MVP 04 · Parenting plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="mvp/kit/kit.css">
+<link rel="stylesheet" href="mvp/kids/pp.css">
+<style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="mvp/kit/kit.js"></script>
+<script>window.Journey = KIT.journey("mvp04", "MVP 04", "Parenting plan", "MVP · the children's arrangements", "MVP 04 · Parenting Plan.html", "decouple.mvp04.v1");</script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="mvp/kit/kit.jsx"></script>
+<script type="text/babel" src="mvp/kids/pp.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+/* MVP 04 · Parenting plan. State in decouple.mvp04.v1: pos (step) and a (answers, prefilled with sensible defaults for Sarah). */
+const { useState, useEffect } = React;
+const KEY = "decouple.mvp04.v1", S = PP.STEPS;
+const fresh = () => ({ pos: "kids", a: { ...PP.DEF }, seen: {} });
+const load = () => { const s = KIT.load(KEY); return s && s.a ? s : fresh(); };
+function App() {
+  const [s, setS] = useState(load), [, tick] = useState(0);
+  const up = (p) => setS((o) => { const n = { ...o, ...p }; KIT.save(KEY, n); return n; });
+  useEffect(() => KIT.subscribe(() => tick((n) => n + 1)), []);
+  useEffect(() => window.Journey.subscribe(() => setS(fresh())), []);
+  useEffect(() => { window.scrollTo(0, 0); }, [s.pos]);
+  const N = { me: KIT.PERSONA.me, them: KIT.PERSONA.them };
+  const i = S.findIndex((x) => x[0] === s.pos), last = s.pos === "plan";
+  const go = (k) => { up({ pos: k, seen: { ...s.seen, [s.pos]: true } }); KIT.setStatus("kids", k === "plan" ? "done" : "started"); if (S.findIndex((x) => x[0] === k) >= 2) KIT.progress(); if (k === "plan") KIT.log("pp-plan", "Reached the finished plan", "step", "done", { step: "Plan" }); };
+  const set = (p) => up({ a: { ...s.a, ...p } });
+  return (
+    <div className="site bg-paper" style={{ minHeight: "100vh" }} data-screen-label={"MVP 04 · " + S[i][1]}>
+      <window.KitTop tool/>
+      <main className="kit-wrap">
+        <window.KitHead kick="The children" title={last ? "A plan for" : "Your parenting plan,"} em={last ? "Ella and Sam." : "step by step."} lede={last ? "Read it through together. Change anything, then download it." : "Where the children live, handovers, holidays and how you’ll decide things. We’ve started it from your guide; change anything."}/>
+        {!KIT.kids() && <div className="pp-skip"><span>Your guide says you don’t have children under 18 together, so you can skip this tool.</span><div><button type="button" className="btn sm" onClick={() => KIT.home()}>Back to my toolkit</button><button type="button" className="btn ghost sm" onClick={() => KIT.write({ kids: true })}>We do have children</button></div></div>}
+        {last ? <PPPlan a={s.a} N={N} onEdit={(k) => up({ pos: k })}/> : (
+          <div className="pp-cols">
+            <nav className="pp-rail" aria-label="Steps">{S.map(([k, l], j) => <button type="button" key={k} className={(k === s.pos ? "on" : "") + (s.seen[k] ? " done" : "")} onClick={() => go(k)}><span className="n">{s.seen[k] && k !== s.pos ? <window.KIc.Check s={11} w={2.6}/> : j + 1}</span>{l}</button>)}</nav>
+            <section className="pp-main">
+              <h2 className="serif">{S[i][1]}</h2>
+              <PPStep id={s.pos} a={s.a} set={set} N={N}/>
+              <div className="pp-nav"><button type="button" className="back" disabled={i === 0} onClick={() => i > 0 && up({ pos: S[i - 1][0] })}><window.KIc.Back s={14}/> Back</button><button type="button" className="btn lg" onClick={() => go(S[i + 1][0])}>{S[i + 1][0] === "plan" ? "See our plan" : "Continue"} <window.KIc.Arrow s={15}/></button></div>
+            </section>
+          </div>
+        )}
+      </main>
+      <TweaksPanel title="Tweaks · MVP 04">
+        <TweakSection label="Jump to"/>
+        <TweakSelect label="Step" value={s.pos} options={S.map(([value, label]) => ({ value, label }))} onChange={(v) => up({ pos: v })}/>
+        <TweakSection label="From the guide"/>
+        <TweakToggle label="Children under 18" value={KIT.kids()} onChange={(v) => KIT.write({ kids: v })}/>
+        <TweakButton label="Start again" onClick={() => { KIT.drop(KEY); setS(fresh()); }}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

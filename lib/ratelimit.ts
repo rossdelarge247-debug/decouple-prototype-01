@@ -30,5 +30,9 @@ export function createLimiter(limit: number, windowMs: number): Limiter {
 export const answersLimiter = createLimiter(120, 60 * 60 * 1000)
 /** at most 3 guide emails per sid per day */
 export const emailLimiter = createLimiter(3, 24 * 60 * 60 * 1000)
+/** at most 3 thank-you sends per sid (spec §7, /api/participant) */
+export const participantLimiter = createLimiter(3, 30 * 24 * 60 * 60 * 1000)
+/** at most 40 AI calls per hour per session (spec §7, /api/claude) */
+export const claudeLimiter = createLimiter(40, 60 * 60 * 1000)
 /** a brake on password guessing, per address */
 export const loginLimiter = createLimiter(20, 15 * 60 * 1000)

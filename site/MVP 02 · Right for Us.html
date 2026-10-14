@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-stage="mvp02">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decouple — MVP 02 · Is doing it ourselves right for us?</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="mvp/kit/kit.css">
+<link rel="stylesheet" href="mvp/fit/fit.css">
+<style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="mvp/kit/kit.js"></script>
+<script>window.Journey = KIT.journey("mvp02", "MVP 02", "Right for us", "MVP · suitability and safety check", "MVP 02 · Right for Us.html", "decouple.mvp02.v1");</script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="mvp/kit/kit.jsx"></script>
+<script type="text/babel" src="mvp/fit/fit.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+/* MVP 02 · Right for us. Answers live in memory only, never in storage and never sent. The toolkit keeps the status;
+   the result band is logged (testing mode only) and kept on the device only if they tick the box. */
+const { useState, useEffect } = React;
+const G = FIT.GROUPS;
+const SAMPLE = {
+  advice: { s1: "no", s2: "no", s3: "unsure", c1: "yes", c2: "no", c3: "yes", t1: "no", t2: "unsure", t3: "no", x1: "no", x2: "no", x3: "no", x4: "yes", r1: "unsure", r2: "yes" },
+  parts: { s1: "no", s2: "no", s3: "no", c1: "no", c2: "no", c3: "no", t1: "yes", t2: "yes", t3: "unsure", x1: "no", x2: "no", x3: "yes", x4: "no", r1: "yes", r2: "yes" },
+  together: { s1: "no", s2: "no", s3: "no", c1: "no", c2: "no", c3: "no", t1: "yes", t2: "yes", t3: "yes", x1: "no", x2: "no", x3: "no", x4: "no", r1: "unsure", r2: "yes" },
+};
+function App() {
+  const [pos, setPos] = useState(-1), [a, setA] = useState({});
+  useEffect(() => { window.scrollTo(0, 0); }, [pos]);
+  useEffect(() => window.Journey.subscribe(() => { setA({}); setPos(-1); }), []);
+  const set = (id, v) => setA((o) => ({ ...o, [id]: v }));
+  const start = () => { KIT.setStatus("fit", "started"); setPos(0); };
+  const next = () => { if (pos < G.length - 1) return setPos(pos + 1); const r = FIT.band(a); KIT.setStatus("fit", "done"); KIT.log("fit-band", "Right for us? result", "band", r.k, { step: "Result" }); setPos(G.length); };
+  const label = pos < 0 ? "Start" : pos < G.length ? G[pos].t : "Result";
+  return (
+    <div className="site bg-paper" style={{ minHeight: "100vh" }} data-screen-label={"MVP 02 · " + label}>
+      <window.KitTop tool/>
+      {pos < 0 && <FitIntro onStart={start}/>}
+      {pos >= 0 && pos < G.length && <FitGroup key={pos} g={G[pos]} i={pos} a={a} set={set} onBack={() => setPos(pos - 1)} onNext={next}/>}
+      {pos === G.length && <FitResult a={a} onRedo={() => { setA({}); setPos(0); }}/>}
+      <TweaksPanel title="Tweaks · MVP 02">
+        <TweakSection label="Jump to a result"/>
+        <TweakButton label="Get advice first (fear or control)" onClick={() => { setA(SAMPLE.advice); setPos(G.length); }}/>
+        <TweakButton label="Get help with some parts" onClick={() => { setA(SAMPLE.parts); setPos(G.length); }}/>
+        <TweakButton label="It could work, with care" onClick={() => { setA(SAMPLE.together); setPos(G.length); }}/>
+        <TweakButton label="Start again" onClick={() => { setA({}); setPos(-1); }}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

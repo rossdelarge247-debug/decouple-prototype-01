@@ -42,7 +42,6 @@ export const PUBLIC_PATHS: readonly string[] = [
   "/proto/playback/pb-blocks.js",
   "/proto/playback/pb-engine.js",
   "/proto/playback/pb.css",
-  "/proto/ut/ut-questions.js",
   "/shared/dc-site.js",
   "/vendor/react-dom.production.min.js",
   "/vendor/react.production.min.js"

@@ -8,6 +8,15 @@ window.R = (function () {
   /* one entry per test. `tab` = the sheet tab name; `re` matches the PROTO column */
   const TESTS = [
     { id: "m02", code: "M02", name: "Divorce guide", sub: "Landing, interview, guide with questions woven in", kind: "Experiment", re: /^M02 Guide/i, tab: "M02 Guide", rx: "^M02 Guide" },
+    { id: "scr", code: "SCR", name: "Participant screener", sub: "Who took part, before the prototypes (Take part hub)", kind: "Questionnaire", re: /^Screener/i, tab: "Screener", rx: "^Screener" },
+    { id: "mvp00", code: "MVP 00", name: "MVP 00 · Public site", sub: "The toolkit's public pages", kind: "Questionnaire", re: /^MVP \d{2} ·? ?Public site/i, tab: "MVP 00 · Public site", rx: "^MVP [0-9]{2} ·? ?Public site" },
+    { id: "mvp01", code: "MVP 01", name: "MVP 01 · Toolkit", sub: "Landing, guide hand-off, account, toolkit home", kind: "Questionnaire", re: /^MVP \d{2} ·? ?Toolkit/i, tab: "MVP 01 · Toolkit", rx: "^MVP [0-9]{2} ·? ?Toolkit" },
+    { id: "mvp02", code: "MVP 02", name: "MVP 02 · Right for us", sub: "Suitability and safety check", kind: "Questionnaire", re: /^MVP \d{2} ·? ?Right for us/i, tab: "MVP 02 · Right for us", rx: "^MVP [0-9]{2} ·? ?Right for us" },
+    { id: "mvp03", code: "MVP 03", name: "MVP 03 · To-do & journal", sub: "Prefilled to-dos and a private journal", kind: "Questionnaire", re: /^MVP \d{2} ·? ?To-do/i, tab: "MVP 03 · To-do & journal", rx: "^MVP [0-9]{2} ·? ?To-do" },
+    { id: "mvp04", code: "MVP 04", name: "MVP 04 · Parenting plan", sub: "The children's arrangements", kind: "Questionnaire", re: /^MVP \d{2} ·? ?Parenting plan/i, tab: "MVP 04 · Parenting plan", rx: "^MVP [0-9]{2} ·? ?Parenting plan" },
+    { id: "mvp05", code: "MVP 05", name: "MVP 05 · Financial statement", sub: "Financial disclosure and the disclosure pack (was MVP 01 · Shared statement)", kind: "Questionnaire", re: /^MVP \d{2} ·? ?(Financial|Shared) statement/i, tab: "MVP 05 · Financial statement", rx: "^MVP [0-9]{2} ·? ?(Financial|Shared) statement" },
+    { id: "mvp06", code: "MVP 06", name: "MVP 06 · Split planner", sub: "Simple settlement and the agreement pack", kind: "Questionnaire", re: /^MVP \d{2} ·? ?Split planner/i, tab: "MVP 06 · Split planner", rx: "^MVP [0-9]{2} ·? ?Split planner" },
+    { id: "mvp07", code: "MVP 07", name: "MVP 07 · Ask", sub: "The AI tool, five modes", kind: "Questionnaire", re: /^MVP \d{2} ·? ?Ask/i, tab: "MVP 07 · Ask", rx: "^MVP [0-9]{2} ·? ?Ask" },
     { id: "mvp", code: "MVP", name: "MVP prototypes", sub: "End-of-prototype questions for the MVP journeys", kind: "Questionnaire", re: /^MVP \d{2} /, tab: "MVP testing", rx: "^MVP [0-9]{2} " },
     { id: "proto", code: "UT", name: "Prototype testing", sub: "End-of-prototype questions and check-ins, Protos 01–10", kind: "Questionnaire", re: /^\d{2} /, tab: "Prototype testing", rx: "^[0-9]{2} " },
     { id: "m02v1", code: "M02 v1", name: "Free tool (first version)", sub: "Retired. Kept for earlier answers", kind: "Experiment", re: /^M02 Free tool/i, tab: "M02 Free tool", rx: "^M02 Free tool" },

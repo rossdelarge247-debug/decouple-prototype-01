@@ -102,11 +102,20 @@ window.DC = (function () {
     el.addEventListener("click", () => { const now = Date.now(); n = now - t < 600 ? n + 1 : 1; t = now; if (n >= 3) { n = 0; session().then((x) => { location.href = x ? (x.owner ? "/hub" : "/studio") : "Decouple · Site Settings.html"; }); } });
   }
 
+  /* AI: on the site, the pages' window.claude.complete goes to /api/claude (spec §7). In the design tool window.claude already exists. */
+  if (!window.claude && /(^|\.)decouple\.uk$|\.vercel\.app$/.test(location.hostname)) window.claude = { complete: async (o) => {
+    const b = typeof o === "string" ? { messages: [{ role: "user", content: o }] } : o || {};
+    const r = await api("/api/claude", { system: String(b.system || ""), messages: (b.messages || []).slice(-20), max_tokens: Math.min(+b.max_tokens || 700, 1200) });
+    if (!r.ok || !r.data) throw new Error(r.status === 401 || r.status === 404 || r.status === 503 ? "offline" : "ai");
+    return r.data.text;
+  } };
+
   return {
     session, onSite: () => session().then((s) => !!s), blocked, send, flush, pending: () => rd().length, human, testing, secret,
     redeem: async (code) => { const r = await api("/api/tester", { code: String(code || "").trim() }); if (r.ok) session(true); return r; },
     signup: async (b) => ((await testing()) ? { ok: true, status: 200, data: { test: true } } : api("/api/signup", b)),
     email: (b) => api("/api/email", b),
+    participant: async (b) => ((await testing()) ? { ok: true, status: 200, data: { test: true } } : api("/api/participant", b)),
     results: (q) => api("/api/results?" + new URLSearchParams(q || {}), null, "GET"),
     logout: async () => { await api("/api/logout", {}); session(true); },
     admin: { get: () => api("/api/admin/site", null, "GET"), set: (p) => api("/api/admin/site", p), publish: () => api("/api/admin/publish", {}), codes: (op) => (op ? api("/api/admin/codes", op) : api("/api/admin/codes", null, "GET")) },

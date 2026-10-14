@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-stage="mvp01">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decouple — MVP 01 · Your divorce toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="mvp/kit/kit.css">
+<link rel="stylesheet" href="mvp/toolkit/tk.css">
+<style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="mvp/kit/kit.js"></script>
+<script>window.Journey = KIT.journey("mvp01", "MVP 01", "Toolkit", "MVP · guide hand-off and toolkit home", "MVP 01 · Toolkit.html", "decouple.mvp01.v1");</script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="mvp/kit/kit.jsx"></script>
+<script type="text/babel" src="mvp/toolkit/tk-screens.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+/* MVP 01 · Your divorce toolkit: guide hand-off → toolkit home → tools (MVP 02–07). The public pages before it are MVP 00.
+   No account needed: until they save, nothing is kept (KIT.save/KIT.load hold it in memory). ?home=1 opens the home, ?want=<tool> marks a tool. */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "signin": "magic"
+}/*EDITMODE-END*/;
+const { useState, useEffect } = React;
+const KEY = "decouple.mvp01.v1", qp = new URLSearchParams(location.search);
+const load = () => { const s = KIT.load(KEY) || {}; return { phase: qp.has("home") ? "home" : qp.has("start") ? "guide" : s.phase === "home" ? "home" : "guide", want: qp.get("want") || s.want || "" }; };
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [s, setS] = useState(load);
+  const [kit, setKit] = useState(() => KIT.read());
+  useEffect(() => KIT.subscribe(setKit), []);
+  useEffect(() => { KIT.write({ signin: t.signin }); }, [t.signin]);
+  useEffect(() => window.Journey.subscribe(() => setS({ phase: "guide", want: "" })), []);
+  useEffect(() => { window.scrollTo(0, 0); }, [s.phase]);
+  const up = (p) => setS((o) => { const n = { ...o, ...p }; KIT.save(KEY, n); return n; });
+  const stage = kit.stage || "apart";
+  const open = (tool, q, mode) => KIT.open(tool.file, tool.id === "ask" && (q || mode) ? { ...(q ? { q } : {}), ...(mode ? { mode } : {}) } : null);
+  const tierL = ["Low", "Middle", "High"];
+  return (
+    <div className="site bg-paper" style={{ minHeight: "100vh", position: "relative" }} data-screen-label={"MVP 01 · " + (s.phase === "home" ? "Toolkit home" : "Your guide")}>
+      <window.KitTop onHome={() => up({ phase: "home" })}/>
+      {s.phase === "guide" && <TKGuide stage={stage} onNext={() => up({ phase: "home" })}/>}
+      {s.phase === "home" && <TKHome key={String(kit.kids) + stage + kit.acct} stage={stage} acct={KIT.acct()} want={s.want} onOpen={open} onSave={() => KIT.needAcct("save")}/>}
+      <TweaksPanel title="Tweaks · MVP 01">
+        <TweakSection label="Jump to"/>
+        <TweakSelect label="Screen" value={s.phase} options={[["guide", "Your guide"], ["home", "Toolkit home"]].map(([value, label]) => ({ value, label }))} onChange={(v) => up({ phase: v })}/>
+        <TweakToggle label="Saved (signed in)" value={!!kit.acct} onChange={(v) => (v ? KIT.signup("tweak") : KIT.signOut())}/>
+        <TweakSelect label="Came for" value={s.want} options={[{ value: "", label: "Nothing in particular" }, ...KIT.TOOLS.map((x) => ({ value: x.id, label: x.short }))]} onChange={(v) => up({ want: v })}/>
+        <TweakSection label="From the guide"/>
+        <TweakSelect label="Stage" value={stage} options={Object.entries(KIT.STAGE_L).map(([value, label]) => ({ value, label }))} onChange={(v) => KIT.write({ stage: v })}/>
+        <TweakToggle label="Children under 18" value={KIT.kids()} onChange={(v) => KIT.write({ kids: v })}/>
+        <TweakSection label="Tests"/>
+        <TweakRadio label="Sign-in" value={t.signin} options={[{ value: "magic", label: "Email link" }, { value: "password", label: "Password" }]} onChange={(v) => setTweak("signin", v)}/>
+        <TweakSelect label={"Price level (now " + tierL[KIT.tier()] + ")"} value={String(KIT.tier())} options={tierL.map((label, i) => ({ value: String(i), label: label + " · £" + KIT.PACKS.disclosure.prices[i] + " / £" + KIT.PACKS.agreement.prices[i] }))} onChange={(v) => KIT.write({ tier: +v })}/>
+        <TweakButton label="Back to the public site (MVP 00)" onClick={() => KIT.open(KIT.SITE)}/>
+        <TweakButton label="Start again (all tools)" onClick={() => { KIT.drop(KEY); KIT.write({ tools: {}, doors: {}, paid: {}, waitlist: {} }); setS({ phase: "guide", want: "" }); }}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
