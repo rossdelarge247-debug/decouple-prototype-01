@@ -12,14 +12,15 @@
   const ago = (d) => { if (!d) return "Never"; const m = (Date.now() - new Date(d)) / 60000; return m < 60 ? Math.max(1, Math.round(m)) + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago"; };
   const expired = (c) => c.expires && new Date(c.expires + "T23:59:59") < new Date();
 
-  let ON = false, st = { mode: "holding", requireCode: true, testMode: false }, codes = [], filter = "active", fresh = [];
+  let ON = false, st = { mode: "holding", requireCode: true, testMode: false, landing: "a" }, codes = [], filter = "active", fresh = [];
+  const LANDS = [["a", "A · Chapters", "The original: hero, with the guide’s chapters alongside"], ["b", "B · First question", "The landing is the first question"], ["c", "C · A letter", "A calm note, beside a page from a guide"], ["d", "D · Questions people ask", "Eight common questions, each mapped to a chapter"], ["e", "E · See your guide", "A look at the guide itself"], ["f", "F · Where are you?", "Pick your stage and get help instantly, before starting"], ["g", "G · Facts, not noise", "Common beliefs, with the plain facts"], ["h", "H · One step at a time", "Calm and minimal: now, soon, later"], ["i", "I · What to do first", "A five-point checklist for this week"]];
   const origin = () => (ON ? location.origin : "https://decouple.uk");
 
   /* data: the site API when signed in on decouple.uk, otherwise this browser */
   const api = {
     async site(p) {
       if (ON) { const r = p ? await DC.admin.set(p) : await DC.admin.get(); if (!r.ok || !r.data) throw new Error(r.status === 401 || r.status === 404 ? "You’re signed out." : "Couldn’t reach the site."); return r.data; }
-      const s = rd(), cur = { mode: s.mode || "guide", requireCode: s.requireCode !== false, testMode: !!s.testMode };
+      const s = rd(), cur = { mode: s.mode || "guide", requireCode: s.requireCode !== false, testMode: !!s.testMode, landing: s.landing || "a" };
       return p ? (wr(p), { ...cur, ...p }) : cur;
     },
     async codes(op) {
@@ -47,6 +48,8 @@
     $("#chips").innerHTML = (st.testMode ? '<span class="chip test"><i></i>Test mode on</span>' : "") + `<span class="chip ${st.mode === "guide" ? "live" : "hold"} hide-sm"><i></i>decouple.uk shows the ${st.mode === "guide" ? "guide" : "holding page"}</span>`;
   }
   function site() {
+    const lb = $("#lands"); if (lb && !lb.children.length) lb.innerHTML = [...LANDS, ["random", "Rotate at random", "Each visitor sees one of the nine, so Results can compare them"]].map(([k, n, d]) => `<div class="lo" data-l="${k}"><button type="button" role="radio" data-l="${k}"><span class="rd"></span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>${k === "random" ? "" : `<a href="${encodeURI("Marketing 02 · Divorce Guide.html")}?demo=1&phase=landing&landing=${k}" target="_blank" rel="noopener">Preview ↗</a>`}</div>`).join("");
+    $$(".lo").forEach((o) => { const on = o.dataset.l === (st.landing || "a"); o.classList.toggle("on", on); o.querySelector("button").setAttribute("aria-checked", on); });
     $$(".mo").forEach((b) => { const on = b.dataset.m === st.mode; b.classList.toggle("on", on); b.setAttribute("aria-checked", on); });
     [["#sw-code", st.requireCode], ["#sw-test", st.testMode]].forEach(([s, v]) => { const b = $(s); b.classList.toggle("on", !!v); b.setAttribute("aria-checked", !!v); });
     $("#test-card").classList.toggle("on", !!st.testMode);
@@ -81,9 +84,10 @@
 
   /* ── actions ── */
   async function setSite(p, msg) {
+    const box = p.landing ? $("#land-msg") : $("#site-msg");
     const prev = st; st = { ...st, ...p }; site();
-    try { st = { ...st, ...(await api.site(p)) }; site(); say($("#site-msg"), msg, "ok"); }
-    catch (e) { st = prev; site(); say($("#site-msg"), e.message, "err"); }
+    try { st = { ...st, ...(await api.site(p)) }; site(); say(box, msg, "ok"); }
+    catch (e) { st = prev; site(); say(box, e.message, "err"); }
   }
   async function codeOp(op, msg) {
     try { codes = await api.codes(op); table(); if (msg) say($("#code-msg"), msg, "ok"); }
@@ -92,6 +96,7 @@
   function wire() {
     $$(".mo").forEach((b) => b.addEventListener("click", () => { if (b.dataset.m === st.mode) return; setSite({ mode: b.dataset.m }, b.dataset.m === "guide" ? "decouple.uk now shows the guide." : "decouple.uk now shows the holding page."); }));
     $("#sw-code").addEventListener("click", () => setSite({ requireCode: !st.requireCode }, !st.requireCode ? "A code is now needed to start the guide." : "Anyone can now start the guide."));
+    $("#lands").addEventListener("click", (e) => { const b = e.target.closest("button[data-l]"); if (!b || b.dataset.l === st.landing) return; const n = (LANDS.find((x) => x[0] === b.dataset.l) || [0, "Rotate at random"])[1]; setSite({ landing: b.dataset.l }, b.dataset.l === "random" ? "Visitors now see one of the nine designs at random." : `The guide now opens on ${n}.`); });
     $("#sw-test").addEventListener("click", () => setSite({ testMode: !st.testMode }, !st.testMode ? "Test mode is on. Nothing you do is saved." : "Test mode is off. Answers are saved again."));
     $("#pub").addEventListener("click", async (e) => { const b = e.currentTarget; if (!ON) return say($("#q-msg"), "Publishing works on decouple.uk.", ""); b.disabled = true; const r = await DC.admin.publish(); b.disabled = false; say($("#q-msg"), r.ok ? "Publishing. New questions are live in about a minute." : "Couldn’t start publishing. Try again.", r.ok ? "ok" : "err"); });
     $("#out").addEventListener("click", async () => { if (ON) { await DC.logout(); location.href = "/"; } else say($("#site-msg"), "Signing out works on decouple.uk.", ""); });

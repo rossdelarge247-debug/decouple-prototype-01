@@ -1,6 +1,6 @@
 # Decouple site · build and housework spec
 
-For Claude Code. Written 13 Oct 2026, from the design project. The owner is Ross. There is one login, Ross's. Domain: **decouple.uk** (already connected to Vercel). Contact: **hello@decouple.uk**.
+For Claude Code. Owned by the design project; last updated 14 Oct 2026 (export `2026-10-14a`). Changes since the last export are listed in that export's `CHANGES.md`. The owner is Ross. There is one login, Ross's. Domain: **decouple.uk** (already connected to Vercel). Contact: **hello@decouple.uk**.
 
 ---
 
@@ -10,7 +10,7 @@ For Claude Code. Written 13 Oct 2026, from the design project. The owner is Ross
 |---|---|---|
 | **Public** | Anyone | `/`: the M02 guide's landing page, or the M01 holding page (switchable). `/privacy`. |
 | **Testers** | Anyone with a tester code | Everything in the guide after the landing page. |
-| **Owner** | Ross, signed in | Prototype hub, Marketing hub, Results, Site settings, Protos 01–10, and every other file. |
+| **Owner** | Ross, signed in | Prototype hub, Marketing hub, Results, Site settings, Protos 01–10, MVP 01, and every other file. |
 
 - The guide's landing page is public. Starting the guide needs a tester code, until the owner turns that off (`requireCode`). The page asks for the code; the server enforces it, because answers and email need a tester or owner session.
 - Holding mode only changes `/`, which then shows the holding page. `/guide` always serves the guide file, so emailed guide links keep working. Without a code, nobody can start the guide there while `requireCode` is on.
@@ -18,7 +18,7 @@ For Claude Code. Written 13 Oct 2026, from the design project. The owner is Ross
 
 ## 2. Addresses
 
-The files in `site/` keep their names, spaces and `·` included, because the pages link to each other by file name. The addresses below are aliases; each file's own path keeps working too, behind the same rules.
+The files in `site/` keep their names, spaces and `·` included, because the pages link to each other by file name. The addresses below are aliases; each file's own path keeps working too, behind the same rules. Single-segment aliases (`/`, `/guide`, `/holding`, `/privacy`, `/hub`) **rewrite**. Aliases with a path segment (`/hub/marketing`, `/hub/results`, `/hub/site`, `/p/01` to `/p/10`) **redirect** to the file's own path: pages load assets by relative path and route with `location.hash`, so a rewrite would break them, and a `<base>` tag would break their `#` links.
 
 | Address | File in `site/` | Level |
 |---|---|---|
@@ -49,11 +49,11 @@ For each request:
    - `LOGIN_PATH`, `/holding`, `/privacy`, `/favicon.ico`.
    - Every path in `dist/_public.json`, which the build generates (§5).
 2. **`/` or `/guide`:**
-   - Read the site settings from Edge Config (`mode`, `requireCode`, `testMode`), cached for 60 seconds per instance. Defaults: `{ mode: "holding", requireCode: true, testMode: false }`.
+   - Read the site settings from Global Config, formerly Edge Config (`mode`, `requireCode`, `testMode`, `landing`), cached for 60 seconds per instance. Defaults: `{ mode: "holding", requireCode: true, testMode: false, landing: "a" }`.
    - If `?code=` is present: check it (§3). If it's valid, set `dc_tester` and send a 302 to `/` with the code removed. If not, send a 302 to `/?code_error=1`.
    - At `/`: serve the guide when mode = guide, or the request has a tester or owner session. Otherwise serve the holding page. `/guide` always serves the guide.
    - The owner can preview with `/?view=holding` or `/?view=guide`.
-3. **Aliases:** rewrite the addresses in §2 to their files. The destinations need encoding, e.g. `/Decouple%20%C2%B7%20Results.html`.
+3. **Aliases:** rewrite or redirect the addresses in §2 to their files, as §2 says. The destinations need encoding, e.g. `/Decouple%20%C2%B7%20Results.html`.
 4. **Everything else:** owner session required. Testers may open the proto files only if `TESTERS_CAN_OPEN_PROTOS=true`: the 10 Proto HTML files and everything under `proto/`. Without a session, return 404 with the 404 page.
 5. **Headers on every response:**
    - `X-Robots-Tag: noindex, nofollow` on everything, for now.
@@ -70,10 +70,10 @@ For each request:
    - Point the tag at the compiled `.js` file and remove the type. Keep the script order exactly as it is.
    - Remove the Babel standalone tag.
 3. **React:** swap the unpkg development builds of React and ReactDOM 18.3.1 for the production builds. Serve them from the site, not unpkg: copy them from `node_modules` into `dist/vendor/`.
-4. **Fonts:** self-host them instead of Google Fonts. That keeps visitor IPs away from Google, which matters for the privacy notice. Families and weights in use: Inter 400–700, Source Serif Pro 400/600/700 with italics, JetBrains Mono 400–600. Rewrite each `<link href="https://fonts.googleapis.com/...">` to a local `fonts.css`.
+4. **Fonts:** self-host them instead of Google Fonts. That keeps visitor IPs away from Google, which matters for the privacy notice. Families and weights in use: Inter 400–700, Source Serif Pro 400/600/700 with italics, JetBrains Mono 400–600, plus the signature fonts on Protos 08 and 09: Caveat, Mrs Saint Delafield and Homemade Apple. A new family in an export is flagged in its `CHANGES.md`. Rewrite each `<link href="https://fonts.googleapis.com/...">` to a local `fonts.css`.
 5. **Cache-busting:** add `?v=<content hash>` to every local JS and CSS reference. Serve `dist/**/*.{js,css,woff2,png}` with `Cache-Control: public, max-age=31536000, immutable` and HTML with `no-cache`.
 6. **Public allow-list:** scan the guide, the holding page and the privacy page, after rewriting, for every local `src` and `href`, and every `url()` in their CSS. Write the list to `dist/_public.json`. The middleware imports it, so nothing else is public.
-7. **Questions:** if `APPS_SCRIPT_URL` is set, fetch `?action=questions` and write `dist/m02/guide/questions.json` (an array of row objects keyed by the tab's column names). If the fetch fails or the tab is empty, leave the file out. The page then uses its built-in questions.
+7. **Questions:** if `APPS_SCRIPT_URL` is set, fetch `?action=questions` and write `dist/m02/guide/questions.json` (an array of row objects keyed by the tab's column names). If the fetch fails or the tab is empty, write an empty list. The page then uses its built-in questions, with no failed request.
 8. **Fail the build** if any HTML still contains `text/babel`, `unpkg.com` or `fonts.googleapis.com`, or if a local reference doesn't resolve.
 
 Target: a Lighthouse mobile performance score of 90 or more for `/`.
@@ -98,13 +98,13 @@ Target: a Lighthouse mobile performance score of 90 or more for `/`.
 - `SETUP.md` gives Ross a click-by-click setup: paste the code, set the secret, deploy, copy the URL into Vercel, and a test with curl.
 - The existing Google Form stays untouched as a backup.
 
-## 7. API (`api/*.ts`, Vercel Functions, Node 20)
+## 7. API (`api/*.ts`, Vercel Functions, Node 22)
 
 All JSON. Reject any body over 64 KB.
 
 | Route | Who | In | Does | Out |
 |---|---|---|---|---|
-| `GET /api/session` | Anyone | — | Reads the cookies and site settings | `{owner, tester, human, testing, label?, mode, requireCode, turnstileSiteKey}` |
+| `GET /api/session` | Anyone | — | Reads the cookies and site settings | `{owner, tester, human, testing, label?, mode, requireCode, landing, turnstileSiteKey}` |
 | `POST /api/login` | Anyone | `{password}` | §3 | 200 and sets `dc_owner`, or 401 |
 | `POST /api/logout` | Anyone | — | Clears `dc_owner` and `dc_tester` | 200 |
 | `POST /api/tester` | Anyone | `{code}` | Checks the code (§3) | 200 `{label}` and sets `dc_tester`, or 404 |
@@ -113,7 +113,7 @@ All JSON. Reject any body over 64 KB.
 | `POST /api/signup` | Human | `{email, stage?, source, sid, hp}` | Checks the email, then sends `kind: "signup"`. Sources: `holding:<utm_source>`, `guide`, `guide-optin`. `stage` can be a `;` list. | 200, 400 or 403 |
 | `POST /api/email` | Same as `/api/answers` | `{email, link, sid}` | Sends the guide email (below) | 200, 400, 401 or 429 |
 | `GET /api/results` | Owner | `?test=&since=` | Passes the request to `action=results` | `{rows:[{sid,pid,test,step,price,landing,qid,qv,q,type,a,at,device}], signups}` |
-| `GET` and `POST /api/admin/site` | Owner | `{mode?: "guide"\|"holding", requireCode?: boolean, testMode?: boolean}` | Reads or writes the Edge Config items through the Vercel REST API (`EDGE_CONFIG_ID`, `VERCEL_API_TOKEN`) | `{mode, requireCode, testMode}` |
+| `GET` and `POST /api/admin/site` | Owner | `{mode?: "guide"\|"holding", requireCode?: boolean, testMode?: boolean, landing?: "a"…"i"\|"random"}` | Reads or writes the Edge Config items through the Vercel REST API (`EDGE_CONFIG_ID`, `VERCEL_API_TOKEN`) | `{mode, requireCode, testMode, landing}` |
 | `GET` and `POST /api/admin/codes` | Owner | POST: `{action: "create", codes:[{code, label, expires, test}]}`, `{action: "update", code, active?, label?, expires?, test?}` or `{action: "delete", code}` | Passes the change to the script's `kind: "codes"` (GET reads `action=codes`). On create, check the format `^[A-Z]{2,6}-[A-Z]{2,6}-\d{2}$`, labels of 40 characters at most, and at most 20 codes per request. The page makes the code strings. | `{codes:[{code,label,active,test,expires,created,uses,last_used}]}` |
 | `POST /api/admin/publish` | Owner | — | Calls `DEPLOY_HOOK_URL`, which rebuilds and so picks up edited questions | `{ok}` |
 
@@ -175,7 +175,16 @@ The design project owns every other page. The client side of the API is `site/sh
 
 Then switch mode back to **holding** before the production deploy. The guide goes public only when the next export lands, with consent and the tester-code screen.
 
-## 12. Repo housework
+## 12. How exports land
+
+- An export is a zip holding `site/`, plus `docs/SITE-SPEC.md` when the spec changed, and a `CHANGES.md` for Claude Code.
+- `site/EXPORT.json` holds the export ID and date. The pull request is named `sync: design export <ID>`.
+- `CHANGES.md` lists: changed or new pages, renamed or removed files, new fonts or outside scripts, new public pages, spec changes (by section), and the handoff findings this export fixes.
+- Findings about pages go in the next `docs/HANDOFF-SITE-<n>.md` under "In `site/`, for the design project". The design project reads that from GitHub.
+
+## 13. Repo housework (done 13 Oct 2026; kept for the record)
+
+As built: the old app was archived as `archive/prototype-01/` on `main` (the tag `prototype-01-root-layout` points at the last root layout), not as a tag and branch; Node 22; Global Config. See `docs/HANDOFF-SITE-1.md`. The original brief follows.
 
 1. Note the current `main` commit. Tag it `app-v1-final`, create the branch `archive/app-v1` from it, and push both. **Show Ross the commit and the links, and wait for his OK.**
 2. On a new branch `site-v1`, remove the old app files from the tree. Their history stays in the tag and the branch. Add the new layout:

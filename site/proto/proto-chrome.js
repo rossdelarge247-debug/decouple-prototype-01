@@ -25,7 +25,7 @@
   .pc-toast span{color:#B8AFA6;display:block;font:11px/1.5 'JetBrains Mono',monospace;margin-top:4px}`;
   const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
   const pill = document.createElement("div"); pill.className = "pc-pill";
-  pill.innerHTML = `<b>${stage.n} · ${stage.name.toUpperCase()}</b><button data-d="desktop">Desktop</button><button data-d="mobile">Mobile</button><span class="pc-sep"></span><button data-act="reset" title="Clear saved journey answers">Reset</button><a href="${encodeURI("Decouple Journey.html")}#${stageId}">Journey ↗</a>`;
+  pill.innerHTML = `<b>${stage.n} · ${stage.name.toUpperCase()}</b><button data-d="desktop">Desktop</button><button data-d="mobile">Mobile</button><span class="pc-sep"></span><button data-act="reset" title="Clear saved journey answers">Reset</button>${/(^|\.)decouple\.uk$/.test(location.hostname) ? `<a href="/hub">Hub ↗</a>` : `<a href="${encodeURI("Decouple Journey.html")}#${stageId}">Journey ↗</a>`}`;
   const frame = document.createElement("div"); frame.className = "pc-stage";
   frame.innerHTML = `<div class="pc-phone"><iframe title="Mobile preview"></iframe></div>`;
   const toast = document.createElement("div"); toast.className = "pc-toast";

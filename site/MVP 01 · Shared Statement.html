@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-stage="mvp01">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decouple — MVP 01 · Shared statement</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="mvp/statement/ms.css">
+<style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="mvp/statement/ms-data.js"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="proto/interview/iv-data.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-ui.jsx"></script>
+<script type="text/babel" src="proto/interview/iv-screens.jsx"></script>
+<script type="text/babel" src="mvp/statement/ms-wizard.jsx"></script>
+<script type="text/babel" src="mvp/statement/ms-doc.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+/* MVP 01 · Shared financial statement. No bank connection: a manual, accurate wizard, a shared document with flags, then outputs.
+   State in decouple.mvp01.v1 only. Testing mode works as on Protos 01–10 (stage "mvp01"). */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "example": true
+}/*EDITMODE-END*/;
+const { useState, useEffect } = React;
+const Ic = window.DIc, MS = window.MS;
+const clone = (x) => JSON.parse(JSON.stringify(x));
+const exit = () => location.replace("https://www.bbc.co.uk/weather");
+const fresh = (ex) => ({ phase: "start", pos: "about", a: ex ? clone(MS.A_EX.a) : {}, items: ex ? clone(MS.A_EX.items) : [], hints: ex ? clone(MS.A_EX.hints) : [], b: null, res: {}, threads: {}, agreed: { a: false, b: false }, invited: false, example: !!ex });
+const load = (ex) => { try { const s = JSON.parse(localStorage.getItem(MS.KEY)); if (s && s.phase) return s; } catch (e) {} return fresh(ex); };
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [s, setS] = useState(() => load(t.example));
+  const up = (p) => setS((o) => { const n = typeof p === "function" ? p(o) : { ...o, ...p }; localStorage.setItem(MS.KEY, JSON.stringify(n)); return n; });
+  useEffect(() => window.Journey.subscribe(() => setS(fresh(t.example))), [t.example]);
+  useEffect(() => { window.scrollTo(0, 0); }, [s.phase, s.pos]);
+  const N = { me: s.a.me || "You", them: s.a.them || "your partner" };
+  const go = (phase, extra) => up({ phase, ...(extra || {}) });
+  const demoB = () => up((o) => ({ ...o, phase: "shared", b: { items: clone(MS.B_EX.items), hints: clone(MS.B_EX.hints) }, threads: { ...clone(MS.THREADS), ...o.threads }, invited: true }));
+  const finish = () => { if (window.UT && window.UT.on()) window.UT.end("mvp01", null, null); else location.href = encodeURI("Decouple · Prototype Hub.html") + "#protos"; };
+  const restart = (ex) => { localStorage.removeItem(MS.KEY); setS(fresh(ex)); };
+  const JUMP = [["start", "Start"], ["wiz", "Your side (wizard)"], ["mine", "Your statement"], ["invite", "Invite (safety check)"], ["waiting", "Waiting for them"], ["shared", "Shared statement"], ["agree", "Agree"], ["out", "Documents"]];
+  const jump = (p) => { if (["shared", "agree", "out"].includes(p) && !s.b) { up((o) => ({ ...o, phase: p, items: o.items.length ? o.items : clone(MS.A_EX.items), a: o.a.me ? o.a : clone(MS.A_EX.a), hints: o.hints.length ? o.hints : clone(MS.A_EX.hints), b: { items: clone(MS.B_EX.items), hints: clone(MS.B_EX.hints) }, threads: { ...clone(MS.THREADS), ...o.threads }, agreed: p === "out" ? { a: true, b: true } : o.agreed })); return; } if (p === "out") return up({ phase: p, agreed: { a: true, b: true } }); go(p); };
+  const tweaks = (
+    <TweaksPanel title="Tweaks · MVP 01">
+      <TweakSection label="Jump to"/>
+      <TweakSelect label="Screen" value={s.phase} options={JUMP.map(([value, label]) => ({ value, label }))} onChange={jump}/>
+      <TweakSection label="Starting point"/>
+      <TweakToggle label="Start with Sarah’s example figures" value={t.example} onChange={(v) => { setTweak("example", v); restart(v); }}/>
+      <TweakButton label="Start again" onClick={() => restart(t.example)}/>
+    </TweaksPanel>
+  );
+  const label = { start: "Start", wiz: "Your side · " + s.pos, mine: "Your statement", invite: "Invite", waiting: "Waiting", shared: "Shared statement", agree: "Agree", out: "Documents" }[s.phase];
+  const wide = ["mine", "shared", "out"].includes(s.phase);
+  return (
+    <div className={"site iv " + (s.phase === "start" ? "bg-wash" : "bg-paper")} data-screen-label={"MVP 01 · " + label}>
+      <header className="iv-top">
+        <div className="l"><button className="wm" onClick={() => go("start")} aria-label="Back to the start">Decouple<i>.</i></button><small>{s.phase === "shared" || s.phase === "agree" || s.phase === "out" ? `Shared statement · ${N.me} and ${N.them}` : "Your financial statement · private to you"}</small></div>
+        <div className="r"><button className="pillbtn exit" onClick={exit}><Ic.X s={12} c="#B91C1C"/> Quick exit</button></div>
+      </header>
+      {s.phase === "start" && <MSStart resume={s.items.length > 0 && !s.example} example={s.example} onStart={() => go(s.b ? "shared" : s.items.length && s.pos === "done" ? "mine" : "wiz")}/>}
+      {s.phase === "wiz" && <main className="iv-body"><MSWizard st={s} up={up} onBack={() => go("start")} onDone={() => go("mine", { pos: "done" })}/></main>}
+      {s.phase === "mine" && <MSMine st={s} up={up} N={N} onInvite={() => go(s.invited ? "waiting" : "invite")} onEdit={(p) => go("wiz", { pos: p })}/>}
+      {s.phase === "invite" && <MSInvite st={s} up={up} N={N} onBack={() => go("mine")} onSent={() => go("waiting")}/>}
+      {s.phase === "waiting" && <MSWaiting N={N} onDemo={demoB} onBack={() => go("mine")}/>}
+      {s.phase === "shared" && s.b && <MSShared st={s} up={up} N={N} onAgree={() => go("agree")}/>}
+      {s.phase === "agree" && s.b && <MSAgree st={s} up={up} N={N} onBack={() => go("shared")} onDone={() => go("out")}/>}
+      {s.phase === "out" && s.b && <MSOutputs st={s} N={N} onFinish={finish}/>}
+      {!wide && null}
+      {tweaks}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

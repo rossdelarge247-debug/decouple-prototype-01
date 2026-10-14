@@ -14,8 +14,8 @@ window.GS = (function () {
     if (!s.sid) s.sid = rid();
     const v = (qp.get("v") || "").toUpperCase(); if (v === "A" || v === "B") s.ver = v; if (!s.ver) s.ver = Math.random() < 0.5 ? "A" : "B";
     if (qp.get("pid")) s.pid = qp.get("pid");
-    const L = (qp.get("landing") || "").toLowerCase(); if (/^[a-e]$/.test(L)) s.lvFixed = L; else if (L === "random") s.lvRotate = true;
-    if (!s.lvRand) s.lvRand = "abcde"[Math.floor(Math.random() * 5)];
+    const L = (qp.get("landing") || "").toLowerCase(); if (/^[a-i]$/.test(L)) s.lvFixed = L; else if (L === "random") s.lvRotate = true;
+    if (!s.lvRand) s.lvRand = "abcdefghi"[Math.floor(Math.random() * 9)];
     s.a = s.a || {}; s.x = s.x || {}; s.phase = s.phase || "landing"; s.ch = s.ch || 0; s.maxCh = s.maxCh || 0; s.held = s.held || [];
     if (["code", "consent"].includes(s.phase)) s.phase = "landing";
     /* a guide opened from its email link: #g=<answers> */

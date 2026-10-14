@@ -4,7 +4,7 @@
    Answers are always kept locally (exportable from the hub) and posted to a Google Form if one is set up.
    Storage: decouple.ut.v1 only — never touches the journey key. */
 window.UT = (function () {
-  if (!window.DC && !document.querySelector('script[src$="shared/dc-site.js"]')) { const sc = document.createElement("script"); sc.src = "shared/dc-site.js"; document.head.appendChild(sc); }
+  if (!window.DC && !document.querySelector('script[src*="shared/dc-site.js"]')) { const sc = document.createElement("script"); sc.src = "shared/dc-site.js"; document.head.appendChild(sc); }
   const KEY = "decouple.ut.v1", J = window.Journey, D = window.UT_DEFAULTS || { CSV: "" };
   const STAGES = J ? J.STAGES : [["discover","01","Discover"],["interview","02","Interview"],["playback","03","Playback"],["signup","04","Sign-up"],["onboard","05","Onboard"],["prepare","06","Prepare"],["reconcile","07","Household"],["settle","08","Settle"],["finalise","09","Finalise"],["dashboard","10","Dashboard"]].map(([id, n, name]) => ({ id, n, name }));
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };

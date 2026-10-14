@@ -1,0 +1,7 @@
+{
+  "id": "2026-10-14a",
+  "date": "2026-10-14",
+  "from": "Decouple design project",
+  "previous": "2026-10-13b",
+  "note": "2026-10-13b was never landed; this export includes its changes"
+}
