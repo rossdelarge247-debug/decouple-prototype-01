@@ -74,7 +74,15 @@ export async function sendEmail(to: string, msg: { subject: string; html: string
       body: JSON.stringify({ from, to: [to], reply_to: 'hello@decouple.uk', subject: msg.subject, html: msg.html, text: msg.text }),
       signal: ctl.signal,
     })
-    if (!res.ok) return { ok: false, status: 502, error: `Resend returned ${res.status}.` }
+    if (!res.ok) {
+      let body = ''
+      try {
+        body = (await res.text()).replace(/\s+/g, ' ').slice(0, 300)
+      } catch {
+        /* no body */
+      }
+      return { ok: false, status: 502, error: `Resend returned ${res.status}${body ? ': ' + body : '.'}` }
+    }
     return { ok: true, status: 200 }
   } catch (err) {
     return { ok: false, status: 502, error: (err as Error).message }
