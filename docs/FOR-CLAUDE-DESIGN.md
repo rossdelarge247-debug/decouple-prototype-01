@@ -29,8 +29,8 @@ The questions template `m02/guide/questions-template.csv`. The site spec `docs/S
    page needs a line in the export notes.
 3. Keep assets on relative paths, as now, with no `<base>` tag. Hash routing is fine. Addresses
    with a path segment redirect to the file for this reason.
-4. Keep `shared/dc-site.js` under exactly that name; two pages find it with a `src$=` selector
-   (`src*=` would be sturdier).
+4. Keep `shared/dc-site.js` under exactly that name. Since export 2026-10-14a the pages find it
+   with `src*=`, so the build cache-busts it like every other script.
 5. Fonts self-hosted today: Inter, Source Serif Pro, JetBrains Mono, Caveat, Mrs Saint Delafield,
    Homemade Apple. A new family is one line in the build, but flag it.
 6. The only outside scripts expected are unpkg React and Babel, which the build replaces.
@@ -49,9 +49,8 @@ Google Fonts, that references a missing file, or that needs an unknown font, and
 
 ## Waiting for you
 
-- The Dashboard help card says `help@decouple.co.uk`; everywhere else is `hello@decouple.uk`.
-- `atlas/hub/m01.png` and `m02.png` are JPEGs with a `.png` name.
-- The Dashboard's sample persona uses a real-looking Gmail address; an example.com one is safer.
+Nothing after export 2026-10-14a. New findings go in the next `docs/HANDOFF-SITE-<n>.md`, as
+spec §12 says.
 
 ## Current state of the layer, for reference
 

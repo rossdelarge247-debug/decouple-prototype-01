@@ -15,7 +15,7 @@ Vercel renamed Edge Config to Global Config in 2026; the spec's "Edge Config" is
 
 1. Vercel › Storage › Create Database › **Global Config**. Name it `decouple-site`. Create.
 2. On the store's page: Connect Project › choose the project › Production and Preview › Connect. This adds `GLOBAL_CONFIG` to the project.
-3. Items tab › edit and paste: `{ "mode": "holding", "requireCode": true, "testMode": false }` › Save Items.
+3. Items tab › edit and paste: `{ "mode": "holding", "requireCode": true, "testMode": false, "landing": "a" }` › Save Items. (`landing` arrived with export 2026-10-14a; a store without it reads as `"a"`, and the landing picker on Site settings writes it.)
 4. Open https://vercel.com/account/tokens (the Tokens page of your personal account; the switcher at the top left must show your account, not the team). Create: name `decouple-site settings`, Scope: the team `rossdelarge247-debug's projects`, then the project `decouple-prototype-01`, expiry as you like. Copy the `vcp_…` value once, for `VERCEL_API_TOKEN`. It lives only in Vercel's environment variables.
 5. `VERCEL_TEAM_ID` = `team_Z76rAImaSJeB08jfbq6gIvGo`. With a team- or project-scoped token Vercel infers the team, so this is a belt-and-braces setting; with a full-account token it is required.
 6. `GLOBAL_CONFIG_ID` is optional: the site reads the store ID from the `GLOBAL_CONFIG` connection string the Connect step added.

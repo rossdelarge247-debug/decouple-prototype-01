@@ -44,7 +44,7 @@ const batch = (over: Record<string, unknown> = {}) => ({
 describe('/api/session', () => {
   it('reports who is asking, the mode and the switches', async () => {
     const anon = await (await session(req('/api/session'))).json()
-    expect(anon).toEqual({ owner: false, tester: false, human: false, testing: false, mode: 'holding', requireCode: true, turnstileSiteKey: '' })
+    expect(anon).toEqual({ owner: false, tester: false, human: false, testing: false, mode: 'holding', requireCode: true, landing: 'a', turnstileSiteKey: '' })
     const t = await (await session(req('/api/session', { cookie: await cookieFor('tester', { l: 'Me · phone', c: 'MINT-OWL-12', t: 1 }) }))).json()
     expect(t).toMatchObject({ tester: true, testing: true, label: 'Me · phone' })
     setup({ testMode: true })
@@ -194,7 +194,7 @@ describe('owner-only routes', () => {
     expect(r.rows).toHaveLength(1)
     expect(r.signups.count).toBe(1)
     expect((await results(req('/api/results?since=yesterday', { cookie: owner }))).status).toBe(400)
-    expect(await (await siteGet(req('/api/admin/site', { cookie: owner }))).json()).toEqual({ mode: 'holding', requireCode: true, testMode: false })
+    expect(await (await siteGet(req('/api/admin/site', { cookie: owner }))).json()).toEqual({ mode: 'holding', requireCode: true, testMode: false, landing: 'a' })
     expect((await sitePost(post('/api/admin/site', { mode: 'open' }, owner))).status).toBe(400)
     expect((await sitePost(post('/api/admin/site', { mode: 'guide' }, owner))).status).toBe(502)
   })
@@ -203,12 +203,12 @@ describe('owner-only routes', () => {
     const fetch = mockFetch(() => ({ status: 'ok' }))
     Object.assign(process.env, { GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_1?token=t', VERCEL_API_TOKEN: 'tok', VERCEL_TEAM_ID: 'team_9' })
     const owner = await cookieFor('owner')
-    const r = await sitePost(post('/api/admin/site', { mode: 'guide', testMode: true }, owner))
-    expect(await r.json()).toEqual({ mode: 'guide', requireCode: true, testMode: true })
+    const r = await sitePost(post('/api/admin/site', { mode: 'guide', testMode: true, landing: 'random' }, owner))
+    expect(await r.json()).toEqual({ mode: 'guide', requireCode: true, testMode: true, landing: 'random' })
     const [url, init] = fetch.mock.calls[0]
     expect(String(url)).toBe('https://api.vercel.com/v1/global-config/ecfg_1/items?teamId=team_9')
     expect(init?.method).toBe('PATCH')
-    expect(JSON.parse(String(init?.body))).toEqual({ items: [{ operation: 'upsert', key: 'mode', value: 'guide' }, { operation: 'upsert', key: 'testMode', value: true }] })
+    expect(JSON.parse(String(init?.body))).toEqual({ items: [{ operation: 'upsert', key: 'mode', value: 'guide' }, { operation: 'upsert', key: 'testMode', value: true }, { operation: 'upsert', key: 'landing', value: 'random' }] })
   })
 
   it('validates code operations before passing them to the script', async () => {
@@ -255,7 +255,7 @@ describe('/api/admin/diagnose', () => {
     expect(d.email.test).toMatch(/email=1/)
     expect(d.variables.present).toContain('GLOBAL_CONFIG')
     expect(d.variables.missing).toContain('RESEND_API_KEY')
-    expect(d.store).toMatchObject({ connected: true, id: 'ecfg_1', read: 'ok', settings: { mode: 'guide', requireCode: false, testMode: false } })
+    expect(d.store).toMatchObject({ connected: true, id: 'ecfg_1', read: 'ok', settings: { mode: 'guide', requireCode: false, testMode: false, landing: 'a' } })
     expect(d.vercelApi.check).toMatch(/^ok/)
     expect(d.script).toMatchObject({ configured: true, check: 'ok', codes: 1 })
   })

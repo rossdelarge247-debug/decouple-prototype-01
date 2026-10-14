@@ -60,12 +60,12 @@ describe('the build transform on a fixture page', () => {
     expect(refs).toEqual(['proto/discover/discover.css', 'shared/dc-site.js', 'proto/journey-store.js', 'privacy.html', 'atlas/hub/p01.png', 'proto/discover/parts.jsx'])
   })
 
-  it('adds a content hash to JS and CSS references, except the one found by name', () => {
+  it('adds a content hash to every JS and CSS reference', () => {
     const page = swapFonts(swapReact(stripBabelStandalone(FIXTURE)))
-    const out = bustHtml(page, (p: string) => (p === 'shared/dc-site.js' ? 'nope' : 'h' + p.length))
+    const out = bustHtml(page, (p: string) => 'h' + p.length)
     expect(out).toContain('href="fonts.css?v=h9"')
     expect(out).toContain('src="proto/journey-store.js?v=h22"')
-    expect(out).toContain('src="shared/dc-site.js"')
+    expect(out).toContain('src="shared/dc-site.js?v=h17"')
     expect(out).toContain('href="#top"')
     expect(out).toContain('href="privacy.html"')
     expect(out).toContain('src="atlas/hub/p01.png"')

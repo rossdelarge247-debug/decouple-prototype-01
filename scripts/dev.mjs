@@ -34,7 +34,7 @@ process.env.OWNER_PASSWORD_HASH ||= hashPassword(process.env.DEV_PASSWORD || 'de
 
 /* ── mocks: in-memory stand-ins for every service the site talks to ── */
 const mock = {
-  settings: { mode: 'holding', requireCode: true, testMode: false },
+  settings: { mode: 'holding', requireCode: true, testMode: false, landing: 'a' },
   codes: [
     { code: 'FERN-LARK-27', label: 'P01', active: true, test: false, expires: '', created: new Date().toISOString(), uses: 0, last_used: '' },
     { code: 'MINT-OWL-12', label: 'Me · phone', active: true, test: true, expires: '', created: new Date().toISOString(), uses: 0, last_used: '' },
@@ -181,7 +181,7 @@ async function handle(request) {
     mock.signups = []
     mock.emails = []
     mock.seen = new Set()
-    mock.settings = { mode: 'holding', requireCode: true, testMode: false }
+    mock.settings = { mode: 'holding', requireCode: true, testMode: false, landing: 'a' }
     return jsonRes({ ok: true })
   }
   const mw = await middleware(request)
