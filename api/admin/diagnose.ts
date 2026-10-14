@@ -2,7 +2,8 @@
    Open /api/admin/diagnose while signed in, or paste the JSON to whoever is helping. */
 import { createClient } from '@vercel/global-config'
 import { unauthorised, who } from '../../lib/api.js'
-import { env } from '../../lib/env.js'
+import { guideEmail, sendEmail } from '../../lib/email.js'
+import { env, siteOrigin } from '../../lib/env.js'
 import { securityHeaders } from '../../lib/http.js'
 import { scriptConfigured, scriptGet } from '../../lib/script.js'
 import { connectionString, normaliseSettings, storeId } from '../../lib/settings.js'
@@ -85,6 +86,17 @@ export async function GET(request: Request): Promise<Response> {
     }
   }
 
+  /* ?email=1 sends the guide email, with a dummy link, to the from address, and reports what Resend said */
+  const url = new URL(request.url)
+  let emailTest: Record<string, unknown> | undefined
+  if (url.searchParams.get('email') === '1') {
+    const from = e.MAIL_FROM || 'Decouple <hello@decouple.uk>'
+    const m = from.match(/<([^>]+)>/)
+    const to = (m ? m[1] : from).trim()
+    const sent = await sendEmail(to, guideEmail(`${siteOrigin(e)}/guide#g=test`), e)
+    emailTest = { to, ...sent }
+  }
+
   const report = {
     at: new Date().toISOString(),
     deployment: {
@@ -96,11 +108,12 @@ export async function GET(request: Request): Promise<Response> {
       node: typeof process !== 'undefined' && process.version ? process.version : null,
     },
     session: { owner: w.owner, testing: w.testing, settingsAsTheFunctionsSeeThem: w.settings },
+    origin: { siteOrigin: siteOrigin(e), requestHost: url.host, note: 'guide links must start with siteOrigin, so open the guide on that host' },
     variables: { present, missing },
     store,
     vercelApi,
     script,
-    email: { configured: !!e.RESEND_API_KEY, from: e.MAIL_FROM || 'Decouple <hello@decouple.uk> (default)' },
+    email: { configured: !!e.RESEND_API_KEY, from: e.MAIL_FROM || 'Decouple <hello@decouple.uk> (default)', test: emailTest ?? 'add ?email=1 to send the guide email to the from address and see what Resend says' },
     turnstile: { siteKey: !!e.TURNSTILE_SITE_KEY, secret: !!e.TURNSTILE_SECRET_KEY },
     deployHook: { configured: !!e.DEPLOY_HOOK_URL, looksRight: /^https:\/\/api\.vercel\.com\//.test(e.DEPLOY_HOOK_URL || '') },
     whatTheSwitchesNeed: ['GLOBAL_CONFIG (added by connecting the store)', 'VERCEL_API_TOKEN', 'then a redeploy'],

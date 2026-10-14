@@ -8,4 +8,6 @@
 
 **In `site/`, for the design project.** Nothing failed. Three nits: the Dashboard help card says `help@decouple.co.uk`; the two hub thumbnails `atlas/hub/m01.png` and `m02.png` are JPEGs with a `.png` name; the sample persona in the Dashboard uses a real-looking Gmail address. Protos 08 and 10 call `window.claude.complete` on a button and fail quietly with a friendly line, as §10 expects.
 
+**State on 14 October.** Live on decouple.uk, with PR #5 and #6 merged: sign-in, the Global Config store and token (switches save), the Google script (questions imported, deploy hook set). Vercel is on Pro. hello@decouple.uk has a GoDaddy mailbox. Turnstile is set and the holding page's sign-up works. Resend is set, so the guide email sends. Every service in spec §9 is now live. Parked by the owner until asked: the end-to-end tester-code run, a review of the spreadsheet's tabs per test, and the Results page's playback. Also parked: analytics and feedback tools; the owner intends Maze or Lookback for sessions later, and no scripts go on the pages without a spec change.
+
 **Next.** The next export with consent and the tester-code screen lands through `SYNC.md`; then mode = guide. After that: the owner-only `/api/claude` proxy for Protos 08 and 10, and a decision on moving from Sheets to a database once the site is stable.

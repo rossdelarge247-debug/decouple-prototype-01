@@ -17,6 +17,11 @@ export async function POST(request: Request): Promise<Response> {
   if (!sid) return bad('sid is required.')
   if (!emailLimiter.hit('sid:' + sid)) return bad('That guide has been emailed three times today.', 429)
   const sent = await sendEmail(email, guideEmail(b.link))
-  if (!sent.ok) return json({ ok: false, error: 'The email could not be sent just now.' }, sent.status === 503 ? 503 : 502)
+  if (!sent.ok) {
+    console.error('[email] send failed:', sent.error)
+    const out: Record<string, unknown> = { ok: false, error: 'The email could not be sent just now.' }
+    if (w.owner) out.detail = sent.error
+    return json(out, sent.status === 503 ? 503 : 502)
+  }
   return json({ ok: true })
 }
