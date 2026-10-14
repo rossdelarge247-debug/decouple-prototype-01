@@ -48,7 +48,7 @@ const DIST = join(ROOT, 'dist')
 const GENERATED = join(ROOT, 'lib', 'generated')
 
 const PUBLIC_PAGES = ['Marketing 02 · Divorce Guide.html', 'Marketing 01 · Holding Page.html', 'privacy.html']
-const OWN_PAGES = ['studio.html', '404.html']
+const OWN_PAGES = ['studio.html', 'take-part-code.html', '404.html']
 const OWN_FILES = ['favicon.ico']
 
 const log = (...a) => console.log('[build]', ...a)

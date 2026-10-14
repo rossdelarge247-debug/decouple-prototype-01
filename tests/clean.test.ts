@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MAX_ANSWER, blockedQid, cleanAnswers, cleanSignup, stripControl } from '../lib/clean.js'
+import { MAX_ANSWER, blockedQid, cleanAnswers, cleanSignup, knownTest, stripControl } from '../lib/clean.js'
 
 const base = () => ({
   batchKey: 'b1',
@@ -60,6 +60,22 @@ describe('cleaning answers', () => {
     expect(cleanAnswers({ ...base(), sid: '' }, { owner: false })).toMatchObject({ kind: 'bad' })
     expect(cleanAnswers(null, { owner: false })).toMatchObject({ kind: 'bad' })
     expect(cleanAnswers({ ...base(), rows: [{ qid: '', a: 'x' }] }, { owner: false })).toMatchObject({ kind: 'bad' })
+  })
+
+  it('accepts the screener and one test per MVP prototype, and nothing else (spec §7)', () => {
+    for (const test of ['M01 Holding', 'Prototype testing', 'Screener', 'MVP 05 · Financial statement', 'MVP 03 · To-do & journal', 'MVP 00 · Public site', 'MVP 07 · Ask']) {
+      expect(knownTest(test), test).toBe(true)
+      expect(cleanAnswers({ ...base(), test }, { owner: false }).kind, test).toBe('ok')
+    }
+    for (const test of ['MVP 99 · <b>', 'MVP 5 · Statement', 'MVP 05 · ', 'MVP 05 - Statement', 'MVP 05 · ' + 'x'.repeat(41), 'screener', 'Codes', 'Participants', 42, null]) {
+      expect(knownTest(test), String(test)).toBe(false)
+      expect(cleanAnswers({ ...base(), test }, { owner: false }).kind, String(test)).toBe('bad')
+    }
+  })
+
+  it('never keeps the screener wellbeing answer, even if a page sends it', () => {
+    const r = cleanAnswers({ ...base(), test: 'Screener', rows: [{ qid: 'scr-exp', a: 'now' }, { qid: 'scr-wb', a: 'hard' }] }, { owner: false, label: 'P02' })
+    expect(r.kind === 'ok' && r.batch.rows.map((x) => x.qid)).toEqual(['scr-exp'])
   })
 
   it('caps every answer at 2,000 characters and strips control characters', () => {

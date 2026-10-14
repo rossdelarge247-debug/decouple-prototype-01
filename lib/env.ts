@@ -12,10 +12,6 @@ export function loginPath(e: Env = env()): string {
   return p.startsWith('/') ? p.replace(/\/+$/, '') || '/' : '/' + p
 }
 
-export function testersCanOpenProtos(e: Env = env()): boolean {
-  return (e.TESTERS_CAN_OPEN_PROTOS || '').trim().toLowerCase() === 'true'
-}
-
 export function sessionSecret(e: Env = env()): string | null {
   const s = e.SESSION_SECRET
   return s && s.length >= 16 ? s : null

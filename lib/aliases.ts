@@ -10,7 +10,9 @@ export const FILES = {
   marketing: 'Decouple · Marketing Hub.html',
   results: 'Decouple · Results.html',
   settings: 'Decouple · Site Settings.html',
+  takePart: 'Decouple · Take Part.html',
   login: 'studio.html',
+  codePage: 'take-part-code.html',
   notFound: '404.html',
 } as const
 
@@ -27,7 +29,26 @@ export const PROTOS: readonly string[] = [
   'Proto 10 · Dashboard.html',
 ]
 
+/** MVP 00 to MVP 07. MVP 00 · Public Site is a prototype, not a public page. */
+export const MVPS: readonly string[] = [
+  'MVP 00 · Public Site.html',
+  'MVP 01 · Toolkit.html',
+  'MVP 02 · Right for Us.html',
+  'MVP 03 · To-do & Journal.html',
+  'MVP 04 · Parenting Plan.html',
+  'MVP 05 · Financial Statement.html',
+  'MVP 06 · Split Planner.html',
+  'MVP 07 · Ask.html',
+]
+
+/** files an export renamed: the old address redirects to the new one, behind the same rules */
+export const RENAMED: Readonly<Record<string, string>> = {
+  'MVP 01 · Shared Statement.html': 'MVP 05 · Financial Statement.html',
+}
+
 export type Alias = { file: string; level: 'public' | 'owner'; via: 'rewrite' | 'redirect' }
+
+const two = (n: number): string => String(n).padStart(2, '0')
 
 export const ALIASES: Readonly<Record<string, Alias>> = {
   '/guide': { file: FILES.guide, level: 'public', via: 'rewrite' },
@@ -37,18 +58,14 @@ export const ALIASES: Readonly<Record<string, Alias>> = {
   '/hub/marketing': { file: FILES.marketing, level: 'owner', via: 'redirect' },
   '/hub/results': { file: FILES.results, level: 'owner', via: 'redirect' },
   '/hub/site': { file: FILES.settings, level: 'owner', via: 'redirect' },
-  ...Object.fromEntries(PROTOS.map((file, i) => [`/p/${String(i + 1).padStart(2, '0')}`, { file, level: 'owner', via: 'redirect' }])),
+  ...Object.fromEntries(PROTOS.map((file, i) => [`/p/${two(i + 1)}`, { file, level: 'owner', via: 'redirect' }])),
+  ...Object.fromEntries(MVPS.map((file, i) => [`/p/mvp${two(i)}`, { file, level: 'owner', via: 'redirect' }])),
 }
 
-/* "/Decouple · Results.html" → "/Decouple%20%C2%B7%20Results.html" */
+/* "/Decouple · Results.html" → "/Decouple%20%C2%B7%20Results.html". encodeURIComponent also turns
+   the & in "MVP 03 · To-do & Journal.html" into %26. */
 export function encodePath(file: string): string {
   return '/' + file.split('/').map(encodeURIComponent).join('/')
-}
-
-/* Decoded path → is it one of the ten proto pages or their assets? */
-export function isProtoPath(decodedPath: string): boolean {
-  const p = decodedPath.replace(/^\/+/, '')
-  return PROTOS.includes(p) || p.startsWith('proto/')
 }
 
 /* Decoded path → the file name of a page, if the path is one of the pages */
@@ -58,4 +75,15 @@ export function decodePath(pathname: string): string {
   } catch {
     return pathname
   }
+}
+
+/* The name the build gives a page's inline scripts: inline/<slug>-<n>.js. Must match slugOf in
+   lib/build/transform.mjs (a test checks they agree). */
+export function slugOf(fileName: string): string {
+  return fileName
+    .replace(/\.html$/i, '')
+    .normalize('NFKD')
+    .replace(/[^A-Za-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase()
 }

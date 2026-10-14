@@ -1,8 +1,16 @@
 /* Cleaning answers (spec §7). Pure: the API calls this before anything reaches the sheet. */
-export const TESTS = ['M02 Guide', 'Prototype testing', 'M01 Holding'] as const
-export type TestName = (typeof TESTS)[number]
+export const TESTS = ['M02 Guide', 'Prototype testing', 'M01 Holding', 'Screener'] as const
 
-export const BLOCKED_QIDS = ['safe', 'safe2', 'name_me', 'name_them'] as const
+/** one test per MVP prototype, e.g. "MVP 05 · Financial statement". Each gets its own tab. */
+export const MVP_TEST_RE = /^MVP \d{2} · [A-Za-z&' -]{1,40}$/
+
+/* New tests are added here deliberately: anything else is a 400 */
+export function knownTest(test: unknown): test is string {
+  return typeof test === 'string' && ((TESTS as readonly string[]).includes(test) || MVP_TEST_RE.test(test))
+}
+
+/** the screener's wellbeing question (scr-wb) is never sent by the page, and never stored if it is */
+export const BLOCKED_QIDS = ['safe', 'safe2', 'name_me', 'name_them', 'scr-wb'] as const
 export const MAX_ROWS = 80
 export const MAX_ANSWER = 2000
 export const MAX_PID = 40
@@ -32,7 +40,7 @@ export interface Batch {
   batchKey: string
   sid: string
   pid: string
-  test: TestName
+  test: string
   step: string
   price: string
   landing: string
@@ -53,8 +61,8 @@ export function cleanAnswers(body: unknown, who: Sender): CleanResult {
   const b = body as Record<string, unknown>
   if (typeof b.hp === 'string' && b.hp.trim() !== '') return { kind: 'drop', why: 'hp' }
   if (b.hp != null && typeof b.hp !== 'string') return { kind: 'bad', error: 'hp must be a string.' }
-  const test = String(b.test ?? '')
-  if (!(TESTS as readonly string[]).includes(test)) return { kind: 'bad', error: 'Unknown test.' }
+  const test = b.test
+  if (!knownTest(test)) return { kind: 'bad', error: 'Unknown test.' }
   const sid = str(b.sid, 64)
   if (!sid) return { kind: 'bad', error: 'sid is required.' }
   if (!Array.isArray(b.rows)) return { kind: 'bad', error: 'rows must be an array.' }
@@ -78,7 +86,7 @@ export function cleanAnswers(body: unknown, who: Sender): CleanResult {
       batchKey: str(b.batchKey, 120) || `${sid}:${Date.now().toString(36)}`,
       sid,
       pid,
-      test: test as TestName,
+      test,
       step: str(b.step, 200),
       price: str(b.price, 20),
       landing: str(b.landing, 20),
@@ -116,4 +124,32 @@ export function cleanSignup(body: unknown): SignupResult {
     .join(';')
   const sid = str(b.sid, 64)
   return { kind: 'ok', signup: { email, stage, source, sid } }
+}
+
+/* The participant hub's thank-you step (spec §7, /api/participant): a follow-up yes or no, a voucher
+   choice, and an email address when either needs one. It goes to the Participants tab, which no read
+   ever returns, and never alongside answers. */
+export interface Participant {
+  sid: string
+  followup: boolean
+  voucher: string
+  email: string
+}
+
+export type ParticipantResult = { kind: 'ok'; participant: Participant } | { kind: 'drop'; why: string } | { kind: 'bad'; error: string }
+
+export function cleanParticipant(body: unknown): ParticipantResult {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return { kind: 'bad', error: 'Expected an object.' }
+  const b = body as Record<string, unknown>
+  if (typeof b.hp === 'string' && b.hp.trim() !== '') return { kind: 'drop', why: 'hp' }
+  const sid = str(b.sid, 64)
+  if (!sid) return { kind: 'bad', error: 'sid is required.' }
+  if (b.followup != null && typeof b.followup !== 'boolean') return { kind: 'bad', error: 'followup must be true or false.' }
+  if (b.voucher != null && typeof b.voucher !== 'string') return { kind: 'bad', error: 'voucher must be text.' }
+  const followup = b.followup === true
+  const voucher = str(b.voucher, 60)
+  const email = str(b.email, 254).toLowerCase()
+  if (email && !EMAIL_RE.test(email)) return { kind: 'bad', error: 'That is not an email address.' }
+  if ((followup || voucher) && !email) return { kind: 'bad', error: 'An email address is needed for that.' }
+  return { kind: 'ok', participant: { sid, followup, voucher, email } }
 }

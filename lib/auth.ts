@@ -5,6 +5,7 @@ import { createCodeStore, normaliseRows, parseFallback, type CodeRow, type CodeS
 import { scriptConfigured, scriptGet, scriptPost } from './script.js'
 import { readSessions, sessionKey, type Session } from './session.js'
 import { readSettings, type Settings } from './settings.js'
+import type { TrackMode } from './tracks.js'
 
 let store: CodeStore | null = null
 
@@ -44,6 +45,10 @@ export interface Who {
   testing: boolean
   label?: string
   code?: string
+  /** a tester's track, read from the live codes list: "" means the guide only (lib/tracks.ts) */
+  track?: string
+  /** a tester's session type: "un" on their own, "mod" with Ross */
+  trackMode?: TrackMode
   /** key for rate limiting */
   key: string
   settings: Settings
@@ -66,16 +71,21 @@ export async function whoami(request: Request, ip = 'unknown', now: number = Dat
   let tester = false
   let label: string | undefined
   let code: string | undefined
+  let track = ''
+  let trackMode: TrackMode = ''
   let testCode = false
   if (sessions.tester) {
     const t = sessions.tester
     if (t.c) {
       const found = await codeStore().check(t.c)
-      /* 'unknown' means nothing could be read: an existing session stays valid rather than throwing testers out */
+      /* 'unknown' means nothing could be read: an existing session stays valid rather than throwing
+         testers out, but with no track, so it opens the guide only until the list can be read */
       if (found.row === 'unknown') tester = true
       else if (found.row) {
         tester = true
         testCode = found.row.test
+        track = found.row.track
+        trackMode = found.row.mode
       }
     } else {
       tester = true
@@ -91,6 +101,10 @@ export async function whoami(request: Request, ip = 'unknown', now: number = Dat
   const who: Who = { owner, tester, human, testing, key, settings, sessions }
   if (label !== undefined) who.label = label
   if (code !== undefined) who.code = code
+  if (tester) {
+    who.track = track
+    who.trackMode = trackMode
+  }
   return who
 }
 

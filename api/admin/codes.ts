@@ -3,10 +3,25 @@ import { unauthorised, who } from '../../lib/api.js'
 import { CODES_PER_REQUEST, CODE_RE, LABEL_MAX, normaliseCode, normaliseRows } from '../../lib/codes.js'
 import { bad, json, readJson } from '../../lib/http.js'
 import { ScriptError, scriptGet, scriptPost } from '../../lib/script.js'
+import { TRACK_RE, type TrackMode } from '../../lib/tracks.js'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
-type Op = { op: 'create'; codes: { code: string; label: string; expires: string; test: boolean }[] } | { op: 'update'; code: string; active?: boolean; label?: string; expires?: string; test?: boolean } | { op: 'delete'; code: string }
+type NewCode = { code: string; label: string; expires: string; test: boolean; track: string; mode: TrackMode }
+type Op = { op: 'create'; codes: NewCode[] } | { op: 'update'; code: string; active?: boolean; label?: string; expires?: string; test?: boolean; track?: string; mode?: TrackMode } | { op: 'delete'; code: string }
+
+/* track: "", "full", "mvp" or "p03,m05" (spec §7). mode: "un" or "mod"; a code without a track has no
+   mode, and a code with one defaults to "un". */
+function parseTrack(v: unknown): { ok: true; track: string } | { ok: false; error: string } {
+  const track = String(v ?? '').trim().toLowerCase()
+  return TRACK_RE.test(track) ? { ok: true, track } : { ok: false, error: 'track must be empty, full, mvp, or a list like p03,m05.' }
+}
+function parseMode(v: unknown, track: string | undefined): { ok: true; mode: TrackMode } | { ok: false; error: string } {
+  const mode = String(v ?? '').trim().toLowerCase()
+  if (mode === 'un' || mode === 'mod') return { ok: true, mode: track === '' ? '' : mode }
+  if (mode === '') return { ok: true, mode: track === '' ? '' : 'un' }
+  return { ok: false, error: 'mode must be un or mod.' }
+}
 
 function parseOp(body: unknown): { ok: true; op: Op } | { ok: false; error: string } {
   if (!body || typeof body !== 'object') return { ok: false, error: 'Expected an object.' }
@@ -26,7 +41,11 @@ function parseOp(body: unknown): { ok: true; op: Op } | { ok: false; error: stri
       if (label.length > LABEL_MAX) return { ok: false, error: `Labels have at most ${LABEL_MAX} characters.` }
       const expires = String(c.expires ?? '').trim()
       if (expires && !DATE_RE.test(expires)) return { ok: false, error: 'expires must be YYYY-MM-DD or empty.' }
-      codes.push({ code, label, expires, test: c.test === true })
+      const track = parseTrack(c.track)
+      if (!track.ok) return track
+      const mode = parseMode(c.mode, track.track)
+      if (!mode.ok) return mode
+      codes.push({ code, label, expires, test: c.test === true, track: track.track, mode: mode.mode })
     }
     return { ok: true, op: { op: 'create', codes } }
   }
@@ -52,6 +71,16 @@ function parseOp(body: unknown): { ok: true; op: Op } | { ok: false; error: stri
       const expires = String(b.expires ?? '').trim()
       if (expires && !DATE_RE.test(expires)) return { ok: false, error: 'expires must be YYYY-MM-DD or empty.' }
       op.expires = expires
+    }
+    if ('track' in b) {
+      const track = parseTrack(b.track)
+      if (!track.ok) return track
+      op.track = track.track
+    }
+    if ('mode' in b) {
+      const mode = parseMode(b.mode, op.track)
+      if (!mode.ok) return mode
+      op.mode = mode.mode
     }
     if (Object.keys(op).length === 2) return { ok: false, error: 'Nothing to change.' }
     return { ok: true, op }

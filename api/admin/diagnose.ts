@@ -2,11 +2,12 @@
    Open /api/admin/diagnose while signed in, or paste the JSON to whoever is helping. */
 import { createClient } from '@vercel/global-config'
 import { unauthorised, who } from '../../lib/api.js'
+import { PRICES, monthOf, readSpend } from '../../lib/claude.js'
 import { guideEmail, sendEmail } from '../../lib/email.js'
 import { env, siteOrigin } from '../../lib/env.js'
 import { securityHeaders } from '../../lib/http.js'
 import { scriptConfigured, scriptGet } from '../../lib/script.js'
-import { connectionString, normaliseSettings, storeId } from '../../lib/settings.js'
+import { SETTINGS_KEYS, connectionString, normaliseSettings, storeId } from '../../lib/settings.js'
 
 const VARIABLES = [
   'SITE_ORIGIN',
@@ -14,7 +15,6 @@ const VARIABLES = [
   'OWNER_PASSWORD_HASH',
   'SESSION_SECRET',
   'TESTER_CODES',
-  'TESTERS_CAN_OPEN_PROTOS',
   'APPS_SCRIPT_URL',
   'APPS_SCRIPT_SECRET',
   'RESEND_API_KEY',
@@ -28,6 +28,9 @@ const VARIABLES = [
   'VERCEL_API_TOKEN',
   'VERCEL_TEAM_ID',
   'DEPLOY_HOOK_URL',
+  'ANTHROPIC_API_KEY',
+  'CLAUDE_MODEL',
+  'CLAUDE_MONTHLY_CAP_USD',
 ]
 
 const message = (e: unknown): string => (e instanceof Error ? e.message : String(e))
@@ -49,7 +52,7 @@ export async function GET(request: Request): Promise<Response> {
   let store: Record<string, unknown> = { connected: !!conn, id, read: 'skipped: no connection string' }
   if (conn) {
     try {
-      const raw = await timed(8000, createClient(conn).getAll(['mode', 'requireCode', 'testMode', 'landing']))
+      const raw = await timed(8000, createClient(conn).getAll([...SETTINGS_KEYS]))
       store = { connected: true, id, read: 'ok', raw, settings: normaliseSettings(raw) }
     } catch (err) {
       store = { connected: true, id, read: 'failed', error: message(err) }
@@ -86,6 +89,27 @@ export async function GET(request: Request): Promise<Response> {
     }
   }
 
+  /* the AI proxy: set up or not, and this month's estimated spend from the store */
+  let aiSpend: unknown = 'skipped: no store'
+  if (conn) {
+    try {
+      const raw = readSpend(await timed(8000, createClient(conn).get('aiSpend')))
+      aiSpend = raw && raw.month === monthOf(Date.now()) ? raw : { month: monthOf(Date.now()), usd: 0 }
+    } catch (err) {
+      aiSpend = { read: 'failed', error: message(err) }
+    }
+  }
+  const capUsd = Number(e.CLAUDE_MONTHLY_CAP_USD)
+  const ai = {
+    configured: !!(e.ANTHROPIC_API_KEY && e.CLAUDE_MODEL && capUsd > 0),
+    key: !!e.ANTHROPIC_API_KEY,
+    model: e.CLAUDE_MODEL || null,
+    modelPriced: e.CLAUDE_MODEL ? e.CLAUDE_MODEL in PRICES : null,
+    monthlyCapUsd: capUsd > 0 ? capUsd : null,
+    spendThisMonth: aiSpend,
+    note: 'until the key, the model and the cap are all set, /api/claude answers 503 and the AI features say they are unavailable',
+  }
+
   /* ?email=1 sends the guide email, with a dummy link, to the from address, and reports what Resend said */
   const url = new URL(request.url)
   let emailTest: Record<string, unknown> | undefined
@@ -115,6 +139,7 @@ export async function GET(request: Request): Promise<Response> {
     script,
     email: { configured: !!e.RESEND_API_KEY, from: e.MAIL_FROM || 'Decouple <hello@decouple.uk> (default)', test: emailTest ?? 'add ?email=1 to send the guide email to the from address and see what Resend says' },
     turnstile: { siteKey: !!e.TURNSTILE_SITE_KEY, secret: !!e.TURNSTILE_SECRET_KEY },
+    ai,
     deployHook: { configured: !!e.DEPLOY_HOOK_URL, looksRight: /^https:\/\/api\.vercel\.com\//.test(e.DEPLOY_HOOK_URL || '') },
     whatTheSwitchesNeed: ['GLOBAL_CONFIG (added by connecting the store)', 'VERCEL_API_TOKEN', 'then a redeploy'],
   }

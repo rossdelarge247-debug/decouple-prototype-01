@@ -1,16 +1,20 @@
 /* Routing middleware (spec §4). Runs in front of every request: the public allow-list goes
-   straight through, / and /guide pick the guide or the holding page, the aliases in §2 map to
-   files, and everything else needs the owner's session or returns a plain 404.
+   straight through, / and /guide pick the guide or the holding page, /take-part opens the
+   participant hub or its code page, the aliases in §2 map to files, and everything else needs the
+   owner's session, or a tester whose track includes it, or returns a plain 404.
    Web APIs only (fetch, crypto.subtle), so it runs on the Node runtime or the edge alike. */
 import { next, rewrite } from '@vercel/functions/middleware'
-import { ALIASES, FILES, decodePath, encodePath, isProtoPath } from './lib/aliases.js'
+import { ALIASES, FILES, RENAMED, decodePath, encodePath } from './lib/aliases.js'
 import { noteCodeUsed, redeemable, whoami } from './lib/auth.js'
-import { loginPath, sessionSecret, siteOrigin, testersCanOpenProtos } from './lib/env.js'
+import { loginPath, sessionSecret, siteOrigin } from './lib/env.js'
 import { NOT_FOUND_HTML } from './lib/generated/not-found.js'
 import { PUBLIC_PATHS } from './lib/generated/public.js'
 import { clientIp, securityHeaders } from './lib/http.js'
 import { isPublicPath, loadPublicList } from './lib/public.js'
+import { indexable, robotsTxt, sitemapXml } from './lib/search.js'
 import { testerCookie } from './lib/session.js'
+import { readSettings } from './lib/settings.js'
+import { trackAllows } from './lib/tracks.js'
 
 export const config = { runtime: 'nodejs' }
 
@@ -39,6 +43,29 @@ function serve(file: string, url: URL, headers: Record<string, string>): Respons
   return rewrite(new URL(encodePath(file), url), { headers })
 }
 
+/* The security headers, without the robots header where indexing allows it (spec §4.5) */
+function openHeaders(path: string, indexing: boolean): Record<string, string> {
+  const h = securityHeaders(false)
+  if (indexable(path, indexing)) delete h['x-robots-tag']
+  return h
+}
+
+/* ?code= on / and /take-part (spec §4.2): a valid code sets dc_tester and comes back without it */
+async function redeemFromLink(url: URL, back: string): Promise<Response> {
+  const to = new URL(back, url)
+  url.searchParams.forEach((v, k) => {
+    if (k !== 'code' && k !== 'code_error') to.searchParams.append(k, v)
+  })
+  const secret = sessionSecret()
+  const row = secret ? await redeemable(url.searchParams.get('code')) : null
+  if (row && secret) {
+    await noteCodeUsed(row.code)
+    return redirect(to.pathname + to.search, { 'set-cookie': await testerCookie(secret, row.label, row.code, row.test) })
+  }
+  to.searchParams.set('code_error', '1')
+  return redirect(to.pathname + to.search)
+}
+
 export default async function middleware(request: Request): Promise<Response> {
   const url = new URL(request.url)
   const path = url.pathname
@@ -56,26 +83,22 @@ export default async function middleware(request: Request): Promise<Response> {
   if (path === loginPath()) return serve(FILES.login, url, closed)
   if (path === '/favicon.ico') return next({ headers: open })
   if (path === '/holding') return serve(FILES.holding, url, { ...open, 'cache-control': HTML })
-  if (path === '/privacy') return serve(FILES.privacy, url, { ...open, 'cache-control': HTML })
+  if (path === '/privacy') {
+    const { indexing } = await readSettings()
+    return serve(FILES.privacy, url, { ...openHeaders(path, indexing), 'cache-control': HTML })
+  }
+  if (path === '/robots.txt' || path === '/sitemap.xml') {
+    const { indexing } = await readSettings()
+    const body = path === '/robots.txt' ? robotsTxt(indexing, PUBLIC, origin) : sitemapXml(indexing, origin)
+    if (body === null) return notFound()
+    const type = path === '/robots.txt' ? 'text/plain; charset=utf-8' : 'application/xml; charset=utf-8'
+    return new Response(body, { status: 200, headers: { ...open, 'content-type': type, 'cache-control': 'public, max-age=300' } })
+  }
   if (isPublicPath(path, PUBLIC)) return next({ headers: { ...open, 'cache-control': cacheFor(decoded) } })
 
   /* 2. the front door */
   if (path === '/' || path === '/guide') {
-    const code = url.searchParams.get('code')
-    if (code !== null) {
-      const back = new URL('/', url)
-      url.searchParams.forEach((v, k) => {
-        if (k !== 'code' && k !== 'code_error') back.searchParams.append(k, v)
-      })
-      const secret = sessionSecret()
-      const row = secret ? await redeemable(code) : null
-      if (row && secret) {
-        await noteCodeUsed(row.code)
-        return redirect(back.pathname + back.search, { 'set-cookie': await testerCookie(secret, row.label, row.code, row.test) })
-      }
-      back.searchParams.set('code_error', '1')
-      return redirect(back.pathname + back.search)
-    }
+    if (url.searchParams.has('code')) return redeemFromLink(url, '/')
     const who = await whoami(request, clientIp(request))
     let file: string = FILES.guide
     if (path === '/') {
@@ -84,15 +107,28 @@ export default async function middleware(request: Request): Promise<Response> {
       else file = who.settings.mode === 'guide' || who.tester || who.owner ? FILES.guide : FILES.holding
     }
     /* varies by cookie and by the switches, so never shared */
-    return serve(file, url, { ...open, 'cache-control': 'private, no-cache' })
+    return serve(file, url, { ...openHeaders(path, who.settings.indexing), 'cache-control': 'private, no-cache' })
   }
 
-  /* 3 and 4. aliases and every other file: the owner, or a tester opening a proto when allowed */
+  /* 2b. the participant hub: never a 404, so a participant who lost the cookie can type the code in.
+     A tester whose code has no track has nothing here and goes to the guide. */
+  if (path === '/take-part') {
+    if (url.searchParams.has('code')) return redeemFromLink(url, '/take-part')
+    const who = await whoami(request, clientIp(request))
+    if (who.owner || (who.tester && who.track)) return serve(FILES.takePart, url, closed)
+    if (who.tester) return redirect('/')
+    return serve(FILES.codePage, url, closed)
+  }
+
+  /* 3 and 4. aliases and every other file: the owner, or a tester whose track includes it */
   const who = await whoami(request, clientIp(request))
   const alias = ALIASES[path]
-  const target = alias ? alias.file : decoded.replace(/^\/+/, '')
-  const testerMayOpen = who.tester && testersCanOpenProtos() && isProtoPath('/' + target)
+  let target = alias ? alias.file : decoded.replace(/^\/+/, '')
+  const renamed = RENAMED[target]
+  if (renamed) target = renamed
+  const testerMayOpen = who.tester && trackAllows(who.track, target)
   if (!who.owner && !testerMayOpen) return notFound()
+  if (renamed) return redirect(encodePath(renamed) + url.search)
   if (alias) {
     if (alias.via === 'redirect') return redirect(encodePath(alias.file) + url.search)
     return serve(alias.file, url, closed)
