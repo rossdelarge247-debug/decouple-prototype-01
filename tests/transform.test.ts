@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bustCss, bustHtml, cssRefs, fontsHrefs, iife, leftovers, localRefs, parseFontsHref, resolveRef, scriptRefs, scripts, slugOf, stripBabelStandalone, swapFonts, swapReact } from '../lib/build/transform.mjs'
+import { addCanonical, bustCss, compiledNameFor, bustHtml, cssRefs, fontsHrefs, iife, leftovers, localRefs, parseFontsHref, resolveRef, rewriteInline, scriptRefs, scripts, slugOf, stripBabelStandalone, swapFonts, swapReact, unescapeAttr, withoutInlineScripts } from '../lib/build/transform.mjs'
 
 const FIXTURE = `<!doctype html>
 <html><head>
@@ -93,5 +93,35 @@ describe('the build transform on a fixture page', () => {
     expect(iife('(() => { })();')).toBe('(() => { })();')
     expect(slugOf('Proto 01 · Discover.html')).toBe('proto-01-discover')
     expect(slugOf('Marketing 02 · Divorce Guide.html')).toBe('marketing-02-divorce-guide')
+  })
+
+  it('reads links as the browser does, so a file name with & resolves (export 2026-10-14d)', () => {
+    expect(unescapeAttr('MVP 03 · To-do &amp; Journal.html')).toBe('MVP 03 · To-do & Journal.html')
+    expect(localRefs('<a href="MVP 03 · To-do &amp; Journal.html">x</a>')[0].path).toBe('MVP 03 · To-do & Journal.html')
+    expect(bustHtml('<script src="a&amp;b.js"></script>', (p: string) => (p === 'a&b.js' ? 'h1' : null))).toBe('<script src="a&amp;b.js?v=h1"></script>')
+  })
+
+  it('builds the public list from tags, not from what an inline script might load off the site', () => {
+    const html = '<script src="shared/dc-site.js"></script><script>if(!onSite){var s=document.createElement("script");s.src="proto/ut/ut-questions.js"}</script>'
+    expect(localRefs(withoutInlineScripts(html)).map((r) => r.path)).toEqual(['shared/dc-site.js'])
+  })
+
+  it('adds one canonical link to the head', () => {
+    const once = addCanonical('<html><head><title>x</title></head><body></body></html>', 'https://decouple.uk/')
+    expect(once).toContain('<link rel="canonical" href="https://decouple.uk/">\n</head>')
+    const twice = addCanonical(once, 'https://decouple.uk/privacy')
+    expect(twice.match(/canonical/g)).toHaveLength(1)
+    expect(twice).toContain('href="https://decouple.uk/privacy"')
+  })
+
+  it('rewrites inline scripts and styles, leaves JSON and src scripts alone, and drops HTML comments', () => {
+    const html = '<!-- about the prototype --><style>a { color: red }</style><script>/* how it works */ var a = 1</script><script type="application/json">{"k": 1}</script><script src="x.js"></script><p>keep <!-- note --> this</p>'
+    const out = rewriteInline(html, (js: string) => `JS(${js.trim()})`, (css: string) => `CSS(${css.trim()})`)
+    expect(out).toBe('<style>CSS(a { color: red })</style><script>JS(/* how it works */ var a = 1)</script><script type="application/json">{"k": 1}</script><script src="x.js"></script><p>keep  this</p>')
+  })
+
+  it('never compiles a JSX file over a script of the same name', () => {
+    expect(compiledNameFor('m02/guide/g-guide.jsx', new Set(['m02/guide/g-guide.jsx']))).toBe('m02/guide/g-guide.js')
+    expect(compiledNameFor('mvp/kit/kit.jsx', new Set(['mvp/kit/kit.js', 'mvp/kit/kit.jsx']))).toBe('mvp/kit/kit.jsx.js')
   })
 })

@@ -201,6 +201,8 @@ describe('middleware: private paths', () => {
     expect(isNext(await middleware(req('/Proto%2010%20%C2%B7%20Dashboard.html', { cookie: full })))).toBe(true)
     expect((await middleware(req(M05, { cookie: full }))).status).toBe(404)
 
+    for (const p of ['/proto%2F..%2FDecouple%20%C2%B7%20Results.html', '/mvp/%2e%2e/Decouple%20%C2%B7%20Site%20Settings.html']) expect((await middleware(req(p, { cookie: mvp }))).status, p).toBe(404)
+
     /* a code turned off takes its track with it */
     const off = await cookieFor('tester', { l: 'Old', c: 'CLAY-RIVER-81' })
     expect((await middleware(req(M05, { cookie: off }))).status).toBe(404)

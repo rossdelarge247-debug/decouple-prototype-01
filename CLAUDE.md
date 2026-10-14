@@ -28,6 +28,6 @@ npm test && npm run typecheck             # what CI runs, with the build
 
 ## Where things are
 
-`middleware.ts` (spec §4) · `api/*.ts` (§7) · `lib/` (§3 sessions and codes, §7 cleaning,
-settings, email) · `scripts/build.mjs` and `lib/build/transform.mjs` (§5) · `apps-script/` (§6)
+`middleware.ts` (spec §4) · `api/*.ts` (§7) · `lib/` (§3 sessions and codes, §4.4 tracks, §5.1 search,
+§7 cleaning, the AI proxy, settings, email) · `scripts/build.mjs` and `lib/build/transform.mjs` (§5) · `apps-script/` (§6)
 · `vercel.json` (§12.7) · `docs/HANDOFF-SITE-<n>.md` (the latest says what works and what is still to do; exports are logged in `docs/exports/`).

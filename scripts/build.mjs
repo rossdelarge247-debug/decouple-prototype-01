@@ -2,15 +2,18 @@
 /* The build (spec §5): site/ → dist/, fast and unchanged in behaviour.
    1. copy  2. compile every Babel script with esbuild, one IIFE each  3. production React from vendor/
    4. self-hosted fonts  5. cache-busting  6. the public allow-list  7. questions.json from the sheet
-   8. fail on anything left over or unresolved. Also copies the login and 404 pages from pages-src/. */
+   8. minify every script and stylesheet, comments out  9. canonical links on the public pages
+   10. fail on anything left over or unresolved. Also copies the login, code and 404 pages from pages-src/. */
 import { createRequire } from 'node:module'
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   FONT_PACKAGES,
+  addCanonical,
   bustCss,
   bustHtml,
+  compiledNameFor,
   cssRefs,
   fontFace,
   fontsHrefs,
@@ -20,6 +23,7 @@ import {
   localRefs,
   parseFontsHref,
   resolveRef,
+  rewriteInline,
   scriptRefs,
   scripts,
   slugOf,
@@ -48,6 +52,14 @@ const DIST = join(ROOT, 'dist')
 const GENERATED = join(ROOT, 'lib', 'generated')
 
 const PUBLIC_PAGES = ['Marketing 02 · Divorce Guide.html', 'Marketing 01 · Holding Page.html', 'privacy.html']
+/* spec §5.9: the guide and the holding page are both served at /, so both point there */
+const CANONICAL_ORIGIN = (process.env.SITE_ORIGIN || 'https://decouple.uk').replace(/\/+$/, '')
+const CANONICAL = {
+  'Marketing 02 · Divorce Guide.html': CANONICAL_ORIGIN + '/',
+  'Marketing 01 · Holding Page.html': CANONICAL_ORIGIN + '/',
+  'privacy.html': CANONICAL_ORIGIN + '/privacy',
+}
+const CSS_TARGET = ['chrome87', 'edge88', 'firefox78', 'safari14']
 const OWN_PAGES = ['studio.html', 'take-part-code.html', '404.html']
 const OWN_FILES = ['favicon.ico']
 
@@ -94,6 +106,10 @@ async function main() {
     cpSync(src, join(DIST, own))
   }
   log('copied site/ and pages-src/')
+  /* x.jsx compiles to x.js, unless the export has its own x.js beside it (export 2026-10-14d ships both
+     mvp/kit/kit.js and mvp/kit/kit.jsx): then to x.jsx.js, so neither overwrites the other */
+  const original = new Set(walk(DIST))
+  const compiledName = (jsx) => compiledNameFor(jsx, original)
 
   /* 3. React production builds */
   mkdirSync(join(DIST, 'vendor'), { recursive: true })
@@ -125,12 +141,13 @@ async function main() {
       if (s.src) {
         const from = resolveRef(page, s.src.split('?')[0])
         if (!inDist(from)) fail(`${page} loads ${s.src}, which does not exist`)
-        const js = from.replace(/\.jsx$/i, '.js')
+        const js = compiledName(from)
         if (!compiledJsx.has(from)) {
           write(js, await compile(read(from), from))
           compiledJsx.add(from)
         }
-        out = `<script src="${s.src.split('?')[0].replace(/\.jsx$/i, '.js')}"></script>`
+        const src = s.src.split('?')[0]
+        out = `<script src="${js === from + '.js' ? src + '.js' : src.replace(/\.jsx$/i, '.js')}"></script>`
       } else {
         n += 1
         const file = `inline/${slug}-${n}.js`
@@ -146,7 +163,7 @@ async function main() {
   }
   for (const jsx of compiledJsx) rmSync(join(DIST, jsx))
   for (const left of walk(DIST).filter((f) => f.endsWith('.jsx'))) {
-    write(left.replace(/\.jsx$/i, '.js'), await compile(read(left), left))
+    write(compiledName(left), await compile(read(left), left))
     rmSync(join(DIST, left))
   }
   log(`compiled ${compiledJsx.size} JSX files and the inline scripts of ${pages.length} pages`)
@@ -168,6 +185,40 @@ async function main() {
   }
   write('fonts.css', faces.join('\n') + '\n')
   log(`fonts.css: ${faces.length} faces from ${Object.keys(fontWants).length} families`)
+
+  /* 8. minify every script and stylesheet the export ships, and the inline ones, comments out.
+     Compiled JSX is minified already; vendor/ holds React's own production builds. Plain scripts
+     keep their top-level names, because the pages share them as globals. */
+  const minifyJs = (code, from, module = false) => {
+    try {
+      return esbuild.transformSync(code, { loader: 'js', minify: true, legalComments: 'none', target: 'es2019', ...(module ? { format: 'esm' } : {}) }).code.trim()
+    } catch (e) {
+      fail(`could not minify ${from}: ${e.message}`)
+    }
+  }
+  const minifyCss = (code, from) => {
+    try {
+      return esbuild.transformSync(code, { loader: 'css', minify: true, legalComments: 'none', target: CSS_TARGET }).code.trim()
+    } catch (e) {
+      fail(`could not minify ${from}: ${e.message}`)
+    }
+  }
+  const compiledJs = new Set([...compiledJsx].map(compiledName))
+  let minified = 0
+  for (const f of walk(DIST)) {
+    if (f.startsWith('vendor/') || f.startsWith('inline/') || compiledJs.has(f)) continue
+    if (f.endsWith('.js')) write(f, minifyJs(read(f), f) + '\n')
+    else if (f.endsWith('.css')) write(f, minifyCss(read(f), f) + '\n')
+    else continue
+    minified += 1
+  }
+  for (const page of pages) {
+    let html = rewriteInline(read(page), (js, module) => minifyJs(js, `${page} inline script`, module), (css) => minifyCss(css, `${page} inline style`))
+    /* 9. canonical links */
+    if (CANONICAL[page]) html = addCanonical(html, CANONICAL[page])
+    write(page, html)
+  }
+  log(`minified ${minified} scripts and stylesheets, and the inline ones of ${pages.length} pages`)
 
   /* 7. questions from the sheet. With nothing to write, an empty array goes out instead of no file:
      the page treats both the same (its built-in questions), and the empty file spares it a 404. */
@@ -204,7 +255,7 @@ async function main() {
     write(page, bustHtml(read(page), (p) => hashFor(resolveRef(page, p))))
   }
 
-  /* 8. nothing left over, everything resolves */
+  /* 10. nothing left over, everything resolves */
   const problems = []
   for (const page of pages) {
     const html = read(page)

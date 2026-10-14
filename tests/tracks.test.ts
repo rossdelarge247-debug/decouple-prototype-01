@@ -44,6 +44,10 @@ describe('tracks (spec §4.4)', () => {
     expect(trackAllows('', FILES.takePart)).toBe(false)
   })
 
+  it('refuses paths that climb out of a folder', () => {
+    for (const f of ['proto/../Decouple · Results.html', 'mvp/./../hub/hub-switch.js', 'proto\\..\\results/r-app.js', 'shared//x.js']) expect(trackAllows('mvp', f), f).toBe(false)
+  })
+
   it('names inline scripts the way the build does', () => {
     for (const f of [...PROTOS, ...MVPS, FILES.takePart, FILES.hub]) expect(slugOf(f), f).toBe(buildSlugOf(f))
     expect(slugOf('MVP 03 · To-do & Journal.html')).toBe('mvp-03-to-do-journal')

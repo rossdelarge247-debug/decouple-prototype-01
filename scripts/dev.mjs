@@ -2,7 +2,7 @@
 /* Local emulation of how Vercel serves the site: middleware.ts in front, then dist/ or api/.
    npm run build && npm run dev   →  http://localhost:3000
    Reads .env.local if present. With MOCK=1 (the default when APPS_SCRIPT_URL is not set) the
-   Google script, Global Config, the Vercel API, Resend and Turnstile are mocked in this process,
+   Google script, Global Config, the Vercel API, Resend, Turnstile and the Anthropic API are mocked in this process,
    so the spec §11 checks that do not need Vercel itself can be run here. State: GET /__mock. */
 import { createRequire } from 'node:module'
 import { createServer } from 'node:http'
@@ -33,14 +33,15 @@ process.env.SESSION_SECRET ||= 'local-development-secret-not-for-production'
 process.env.OWNER_PASSWORD_HASH ||= hashPassword(process.env.DEV_PASSWORD || 'decouple-dev')
 
 /* ── mocks: in-memory stand-ins for every service the site talks to ── */
+const SETTINGS = { mode: 'holding', requireCode: true, testMode: false, landing: 'a', indexing: false }
+const code = (c, label, track = '', mode = '', test = false) => ({ code: c, label, active: true, test, expires: '', created: new Date().toISOString(), uses: 0, last_used: '', track, mode })
 const mock = {
-  settings: { mode: 'holding', requireCode: true, testMode: false, landing: 'a' },
-  codes: [
-    { code: 'FERN-LARK-27', label: 'P01', active: true, test: false, expires: '', created: new Date().toISOString(), uses: 0, last_used: '' },
-    { code: 'MINT-OWL-12', label: 'Me · phone', active: true, test: true, expires: '', created: new Date().toISOString(), uses: 0, last_used: '' },
-  ],
+  settings: { ...SETTINGS },
+  codes: [code('FERN-LARK-27', 'P01'), code('MINT-OWL-12', 'Me · phone', '', '', true), code('OAK-WREN-40', 'P02', 'mvp', 'un'), code('ASH-FINCH-55', 'P03', 'p03,m05', 'mod'), code('ELM-TERN-60', 'P04', 'full', 'un')],
   tabs: {},
   signups: [],
+  participants: [],
+  ai: [],
   questions: [],
   emails: [],
   seen: new Set(),
@@ -64,12 +65,16 @@ function mockScript(url, init) {
       mock.signups.push({ received_at: new Date().toISOString(), email: b.email, stage: b.stage, source: b.source, sid: b.sid })
       return jsonRes({ ok: true })
     }
+    if (b.kind === 'participant') {
+      mock.participants.push({ received_at: new Date().toISOString(), pid: b.pid, sid: b.sid, email: b.email, followup: b.followup, voucher: b.voucher })
+      return jsonRes({ ok: true })
+    }
     if (b.kind === 'codes') {
       if (b.op === 'create') for (const c of b.codes) {
         if (mock.codes.some((x) => x.code === c.code)) return jsonRes({ ok: false, error: c.code + ' already exists' })
-        mock.codes.unshift({ code: c.code, label: c.label, active: true, test: !!c.test, expires: c.expires || '', created: new Date().toISOString(), uses: 0, last_used: '' })
+        mock.codes.unshift({ ...code(c.code, c.label, c.track || '', c.mode || '', !!c.test), expires: c.expires || '' })
       }
-      if (b.op === 'update') mock.codes = mock.codes.map((x) => (x.code === b.code ? { ...x, ...Object.fromEntries(Object.entries(b).filter(([k]) => ['active', 'test', 'label', 'expires'].includes(k))) } : x))
+      if (b.op === 'update') mock.codes = mock.codes.map((x) => (x.code === b.code ? { ...x, ...Object.fromEntries(Object.entries(b).filter(([k]) => ['active', 'test', 'label', 'expires', 'track', 'mode'].includes(k))) } : x))
       if (b.op === 'delete') mock.codes = mock.codes.filter((x) => x.code !== b.code)
       return jsonRes({ ok: true, codes: mock.codes })
     }
@@ -85,6 +90,7 @@ function mockScript(url, init) {
   if (action === 'questions') return jsonRes({ ok: true, questions: mock.questions })
   if (action === 'results') {
     const test = u.searchParams.get('test')
+    /* like the script: Participants, Signups and Codes are never answer tabs */
     const rows = (test ? mock.tabs[test] || [] : Object.values(mock.tabs).flat()).map((r) => ({ sid: r.sid, pid: r.pid, test: r.test, step: r.step, price: r.price, landing: r.landing, qid: r.qid, qv: r.qv, q: r.question, type: r.type, a: r.answer, at: r.received_at, device: r.device }))
     const byStage = {}
     const byDay = Array(28).fill(0)
@@ -108,13 +114,28 @@ if (MOCK) {
     TURNSTILE_SECRET_KEY: 'mock',
     TURNSTILE_SITE_KEY: '1x00000000000000000000AA',
     DEPLOY_HOOK_URL: 'https://api.vercel.com/v1/integrations/deploy/mock/mock',
+    ANTHROPIC_API_KEY: 'mock',
+    CLAUDE_MODEL: process.env.CLAUDE_MODEL || 'claude-opus-5-5',
+    CLAUDE_MONTHLY_CAP_USD: process.env.CLAUDE_MONTHLY_CAP_USD || '50',
   })
   const real = globalThis.fetch
   globalThis.fetch = async (input, init) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
     const host = new URL(url).host
     if (host === 'script.google.com') return mockScript(url, init)
-    if (host === 'global-config.vercel.com' || host === 'edge-config.vercel.com') return jsonRes(mock.settings)
+    if (host === 'global-config.vercel.com' || host === 'edge-config.vercel.com') {
+      const item = new URL(url).pathname.match(/\/item\/([^/]+)$/)
+      if (!item) return jsonRes(mock.settings)
+      const key = decodeURIComponent(item[1])
+      return key in mock.settings ? jsonRes(mock.settings[key]) : new Response('', { status: 404, headers: { 'x-edge-config-digest': 'mock' } })
+    }
+    if (host === 'api.anthropic.com') {
+      const b = JSON.parse(String(init?.body || '{}'))
+      const last = (b.messages || []).at(-1)
+      /* content stays in this process; the log below counts it, as the real proxy does */
+      mock.ai.push({ at: new Date().toISOString(), model: b.model, max_tokens: b.max_tokens, messages: (b.messages || []).length, fallbacks: b.fallbacks || null, effort: b.output_config?.effort || null })
+      return jsonRes({ id: 'msg_mock', type: 'message', role: 'assistant', model: b.model, stop_reason: 'end_turn', stop_sequence: null, content: [{ type: 'text', text: `(mock reply to a ${String(last?.content || '').length}-character question)` }], usage: { input_tokens: 400, output_tokens: 120, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 } })
+    }
     if (host === 'api.vercel.com') {
       if (url.includes('/global-config/') || url.includes('/edge-config/')) {
         for (const it of JSON.parse(String(init?.body || '{}')).items || []) mock.settings[it.key] = it.value
@@ -179,9 +200,11 @@ async function handle(request) {
   if (url.pathname === '/__mock/reset') {
     mock.tabs = {}
     mock.signups = []
+    mock.participants = []
+    mock.ai = []
     mock.emails = []
     mock.seen = new Set()
-    mock.settings = { mode: 'holding', requireCode: true, testMode: false, landing: 'a' }
+    mock.settings = { ...SETTINGS }
     return jsonRes({ ok: true })
   }
   const mw = await middleware(request)

@@ -52,6 +52,8 @@ export function trackFiles(track: string | undefined): Set<string> {
 export function trackAllows(track: string | undefined, file: string): boolean {
   const pages = trackFiles(track)
   if (!pages.size) return false
+  /* "proto%2F..%2FDecouple · Results.html" decodes to a path that starts with proto/ but isn't in it */
+  if (file.includes('\\') || file.split('/').some((seg) => seg === '..' || seg === '.' || seg === '')) return false
   if (pages.has(file) || file === FILES.takePart) return true
   if (TRACK_DIRS.some((d) => file.startsWith(d))) return true
   const m = file.match(/^inline\/(.+)-\d+\.js$/)
