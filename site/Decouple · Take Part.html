@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Decouple — Research session</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="mvp/kit/kit.css">
+<link rel="stylesheet" href="take-part/tp.css">
+<style>html,body{margin:0;background:#FAFAF7}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script>window.Journey = { STAGES: [], get: () => ({}), set: () => {}, subscribe: () => () => {}, goStage: () => false, embedded: true };</script>
+<script src="shared/dc-site.js"></script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="take-part/tp-data.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="take-part/tp.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+/* Take part · the participant hub (address /take-part on decouple.uk). Tester-only; never links to the owner's hubs.
+   On the site, track, mode and label come from the tester code (/api/session). Owners, and the design project, preview with
+   ?track=mvp|full|p03,m05 &mode=un|mod &pid=P07, or ?code=<a code made in Site settings' preview>. */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "track": "mvp",
+  "mode": "un"
+}/*EDITMODE-END*/;
+const { useState, useEffect } = React;
+const qp = new URLSearchParams(location.search);
+const sidOf = () => { const u = UT.get(); return u.sid || "S-" + Date.now().toString(36).toUpperCase(); };
+function localCode(code) { try { const c = ((JSON.parse(localStorage.getItem("decouple.site.v1")) || {}).codes || []).find((x) => x.code === String(code).trim().toUpperCase()); return c || null; } catch (e) { return null; } }
+function Root() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [who, setWho] = useState(null);
+  useEffect(() => { (async () => {
+    const s = await DC.session();
+    if (s && s.tester) return setWho({ pid: s.label || "tester", track: s.track || "", mode: s.trackMode || "un", sid: sidOf() });
+    const c = qp.get("code") && localCode(qp.get("code"));
+    if (c) return setWho({ pid: c.label || c.code, track: c.track || "", mode: c.mode || "un", sid: sidOf(), preview: !s });
+    setWho({ pid: qp.get("pid") || "P-preview", track: qp.get("track") || t.track, mode: qp.get("mode") || t.mode, sid: sidOf(), preview: true });
+  })(); }, [t.track, t.mode]);
+  if (!who) return null;
+  return <>
+    <TPApp key={who.track + who.mode + who.pid} who={who}/>
+    <TweaksPanel title="Tweaks · Take part">
+      <TweakSection label="Preview as"/>
+      <TweakSelect label="Track" value={t.track} options={[{ value: "mvp", label: "MVP · 8" }, { value: "full", label: "Full vision · 10" }, { value: "p03,p06,m05", label: "Chosen: 03, 06, M05" }, { value: "", label: "Guide only" }]} onChange={(v) => setTweak("track", v)}/>
+      <TweakRadio label="Session" value={t.mode} options={[{ value: "un", label: "On their own" }, { value: "mod", label: "With me" }]} onChange={(v) => setTweak("mode", v)}/>
+      <TweakButton label="Back to the start" onClick={() => { localStorage.setItem(TPKEY, JSON.stringify({ step: "welcome", pid: who.pid })); location.reload(); }}/>
+      <TweakButton label="Jump to the session list" onClick={() => { localStorage.setItem(TPKEY, JSON.stringify({ step: "session", persona: "sarah", pid: who.pid })); location.reload(); }}/>
+    </TweaksPanel>
+  </>;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Root/>);
+</script>
+</body>
+</html>

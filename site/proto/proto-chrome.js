@@ -9,6 +9,8 @@
     if (d.type === "decouple:goStage" && J.embedded && window.parent !== window) window.parent.postMessage(d, "*");
   });
   if (J.embedded) return;
+  /* participants (from the Take part hub) never see the owner's prototype bar */
+  try { const u = JSON.parse(localStorage.getItem("decouple.ut.v1")) || {}; if (u.participant && u.on) return; } catch (e) {}
   const stageId = document.documentElement.dataset.stage;
   const stage = J.STAGES.find((s) => s.id === stageId) || { n: "—", name: "" };
   const css = `

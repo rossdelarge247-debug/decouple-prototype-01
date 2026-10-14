@@ -26,6 +26,7 @@ import {
   stripBabelStandalone,
   swapFonts,
   swapReact,
+  withoutInlineScripts,
 } from '../lib/build/transform.mjs'
 
 const require = createRequire(import.meta.url)
@@ -252,7 +253,7 @@ async function main() {
   for (const page of PUBLIC_PAGES) {
     if (!inDist(page)) fail(`public page ${page} is missing from the export`)
     add(page)
-    for (const r of localRefs(read(page))) {
+    for (const r of localRefs(withoutInlineScripts(read(page)))) {
       const t = resolveRef(page, r.path)
       if (t.endsWith('.css')) visitCss(t)
       else if (t.endsWith('.js')) visitJs(t)

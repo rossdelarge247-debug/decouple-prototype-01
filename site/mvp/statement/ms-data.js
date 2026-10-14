@@ -1,14 +1,14 @@
-/* MVP 01 · Shared statement — store, schema, example couple, flag engine.
-   State: decouple.mvp01.v1 only (never the full-vision journey key). A Journey stub lets ut.js and proto-chrome.js work unchanged. */
+/* MVP 05 · Financial statement (was MVP 01 · Shared statement) — store, schema, example couple, flag engine.
+   State: decouple.mvp05.v1 only (never the full-vision journey key). A Journey stub lets ut.js and proto-chrome.js work unchanged. */
 window.Journey = (function () {
-  const KEY = "decouple.mvp01.v1", subs = new Set();
-  const STAGES = [{ id: "mvp01", n: "MVP 01", name: "Shared statement", sub: "MVP · financial disclosure", file: "MVP 01 · Shared Statement.html", built: true }];
+  const KEY = "decouple.mvp05.v1", subs = new Set();
+  const STAGES = [{ id: "mvp05", n: "MVP 05", name: "Financial statement", sub: "MVP · financial disclosure", file: "MVP 05 · Financial Statement.html", built: true }];
   let mem = {};
   return { STAGES, KEY, get: () => mem, set: (s, p) => { mem = { ...mem, [s]: { ...(mem[s] || {}), ...p } }; }, reset: () => { localStorage.removeItem(KEY); subs.forEach((f) => f()); }, goStage: () => false, subscribe: (f) => (subs.add(f), () => subs.delete(f)), embedded: new URLSearchParams(location.search).has("embed") };
 })();
 
 window.MS = (function () {
-  const KEY = "decouple.mvp01.v1";
+  const KEY = "decouple.mvp05.v1";
   const CATS = [
     { id: "home", t: "Property", form: "Form E 2.1–2.2", ic: "Home", q: "Do you own a home or any other property?", help: "Include property in your name, in joint names, or abroad.", doc: "an estate agent’s valuation and your latest mortgage statement" },
     { id: "accounts", t: "Bank & savings", form: "Form E 2.3", ic: "Bank", q: "Do you have any bank or savings accounts?", help: "Every account in your name or joint names, even if it’s nearly empty.", doc: "12 months of statements" },

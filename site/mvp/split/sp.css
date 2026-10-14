@@ -1,0 +1,32 @@
+/* MVP 06 · Split planner. On discover.css + kit.css. Sky = this tool; violet = Sarah, sky = Mark */
+.sp-fig{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;margin-top:26px;align-items:start}
+.sp-tbl{background:#FFF;border:1px solid var(--line);border-radius:20px;padding:6px 20px}.sp-tbl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) 130px;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid #F4F2EE}.sp-tbl b{font-size:14.5px}.sp-tbl small{font-size:13px;color:var(--sub)}.sp-tbl span{text-align:right;font:600 16px 'Source Serif Pro',Georgia,serif;font-variant-numeric:tabular-nums}
+.sp-tbl .tot{border-bottom:0}.sp-tbl .tot span{font-size:20px;color:#0369A1}
+.sp-figa{position:sticky;top:90px;display:grid;gap:12px;padding:22px;border-radius:20px;background:#E0F2FE;border:1px solid #BAE6FD}.sp-figa>b{font-size:19px}.sp-figa p{margin:0;font-size:13.5px;line-height:1.55;color:#0C4A6E}.sp-figa .kit-lnk{justify-self:center}.sp-figa .btn{justify-content:center}
+.sp-cols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;margin-top:26px;align-items:start}
+.sp-list{display:grid;gap:12px}
+.sp-card{background:#FFF;border:1px solid var(--line);border-radius:20px;padding:20px 22px;display:grid;gap:16px}
+.sp-card .hd{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:12px;align-items:center}.sp-card .ic{width:38px;height:38px;border-radius:11px;background:#E0F2FE;color:#0369A1;display:grid;place-items:center}.sp-card h3{margin:0;font-size:19px;font-weight:600}.sp-card .hd small{display:block;margin-top:2px;font-size:12.5px;color:var(--mute)}
+.sp-tag{display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
+.sp-card .why{display:flex;gap:7px;align-items:flex-start;margin:0;font-size:13px;line-height:1.5;color:var(--sub)}.sp-card .why svg{flex-shrink:0;margin-top:3px}
+.sp-card .kit-lnk{justify-self:start;margin-top:-6px}
+.sp-opts{display:flex;flex-wrap:wrap;gap:6px}.sp-opts button{all:unset;cursor:pointer;padding:9px 14px;border-radius:12px;border:1.5px solid var(--line);background:#FFF;display:grid;gap:1px}.sp-opts button:hover{border-color:#7DD3FC}.sp-opts button.on{border-color:#0369A1;background:#F0F9FF}.sp-opts b{font-size:13.5px;font-weight:600}.sp-opts small{font-size:11.5px;color:var(--mute)}
+.sp-slide{display:grid;gap:8px}.sp-slide .ends{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-variant-numeric:tabular-nums}.sp-slide .ends span:first-child b{color:#5B21B6}.sp-slide .ends span:last-child b{color:#0369A1}
+.sp-slide input{-webkit-appearance:none;appearance:none;width:100%;height:10px;border-radius:99px;background:linear-gradient(90deg,#5B21B6 0,#5B21B6 var(--p),#0369A1 var(--p),#0369A1 100%);outline:none;margin:6px 0}
+.sp-slide input::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:99px;background:#FFF;border:2px solid #17141F;box-shadow:0 2px 6px rgba(0,0,0,.2);cursor:grab}.sp-slide input::-moz-range-thumb{width:24px;height:24px;border-radius:99px;background:#FFF;border:2px solid #17141F;cursor:grab}
+.sp-slide input:focus-visible::-webkit-slider-thumb{outline:3px solid #C4B5FD}
+.sp-kids{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 18px;border-radius:16px;background:#FDF2F8;border:1px solid #FBCFE8;color:#9D174D}.sp-kids b{font-size:14px;color:var(--ink)}.sp-kids p{margin:2px 0 0;font-size:13px;color:var(--sub)}
+.sp-out{margin:4px 0 0;font-size:12.5px;line-height:1.5;color:var(--mute)}
+.sp-rail{position:sticky;top:88px}
+.sp-sum{background:#FFF;border:1px solid var(--line);border-radius:22px;padding:20px;display:grid;gap:14px;box-shadow:0 24px 50px -32px rgba(40,20,80,.35)}
+.sp-sum .bar{height:14px;border-radius:99px;background:#0369A1;overflow:hidden}.sp-sum .bar i{display:block;height:100%;background:#5B21B6;transition:width .25s}
+.sp-sum .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sp-sum .two>div{padding:12px;border-radius:14px;background:#F5F3FF}.sp-sum .two>div.b{background:#F0F9FF;text-align:right}.sp-sum .two small{display:block;font-size:12px;color:var(--mute)}.sp-sum .two b{display:block;margin-top:2px;font-size:22px;font-variant-numeric:tabular-nums}.sp-sum .two span{font-size:13px;font-weight:600;color:var(--sub)}
+.sp-sum .ov{display:grid;gap:8px;padding:12px 14px;border-radius:14px;background:#FAFAF7}.sp-sum .ov .sp-tag{justify-self:start}.sp-sum .ov p{margin:0;font-size:13px;line-height:1.5;color:var(--sub)}
+.sp-sum .btn{justify-content:center}.sp-sum .kit-lnk{justify-self:center}.sp-sum .how{margin:0;font-size:12.5px;line-height:1.55;color:var(--sub)}
+.sp-agree{margin-top:26px;background:#FFF;border:1px solid var(--line);border-radius:22px;padding:24px 26px}
+.sp-agree .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line)}.sp-agree h2{margin:8px 0 0;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+.sp-agree .row{display:grid;grid-template-columns:160px minmax(0,1fr) auto;gap:16px;align-items:start;padding:14px 0;border-bottom:1px solid #F4F2EE}.sp-agree .row b{font:600 15px 'Source Serif Pro',Georgia,serif;color:#0369A1}.sp-agree .row p{margin:0;font-size:14.5px;line-height:1.55}
+.sp-agree .ft{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}.sp-agree .ft span{font-size:12.5px;color:var(--mute)}
+.sp-doors{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.sp-doors .kit-fd{grid-template-columns:40px minmax(0,1fr)}.sp-doors .kit-fd .btn{grid-column:1/-1;justify-content:center}
+@media (max-width:980px){.sp-fig,.sp-cols{grid-template-columns:1fr}.sp-rail,.sp-figa{position:static}.sp-doors{grid-template-columns:1fr}}
+@media (max-width:640px){.sp-tbl>div{grid-template-columns:minmax(0,1fr) auto}.sp-tbl small{grid-column:1;grid-row:2}.sp-card{padding:18px}.sp-card .hd{grid-template-columns:38px minmax(0,1fr)}.sp-card .hd .sp-tag{grid-column:2;justify-self:start}.sp-agree{padding:20px 18px}.sp-agree .row{grid-template-columns:1fr}.sp-agree .row .sp-tag{justify-self:start}.sp-kids{grid-template-columns:18px minmax(0,1fr)}.sp-kids .btn{grid-column:2;justify-self:start}}

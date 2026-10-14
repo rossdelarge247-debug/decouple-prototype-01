@@ -75,7 +75,7 @@ window.UT = (function () {
     const at = new Date().toISOString(), device = `${innerWidth}×${innerHeight} · ${navigator.userAgent.match(/(Firefox|Edg|Chrome|Safari)\/[\d.]+/)?.[0] || "browser"}`;
     const rows = answers.map((x) => ({ sid: S.sid, pid: S.pid, proto: `${st.n} ${st.name}${probe ? " · " + probe : ""}`, qid: x.id, question: x.q, type: x.type, answer: x.a, at, device }));
     save(probe ? { local: [...(read().local || []), ...rows] } : { local: [...(read().local || []), ...rows], done: { ...(read().done || {}), [st.id]: at } });
-    if (window.DC && rows.length) { window.DC.send({ sid: S.sid, pid: S.pid, test: "Prototype testing", step: rows[0].proto, rows: rows.map((r) => ({ qid: r.qid, qv: 1, q: r.question, type: r.type, a: r.answer })) }); return true; }
+    if (window.DC && rows.length) { window.DC.send({ sid: S.sid, pid: S.pid, test: /^MVP \d{2}$/.test(st.n) ? `${st.n} · ${st.name}` : "Prototype testing", step: rows[0].proto, rows: rows.map((r) => ({ qid: r.qid, qv: 1, q: r.question, type: r.type, a: r.answer })) }); return true; }
     const ok = await Promise.all(rows.map(post)); return ok.every(Boolean) && rows.length > 0;
   }
 
@@ -176,7 +176,7 @@ window.UT = (function () {
     const cur = stageOf(document.documentElement.dataset.stage); if (!cur) return;
     const b = document.createElement("div"); b.className = "ut-badge";
     b.innerHTML = `<div class="ut-pill"><span class="t"><i></i>Testing · <b>${esc(S.pid)}</b></span><button type="button" data-fin>${cur.id === "dashboard" ? "Finish session" : "Finish this part"}</button></div>`;
-    b.querySelector("[data-fin]").onclick = () => { closeProbe(); const ci = STAGES.indexOf(cur), nx = STAGES[ci + 1]; nx ? J.goStage(nx.id) : end(cur.id, null, null); };
+    b.querySelector("[data-fin]").onclick = () => { closeProbe(); if (S.hub) return end(cur.id, null, toHub); const ci = STAGES.indexOf(cur), nx = STAGES[ci + 1]; nx ? J.goStage(nx.id) : end(cur.id, null, null); };
     document.body.appendChild(b); dwell(cur, b);
   }
 
@@ -209,6 +209,9 @@ window.UT = (function () {
     render();
   }
 
+  /* participant sessions (Decouple · Take Part.html): finishing a part goes back to their hub, and only their track continues forward */
+  const toHub = () => { const h = read().hub; if (h) location.href = h; };
+
   /* ---------- wire up ---------- */
   if (J && !J.embedded) {
     const orig = J.goStage, cur = () => document.documentElement.dataset.stage;
@@ -216,6 +219,8 @@ window.UT = (function () {
       S = read(); if (!S.on) return orig(id, hash);
       const from = stageOf(cur()), to = stageOf(id); if (!from || !to) return orig(id, hash);
       const fi = STAGES.indexOf(from), ti = STAGES.indexOf(to), fwd = ti === fi + 1 || (ti > fi && to.id !== "dashboard");
+      const hubOnly = S.hub && Array.isArray(S.track) && !S.track.includes(to.id);
+      if (hubOnly) { end(from.id, null, toHub); return true; }
       if (!fwd || (read().done || {})[from.id]) return orig(id, hash);
       if (!S.pid) { start(() => end(from.id, id, () => orig(id, hash))); return true; }
       end(from.id, id, () => orig(id, hash)); return true;
@@ -226,8 +231,8 @@ window.UT = (function () {
 
   return {
     get: () => read(), on: () => !!read().on, set: save, subscribe: (f) => (subs.add(f), () => subs.delete(f)),
-    setOn: (v) => save({ on: !!v }), load, parseCSV, defaults: D, source: () => tableSrc, formMap, end, start, upNext, probe: () => { const c = stageOf(document.documentElement.dataset.stage), h = document.querySelector(".ut-badge"); if (c && h && !probeEl) show(c, h, 0, false); },
-    newSession: () => save({ pid: null, sid: null, done: {} }),
+    setOn: (v) => save(v ? { on: true } : { on: false, participant: false, hub: null, track: null }), load, parseCSV, defaults: D, source: () => tableSrc, formMap, end, start, upNext, probe: () => { const c = stageOf(document.documentElement.dataset.stage), h = document.querySelector(".ut-badge"); if (c && h && !probeEl) show(c, h, 0, false); },
+    newSession: () => save({ pid: null, sid: null, done: {}, participant: false, hub: null, track: null }),
     participantLink: (base) => { const c = {}; if (sheetUrl()) c.sheet = sheetUrl(); if (formUrl()) c.form = formUrl(); const u = new URL(base || "Proto 01 · Discover.html", location.href); u.searchParams.set("test", "1"); if (Object.keys(c).length) u.searchParams.set("cfg", btoa(unescape(encodeURIComponent(JSON.stringify(c))))); return u.href; },
     exportCSV: () => { const rows = read().local || [], h = ["sid", "pid", "proto", "qid", "question", "type", "answer", "at", "device"], q = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`; return [h.join(","), ...rows.map((r) => h.map((k) => q(r[k])).join(","))].join("\n"); },
     clearLocal: () => save({ local: [] }),

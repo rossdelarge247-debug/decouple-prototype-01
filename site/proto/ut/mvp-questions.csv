@@ -1,0 +1,76 @@
+proto,order,id,type,question,options,required,active
+mvp05,0,m5-in,intro,"The money step. Fill in your side of a financial statement with exact figures (no bank connection), invite your partner, check both sides together, agree it's complete, then see the finished pack.",10 min,,y
+mvp05,1,m5-r1,recap,Filled in your side of the statement with exact figures and where they came from,,,y
+mvp05,2,m5-r2,recap,Saw both sides together and sorted out what was missing or didn't match,,,y
+mvp05,3,m5-r3,recap,Agreed it was complete and saw the finished disclosure pack and its price,,,y
+mvp05,4,m5-q1,ease7,How easy was it to give exact figures for each thing?,,y,y
+mvp05,5,m5-q2,choice,"Where you couldn't give an exact figure, what did you do?",Guessed|Ticked 'don't know yet'|Stopped to look it up|Didn't notice,n,y
+mvp05,6,m5-q3,rating5,How useful were the flags (missing / doesn't match) for spotting problems?,,y,y
+mvp05,7,m5-q4,yesno,Would you be comfortable inviting your partner to this?,,y,y
+mvp05,8,m5-q5,choice,Which would you take to the next step?,Open financial statement|D81 figures|Form E draft|None of these,n,y
+mvp05,9,m5-q6,rating5,"Compared with sending spreadsheets by email, how much better is this?",,y,y
+mvp05,10,m5-q7,choice,What would you pay for the finished disclosure pack?,Nothing|Up to £30|£30–£50|£50–£80|More than £80,n,y
+mvp05,11,m5-q8,yesno,Would you rather the bank connection filled it in for you?,,n,y
+mvp00,0,m0-in,intro,"The toolkit's public pages. Look around as if you'd just found it: what it is, what's free, what costs money, and whether it's safe. Then start the free guide.",4 min,,y
+mvp00,1,m0-r1,recap,Looked around the public pages,,,y
+mvp00,2,m0-r2,recap,Found what's free and what costs money,,,y
+mvp00,3,m0-r3,recap,Started the free guide,,,y
+mvp00,4,m0-q1,rating5,How clear was what Decouple is?,,y,y
+mvp00,5,m0-q2,rating5,"How clear was what's free, what needs an account, and what costs money?",,y,y
+mvp00,6,m0-q3,choice,What would most make you trust it?,That it's free to try|No account to start|The safety and privacy page|The 'is it right for us?' check|Nothing yet,n,y
+mvp00,7,m0-q4,yesno,Did having to start with the guide put you off?,,y,y
+mvp00,8,m0-q5,choice,Which page would you look at first?,How it works|The tools|Prices|Is it right for us?|Safety & privacy|FAQ,n,y
+mvp01,0,m1-in,intro,"A free divorce toolkit. See the landing page, get your guide, save your toolkit and look around the tools in it.",4 min,,y
+mvp01,1,m1-r1,recap,Saw what the toolkit offers and what costs money,,,y
+mvp01,2,m1-r2,recap,Got your guide and chose whether to save your toolkit,,,y
+mvp01,3,m1-r3,recap,Looked around the toolkit home,,,y
+mvp01,4,m1-q1,rating5,How clear was what's free and what you'd pay for?,,y,y
+mvp01,5,m1-q2,rating5,"How well does ""Your divorce toolkit"" describe it?",,y,y
+mvp01,6,m1-q3,yesno,Would you create a free account to save your toolkit?,,y,y
+mvp01,7,m1-q4,choice,What would most make you trust it with your details?,The privacy promises|Knowing who's behind it|Reviews from people like me|Being regulated|Nothing would,n,y
+mvp01,8,m1-q5,choice,Which tool would you open first?,Is doing it ourselves right for us?|To-do list & journal|Parenting plan|Financial statement|Split planner|Ask,y,y
+mvp01,9,m1-q6,rating5,How likely are you to come back to it over the coming months?,,y,y
+mvp01,10,m1-q7,yesno,Is anything missing that you'd expect in a divorce toolkit?,,n,y
+mvp02,0,m2-in,intro,"Before you begin: fifteen honest questions about safety, control, how you talk and how complicated things are. At the end it says plainly whether to get advice first. Answer as yourself, or as someone you imagine.",5 min,,y
+mvp02,1,m2-r1,recap,Answered questions about safety and control,,,y
+mvp02,2,m2-r2,recap,Answered questions about how you talk and your situation,,,y
+mvp02,3,m2-r3,recap,Saw a result: get advice first / get help with some parts / it could work,,,y
+mvp02,4,m2-q1,rating5,How comfortable were the safety questions to answer?,,y,y
+mvp02,5,m2-q2,rating5,How much did you trust the result?,,y,y
+mvp02,6,m2-q3,yesno,Did anything feel judgemental?,,y,y
+mvp02,7,m2-q4,yesno,Would you be worried about someone seeing this on your phone?,,y,y
+mvp02,8,m2-q5,choice,Where would you want this check?,Before the guide|After the guide|In the toolkit|Nowhere,n,y
+mvp03,0,m3-in,intro,"Get organised: a to-do list made from your guide, and a private journal with a companion you can talk an entry through with.",5 min,,y
+mvp03,1,m3-r1,recap,Looked through the to-do list and ticked something off,,,y
+mvp03,2,m3-r2,recap,Wrote or read a journal entry,,,y
+mvp03,3,m3-r3,recap,Talked an entry through with the companion,,,y
+mvp03,4,m3-q1,rating5,How useful was a to-do list made from your guide?,,y,y
+mvp03,5,m3-q2,yesno,Would you keep a journal here?,,y,y
+mvp03,6,m3-q3,rating5,How helpful was the companion?,,n,y
+mvp03,7,m3-q4,choice,What would bring you back each week?,The to-do list|The journal|Reminders|Nothing,n,y
+mvp04,0,m4-in,intro,"The children: build a parenting plan, from where they live to holidays and money, then see it as one document.",6 min,,y
+mvp04,1,m4-r1,recap,Chose a pattern for where the children live,,,y
+mvp04,2,m4-r2,recap,"Set out handovers, holidays and decisions",,,y
+mvp04,3,m4-r3,recap,Saw the finished plan,,,y
+mvp04,4,m4-q1,ease7,How easy was it to set out the arrangements?,,y,y
+mvp04,5,m4-q2,rating5,How useful was the two-week calendar?,,y,y
+mvp04,6,m4-q3,yesno,Would you share this plan with your partner?,,y,y
+mvp04,7,m4-q4,yesno,Is anything missing from the plan?,,n,y
+mvp04,8,m4-q5,choice,Should it come before the money in the toolkit?,Yes|No|Doesn't matter,n,y
+mvp06,0,m6-in,intro,"Agree what's fair: try different splits of the home, pensions, savings and debts, and see how a court would likely see each. Then the agreement and its finished pack.",6 min,,y
+mvp06,1,m6-r1,recap,Tried different splits and watched the tags change,,,y
+mvp06,2,m6-r2,recap,Read the agreement summary,,,y
+mvp06,3,m6-r3,recap,Saw the agreement pack and its price,,,y
+mvp06,4,m6-q1,rating5,How well did you understand the Strong / Reasonable / A stretch tags?,,y,y
+mvp06,5,m6-q2,rating5,How much would you trust them?,,y,y
+mvp06,6,m6-q3,yesno,Did it feel like advice on what you should do?,,y,y
+mvp06,7,m6-q4,choice,What would you pay for the finished agreement pack?,Nothing|Up to £80|£80–£150|£150–£250|More than £250,n,y
+mvp06,8,m6-q5,yesno,Would you still want a solicitor to check it?,,y,y
+mvp07,0,m7-in,intro,"Ask: an AI sounding board with five modes. Try at least two: ask a question, get ready for a meeting, explain a letter, calm a message, or talk something through.",6 min,,y
+mvp07,1,m7-r1,recap,Asked a question and read the answer and its sources,,,y
+mvp07,2,m7-r2,recap,Tried at least one other mode,,,y
+mvp07,3,m7-q1,rating5,How much did you trust the answers?,,y,y
+mvp07,4,m7-q2,yesno,Would you rely on it for a real decision?,,y,y
+mvp07,5,m7-q3,choice,Which mode was most useful?,Ask anything|Get ready for a meeting|Explain this letter|Say it calmly|Talk it through,y,y
+mvp07,6,m7-q4,rating5,"Compared with asking ChatGPT, how much better was it?",,n,y
+mvp07,7,m7-q5,yesno,Would you be comfortable pasting a real letter into it?,,y,y

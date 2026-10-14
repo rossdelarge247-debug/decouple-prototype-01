@@ -125,7 +125,7 @@ section{padding:112px 0}
 .tt:before{content:counter(t,decimal-leading-zero);position:absolute;left:28px;top:24px;font:400 30px/1 'Source Serif Pro',Georgia,serif;color:var(--vl)}
 .tt h4{margin:0;font:600 19px/1.3 'Source Serif Pro',Georgia,serif}.tt p{margin:8px 0 0;font-size:14px;line-height:1.55;color:var(--sub)}
 .tt .sig{margin-top:14px;display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--ink)}.tt .sig b{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--grn);white-space:nowrap}
-.tt .where{position:absolute;top:24px;right:24px;font:500 11px 'JetBrains Mono',monospace;color:var(--mute)}
+.tt .where{display:block;margin-bottom:6px;font:500 11px 'JetBrains Mono',monospace;color:var(--mute)}
 /* footer */
 footer{padding:64px 0 72px;border-top:1px solid var(--line)}
 footer .wrap{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap;align-items:flex-start}
@@ -156,19 +156,35 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 .top nav a,.hsw-b{white-space:nowrap}.top nav{gap:20px;min-width:0}.top .hsw{flex-shrink:0}
 @media (max-width:1380px){.top nav{gap:16px}.top nav a{font-size:12.5px}.hsw-l{display:none}}
 @media (max-width:1240px){.top nav{display:none}.ttg{margin-left:auto}}.ptabs button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:#FFF;font-size:14px;font-weight:600;color:var(--sub)}.ptabs button:hover{border-color:#C4B5FD}.ptabs button.on{background:var(--ink);border-color:var(--ink);color:#FFF}.ptabs button i{font-style:normal;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(0,0,0,.07)}.ptabs button.on i{background:rgba(255,255,255,.18)}.ptabs .ptn{margin-left:10px;font-size:13px;color:var(--mute)}.q.legal{background:rgba(252,165,165,.16);color:#FCA5A5}
+[data-ptn][hidden]{display:none!important}
+.hero .modesw{display:inline-flex;flex-wrap:wrap;gap:4px;padding:5px;margin:0 0 44px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)}
+.hero .modesw button{all:unset;cursor:pointer;display:grid;gap:3px;padding:12px 20px;border-radius:15px;color:rgba(255,255,255,.66)}.hero .modesw button b{font-size:15px;font-weight:600;color:#FFF}.hero .modesw button small{font-size:12.5px}.hero .modesw button:hover{background:rgba(255,255,255,.06)}
+.hero .modesw button.on{background:#FFF;color:var(--sub)}.hero .modesw button.on b{color:#17141F}.hero .modesw button:focus-visible{outline:2px solid #C4B5FD;outline-offset:2px}
+.top .tmode{display:inline-flex;gap:2px;margin:0;padding:3px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);flex-shrink:0}.top .tmode button{all:unset;cursor:pointer;height:28px;padding:0 12px;border-radius:999px;font:500 12.5px Inter,sans-serif;color:rgba(255,255,255,.72);white-space:nowrap}.top .tmode button.on{background:#FFF;color:#17141F;font-weight:600}
+.cmp{margin-top:48px;border-radius:22px;overflow:hidden;border:1px solid var(--line);background:#FFF}
+.cmp-r{display:grid;grid-template-columns:170px minmax(0,1fr) minmax(0,1fr);border-top:1px solid var(--line)}.cmp-r:first-child{border-top:0}
+.cmp-r>*{padding:14px 20px;font-size:14px;line-height:1.5}.cmp-r>b{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding-top:16px}.cmp-r>span:nth-child(2){color:var(--sub)}.cmp-r>span:last-child{background:var(--vs);color:#2E1065}
+.cmp-h>span{font:600 19px 'Source Serif Pro',Georgia,serif!important;padding-top:18px!important}.cmp-h>span small{display:block;margin-top:2px;font:500 12px Inter,sans-serif;color:var(--mute)}
+.jy.mvp{grid-template-columns:1.8fr repeat(5,minmax(0,1fr))}
+.mvp-note{margin-top:14px;font-size:13px;color:var(--mute)}
+@media (max-width:1000px){.jy.mvp{grid-template-columns:1fr 1fr}.cmp-r{grid-template-columns:120px minmax(0,1fr) minmax(0,1fr)}}
+@media (max-width:720px){.jy.mvp{grid-template-columns:1fr}.cmp-r{grid-template-columns:1fr 1fr}.cmp-r>b{grid-column:1/-1;padding-bottom:0}.cmp-h>b{display:none}.hero .modesw{display:grid;width:100%}.top .tmode{display:none}}
 </style>
 <script src="hub/hub-switch.js" defer></script>
 </head>
 <body>
 <header class="top">
 <a class="wm" href="#">Decouple<i>.</i></a><div data-hubsw="proto" data-date="October 2026"></div>
-<nav><a href="#journey">Journey</a><a href="#protos">Prototypes</a><a href="#next">To build</a><a href="#decide">Decisions</a><a href="#test">What we'll test</a><a href="#testing">Run a session</a></nav>
+<div class="ptabs tmode" role="tablist" aria-label="Which product"><button type="button" role="tab" aria-selected="true" class="on" data-pt="full">Full vision</button><button type="button" role="tab" aria-selected="false" data-pt="mvp">MVP</button></div>
+<nav><a href="#journey">Journey</a><a href="#protos">Prototypes</a><a href="#next" data-ptn="full">To build</a><a href="#decide" data-ptn="full">Decisions</a><a href="#test" data-ptn="full">What we'll test</a><a href="#mvplive" data-ptn="mvp" hidden>Before it&rsquo;s live</a><a href="#mvptest" data-ptn="mvp" hidden>What it tests</a><a href="#testing">Run a session</a></nav>
 <button class="ttg" id="ttg" type="button" aria-pressed="false"><span class="sw"></span>Testing mode</button>
-<a class="btn sm" href="Proto 01 · Discover.html">Start the journey<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
+<a class="btn sm" data-ptn="full" href="Proto 01 · Discover.html">Start the journey<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a><a class="btn sm" data-ptn="mvp" hidden href="MVP 00 · Public Site.html">Start the MVP<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a>
 </header>
 
 <div class="hero">
 <div class="wrap">
+<div class="ptabs modesw" role="tablist" aria-label="Which product"><button type="button" role="tab" aria-selected="true" class="on" data-pt="full"><b>Full vision</b><small>10 journeys · the complete product</small></button><button type="button" role="tab" aria-selected="false" data-pt="mvp"><b>MVP toolkit</b><small>8 prototypes · what we could launch first</small></button></div>
+<div data-ptn="full">
 <div class="kick">The complete settlement workspace for separating couples</div>
 <h1>Separation, sorted out <em>together.</em></h1>
 <p class="lede">Decouple takes a couple from &ldquo;we&rsquo;ve decided to separate&rdquo; to a financial order sealed by the court. One shared record, plain-English guidance, and documents a judge expects to see, in about three months, for a fixed price.</p>
@@ -180,10 +196,24 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 <div><b>~3 mo</b><span>first conversation to sealed order, against 12 to 18 months</span></div>
 </div>
 </div>
+<div data-ptn="mvp" hidden>
+<div class="kick">The MVP: a free divorce toolkit</div>
+<h1>Do it yourselves, <em>one step at a time.</em></h1>
+<p class="lede">A smaller product we could launch first. A free guide, then free tools in the order things happen. Use them with no account, save when you want to come back, and pay only for the finished paperwork. It puts the full vision&rsquo;s riskiest bets in front of real people before we build the parts that need both partners, a bank connection and court filing.</p>
+<div class="acts"><a class="btn" href="MVP 00 · Public Site.html">Walk the MVP journey<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a><a class="ghost" href="#protos">Browse the MVP prototypes</a></div>
+<div class="facts">
+<div><b>8</b><span>linked prototypes, from the public site to Ask</span></div>
+<div><b>5</b><span>tools, in the order things happen</span></div>
+<div><b>£0</b><span>to use every tool, with no account needed</span></div>
+<div><b>£29–249</b><span>test prices, for finished document packs only</span></div>
+</div>
+</div>
+</div>
 </div>
 
 <section id="journey">
 <div class="wrap">
+<div data-ptn="full">
 <div class="sh rv"><div><div class="kick">The journey</div><h2>One path, <em>two people,</em> from first search to sealed order.</h2></div><p>Every prototype is a stage of the same story. They share one state, so what Sarah enters in her interview carries through to the order the court seals. Mark, her ex, is played by the system so each step can be demoed solo.</p></div>
 <div class="jy rv">
 <div class="ph" style="--c:var(--v)"><span class="bar"></span><div class="n">Phase 1 · Begin</div><h3>Understand &amp; commit</h3><p>Free until you&rsquo;re ready to pay.</p><div class="chips"><a class="chip" href="#p01"><i>01</i>Discover</a><a class="chip" href="#p02"><i>02</i>Interview</a><a class="chip" href="#p03"><i>03</i>Playback</a><a class="chip" href="#p04"><i>04</i>Sign-up</a><a class="chip" href="#p05"><i>05</i>Onboard</a></div></div>
@@ -193,12 +223,38 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 <div class="span"><a class="chip" href="#p10"><i>10</i>Dashboard</a><span><b>Runs alongside every phase.</b> From the household picture onwards, returning users land here: next action, what&rsquo;s waiting, evidence and support.</span></div>
 </div>
 </div>
+<div data-ptn="mvp" hidden>
+<div class="sh rv"><div><div class="kick">The MVP journey</div><h2>Free to use, <em>save when you want,</em> pay for the paperwork.</h2></div><p>Each prototype is one tool, wired together through the toolkit home. They share one store, so the guide&rsquo;s answers carry into every tool, and the tool for your stage is marked &ldquo;Now&rdquo;. Nothing is kept until the person saves.</p></div>
+<div class="jy mvp rv">
+<div class="ph" style="--c:var(--v)"><span class="bar"></span><div class="n">Front door</div><h3>Find it, get the guide</h3><p>Public pages, then the free guide, required first.</p><div class="chips"><a class="chip" href="#mvp00"><i>00</i>Public site</a><a class="chip" href="#mvp01"><i>01</i>Toolkit</a></div></div>
+<div class="ph" style="--c:var(--grn)"><span class="bar"></span><div class="n">Step 1</div><h3>Right for us?</h3><p>Safety and suitability.</p><div class="chips"><a class="chip" href="#mvp02"><i>02</i>Check</a></div></div>
+<div class="ph" style="--c:var(--amb)"><span class="bar"></span><div class="n">Step 2</div><h3>Get organised</h3><p>To-dos and a journal.</p><div class="chips"><a class="chip" href="#mvp03"><i>03</i>To-do</a></div></div>
+<div class="ph" style="--c:var(--mag)"><span class="bar"></span><div class="n">Step 3</div><h3>The children</h3><p>A parenting plan.</p><div class="chips"><a class="chip" href="#mvp04"><i>04</i>Plan</a></div></div>
+<div class="ph" style="--c:var(--sky)"><span class="bar"></span><div class="n">Step 4</div><h3>The money</h3><p>Disclosure. Paid pack.</p><div class="chips"><a class="chip" href="#mvp05"><i>05</i>Statement</a></div></div>
+<div class="ph" style="--c:var(--v)"><span class="bar"></span><div class="n">Step 5</div><h3>What&rsquo;s fair</h3><p>Split planner. Paid pack.</p><div class="chips"><a class="chip" href="#mvp06"><i>06</i>Planner</a></div></div>
+<div class="span"><a class="chip" href="#mvp07"><i>07</i>Ask</a><span><b>Any time, from any tool.</b> The AI sounding board: five modes, answers from official sources, and it says when someone needs a professional.</span></div>
+</div>
+<div class="cmp rv" role="table" aria-label="Full vision and MVP compared">
+<div class="cmp-r cmp-h" role="row"><b role="columnheader"></b><span role="columnheader">Full vision<small>Protos 01–10</small></span><span role="columnheader">MVP toolkit<small>MVP 00–07</small></span></div>
+<div class="cmp-r" role="row"><b>Purpose</b><span>The complete product: one shared case, from first search to a sealed court order.</span><span>A cheaper first product that tests the riskiest bets with real people, and earns trust and traffic.</span></div>
+<div class="cmp-r" role="row"><b>Who</b><span>Both partners, in one shared workspace.</span><span>One person, solo-first. The partner joins only for the financial statement.</span></div>
+<div class="cmp-r" role="row"><b>Shape</b><span>10 linked stages of one journey.</span><span>A public site, a toolkit home, five tools and Ask, each its own prototype.</span></div>
+<div class="cmp-r" role="row"><b>Money</b><span>Plans at £99, £499 and £999, paid before the work.</span><span>Free tools. Pay only for finished packs, at test prices.</span></div>
+<div class="cmp-r" role="row"><b>Account</b><span>Sign-up and payment up front.</span><span>None to use it. Save to come back, invite the partner or get a pack.</span></div>
+<div class="cmp-r" role="row"><b>Figures</b><span>Open Banking fills in the picture.</span><span>Typed in, with sources and documents. Bank connection is a fake door.</span></div>
+<div class="cmp-r" role="row"><b>Agreement</b><span>Versioned proposals until both sign.</span><span>A split planner with court tags. Agreeing online is a fake door.</span></div>
+<div class="cmp-r" role="row"><b>Court</b><span>We draft the documents, both sign, we file and track.</span><span>A draft consent order in the pack. Filing for them is a fake door.</span></div>
+<div class="cmp-r" role="row"><b>It proves</b><span>That couples can finish without professionals.</span><span>Whether people use it, come back and pay, and which full-vision features they want most.</span></div>
+</div>
+</div>
+</div>
 </section>
 
 <section id="protos" style="padding-top:0">
 <div class="wrap">
-<div class="sh rv"><div><div class="kick">The prototypes</div><h2>Ten stages, <em>all clickable.</em></h2></div><p>Each opens with our demo couple, Sarah and Mark: married 14 years, two children, a house, two pensions. Tweaks (bottom right in each prototype) jump to key moments and switch design options. Flip any card for its open edges: scenarios not yet covered, key questions, gaps and the MVP bet.</p></div>
-<div class="ptbar"><div class="ptabs" role="tablist" aria-label="Prototype sets"><button type="button" role="tab" aria-selected="true" class="on" data-pt="full">Full vision<i>10</i></button><button type="button" role="tab" aria-selected="false" data-pt="mvp">MVP<i>1</i></button><span class="ptn" data-ptn="full">The complete product: bank connection, guided settlement, court documents.</span><span class="ptn" data-ptn="mvp" hidden>Much simpler tools we could launch first, each tested alongside the full vision.</span></div>
+<div class="sh rv" data-ptn="full"><div><div class="kick">The prototypes</div><h2>Ten stages, <em>all clickable.</em></h2></div><p>Each opens with our demo couple, Sarah and Mark: married 14 years, two children, a house, two pensions. Tweaks (bottom right in each prototype) jump to key moments and switch design options. Flip any card for its open edges: scenarios not yet covered, key questions, gaps and the MVP bet.</p></div>
+<div class="sh rv" data-ptn="mvp" hidden><div><div class="kick">The MVP prototypes</div><h2>Eight prototypes, <em>one toolkit.</em></h2></div><p>Numbered in journey order, from the public site to Ask. Each is its own test, with its own end-of-prototype questions and sheet tab, so every tool gets its own feedback. Flip any card for its assumptions, key questions and the bet.</p></div>
+<div class="ptbar"><div class="ptabs" role="tablist" aria-label="Prototype sets"><button type="button" role="tab" aria-selected="true" class="on" data-pt="full">Full vision<i>10</i></button><button type="button" role="tab" aria-selected="false" data-pt="mvp">MVP<i>8</i></button><span class="ptn" data-ptn="full">The complete product: bank connection, guided settlement, court documents.</span><span class="ptn" data-ptn="mvp" hidden>Much simpler tools we could launch first, each tested alongside the full vision.</span></div>
 <div class="fliptool"><span>Show</span><div class="seg" role="group" aria-label="Card side"><button type="button" class="on" data-side="0">What’s built</button><button type="button" data-side="1">Open edges</button></div></div></div>
 <div class="protos" data-pt="full">
 
@@ -442,22 +498,22 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 </div>
 
 <div class="protos" data-pt="mvp" hidden>
-<article class="card rv" id="mvp01" style="--t1:#E0F2FE;--t2:#F3EEFE"><div class="flip">
+<article class="card rv" id="mvp05" style="--t1:#E0F2FE;--t2:#F3EEFE;order:5"><div class="flip">
 <div class="pc face front">
-<a class="shot" href="MVP 01 · Shared Statement.html"><div class="fr"><img src="atlas/hub/mvp01.png" alt="Shared statement: four things to sort out" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<a class="shot" href="MVP 05 · Financial Statement.html"><div class="fr"><img src="atlas/hub/mvp05.png" alt="Financial statement: four things to sort out" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
 <div class="bd">
-<div class="meta"><span class="num">MVP 01</span><span class="pill ph1">Disclosure</span><span class="pill rev">Ready for testing</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Questions &amp; assumptions</button></div>
-<h3>Shared statement<small>Financial disclosure, without a bank connection</small></h3>
+<div class="meta"><span class="num">MVP 05</span><span class="pill ph1">The money</span><span class="pill rev">Ready for testing</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Questions &amp; assumptions</button></div>
+<h3>Financial statement<small>The money: disclosure, and the finished pack</small></h3>
 <p class="d">The open financial statement mediators ask for, built by the couple. Each person enters exact figures and where they came from. Then both sides sit in one document: what’s missing or doesn’t match is flagged and sorted out in comments. When both agree, it produces an open financial statement, the figures for a D81, or a Form E draft.</p>
 <div><div class="lbl">Journey</div><div class="flow"><span>Start</span><i>→</i><span>Your side (wizard)</span><i>→</i><span>Your statement</span><i>→</i><span>Safety check &amp; invite</span><i>→</i><span>Shared statement</span><i>→</i><span>Both agree</span><i>→</i><span>Documents</span></div></div>
 <div><div class="lbl">Reuses</div><ul class="sc"><li>The Proto 02 question engine and safety check, for the wizard</li><li>The two-sided document from Protos 07 and 09, with comments</li><li>The full vision’s screens, type and colours</li></ul></div>
-<div><div class="lbl">Leaves out on purpose</div><ul class="sc"><li>Bank connection: figures are typed in, with a source and a date</li><li>Settlement proposals, court filing and the dashboard</li><li>The mediator’s view, which comes later</li></ul></div>
-<div class="ft"><span class="tip"><b>Demo tip:</b> Sarah’s figures are filled in. On the waiting screen, “Skip ahead” brings in Mark’s side with four flags to sort out. Tweaks jump to any screen, or start blank.</span><a class="go" href="MVP 01 · Shared Statement.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+<div><div class="lbl">Leaves out on purpose</div><ul class="sc"><li>Bank connection: a fake door asks whether people want it, and what they’d need to trust it</li><li>Settlement proposals, court filing and the dashboard</li><li>The mediator’s view, which comes later</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Sarah’s figures are filled in. On the waiting screen, “Skip ahead” brings in Mark’s side with four flags to sort out. Tweaks jump to any screen, or start blank.</span><a class="go" href="MVP 05 · Financial Statement.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
 </div>
 </div>
 <div class="pc face back" aria-hidden="true">
-<div class="bh"><div class="meta"><span class="num">MVP 01</span><span class="bk">Questions &amp; assumptions</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
-<h3>Shared statement<small>What we need to learn before building it</small></h3>
+<div class="bh"><div class="meta"><span class="num">MVP 05</span><span class="bk">Questions &amp; assumptions</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Financial statement<small>What we need to learn before building it</small></h3>
 <div class="bg">
 <div><div class="lbl">Assumptions</div><ul class="ol"><li>Couples will give exact figures, with dates and documents, without a bank connection doing it for them</li><li>A shared document with flags beats spreadsheets by email, enough to pay for</li><li>The person who starts will invite their partner, and the partner will fill in their side</li><li>Mediators and solicitors will accept a statement the couple built themselves</li><li>“Missing” flags, from “what do you think they have?”, catch the things that unravel agreements</li></ul></div>
 <div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Where do people stall on accuracy: finding figures, dates, or documents?</li><li><b class="q ux">UX</b>Does “fill in yours before you see theirs” feel fair, or like being kept in the dark?</li><li><b class="q ux">UX</b>Is “what do you think they have?” helpful, or does it feel like spying?</li><li><b class="q biz">Business</b>Is this worth paying for on its own, and how much? Per couple, or per person?</li><li><b class="q biz">Business</b>Does it lead into the full journey, or replace it for simpler cases?</li><li><b class="q legal">Legal</b>Can a couple-built, both-confirmed statement stand in for a mediator’s open financial statement? What wording should the “both satisfied” step use?</li></ul></div>
@@ -466,11 +522,179 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 <div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>A shared, flagged statement gets couples to complete disclosure faster than spreadsheets, with fewer gaps</p></div><div><small>We’ll test it with</small><p>Moderated sessions as Sarah, next to Protos 06–07, plus five mediator interviews</p></div><div><small>We’re right if</small><p>≥70% finish their side with exact figures, ≥4/5 on usefulness of the flags, and mediators say they’d accept it</p></div></div></div>
 </div>
 </div></article>
+<article class="card rv" id="mvp00" style="--t1:#F3EEFE;--t2:#FAFAF7;order:0"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="MVP 00 · Public Site.html"><div class="fr"><img src="atlas/hub/mvp00.png" alt="Public site: your divorce, one step at a time" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">MVP 00</span><span class="pill ph1">Public site</span><span class="pill rev">Ready for testing</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Questions &amp; assumptions</button></div>
+<h3>Your divorce toolkit<small>The public pages, before the guide</small></h3>
+<p class="d">The toolkit’s own public site, built on Proto 01’s design: home, how it works (free, save, pay), a page per tool, prices for the two packs, a public “Is it right for us?” check, safety &amp; privacy, and FAQ. Every start goes to the free guide first. A prototype in the hub only: nothing on decouple.uk changes.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Home</span><i>→</i><span>How it works · Tools · Prices · Safety · FAQ</span><i>→</i><span>Start with the free guide</span><i>→</i><span>MVP 01</span></div></div>
+<div><div class="lbl">Reuses</div><ul class="sc"><li>Proto 01’s nav, hero, type and section system</li><li>MVP 02’s check, as a public page</li><li>The toolkit’s prices and tool order, from the shared kit</li></ul></div>
+<div><div class="lbl">Leaves out on purpose</div><ul class="sc"><li>Plans and subscriptions</li><li>Reviews and numbers we don’t have yet</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Tweaks jump to any page and change the price level. Tool pages pass “you came for this” to the toolkit.</span><a class="go" href="MVP 00 · Public Site.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">MVP 00</span><span class="bk">Questions &amp; assumptions</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Your divorce toolkit<small>What we need to learn before building it</small></h3>
+<div class="bg">
+<div><div class="lbl">Assumptions</div><ul class="ol"><li>“Free to use, save when you want, pay for the paperwork” is clear in seconds</li><li>A required five-minute guide doesn’t put people off</li><li>Saying who it’s not for builds trust</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Which page do people look at first?</li><li><b class="q ux">UX</b>Do tool pages make people start, or read and leave?</li><li><b class="q biz">Business</b>Do the pack prices on show put people off?</li><li><b class="q legal">Legal</b>Wording on prices, “draft” documents and safety</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Search: one page per tool is built for it, when it goes public</li><li>Who’s behind it: an about page, once we can say</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>An honest, free-first public site gets more people into the guide than a sales page</p></div><div><small>We’ll test it with</small><p>Moderated sessions: first impressions, then “find what it costs”</p></div><div><small>We’re right if</small><p>≥4/5 on “clear what’s free”, and most start the guide without prompting</p></div></div></div>
+</div>
+</div></article>
+<article class="card rv" id="mvp01" style="--t1:#F3EEFE;--t2:#FAFAF7;order:1"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="MVP 01 · Toolkit.html"><div class="fr"><img src="atlas/hub/mvp01.png" alt="Toolkit home: Good to see you, Sarah" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">MVP 01</span><span class="pill ph1">Toolkit</span><span class="pill rev">Ready for testing</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Questions &amp; assumptions</button></div>
+<h3>Your divorce toolkit<small>Guide hand-off and toolkit home, no account needed</small></h3>
+<p class="d">Where MVP 00 hands over. The free guide comes first, then the toolkit opens with no sign-up: the tools in the order things happen, with the one for your stage marked “Now” (and the one you came for, if you picked one). Nothing is kept until you save. A “Save my progress” prompt appears after your first real progress in any tool, and saving is needed to come back, invite your partner or get a pack.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Your guide</span><i>→</i><span>Toolkit home</span><i>→</i><span>A tool</span><i>→</i><span>Save my progress</span><i>→</i><span>A pack</span></div></div>
+<div><div class="lbl">Reuses</div><ul class="sc"><li>The M02 guide, as the step before the toolkit</li><li>MVP 02–07: each tool is its own prototype, opened from here</li><li>The full vision’s type, colours and Quick exit</li></ul></div>
+<div><div class="lbl">Leaves out on purpose</div><ul class="sc"><li>Plans and pricing tiers: nothing is sold but finished packs</li><li>Real accounts: saving is simulated, and nothing is stored until then</li><li>The tools themselves, which are MVP 02–07</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Tweaks set Sarah’s stage (the “Now” tool follows), whether she has children (the parenting plan folds away), sign-in and the price level.</span><a class="go" href="MVP 01 · Toolkit.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">MVP 01</span><span class="bk">Questions &amp; assumptions</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Your divorce toolkit<small>What we need to learn before building it</small></h3>
+<div class="bg">
+<div><div class="lbl">Assumptions</div><ul class="ol"><li>“Free toolkit” earns more trust, and more sign-ups, than a priced service</li><li>People will use the tools before signing up, and save once they’ve made progress</li><li>Ordering tools by the process helps people know where to start</li><li>People will come back to it over months, not once</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Is it clear what’s free and what costs money?</li><li><b class="q ux">UX</b>Email link or password: which do more people finish?</li><li><b class="q ux">UX</b>Does “Now” for their stage match where they’d start?</li><li><b class="q biz">Business</b>Does “Your divorce toolkit” describe it, or undersell it?</li><li><b class="q biz">Business</b>Do the pack prices on the home page put people off, at any level?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Real accounts: security, two-step sign-in, shared devices</li><li>What we keep if they look around without an account</li><li>How the guide’s answers carry into each tool</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>A free toolkit, in process order, gets more people started than a paid plan</p></div><div><small>We’ll test it with</small><p>Moderated sessions from the guide into the toolkit, then the live site once it’s public</p></div><div><small>We’re right if</small><p>≥60% save their toolkit, ≥4/5 on “clear what’s free”, and most open the tool marked Now</p></div></div></div>
+</div>
+</div></article>
+<article class="card rv" id="mvp02" style="--t1:#ECFDF5;--t2:#FAFAF7;order:2"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="MVP 02 · Right for Us.html"><div class="fr"><img src="atlas/hub/mvp02.png" alt="Right for us: feeling safe" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">MVP 02</span><span class="pill ph1">Before you begin</span><span class="pill rev">Ready for testing</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Questions &amp; assumptions</button></div>
+<h3>Is doing it ourselves right for us?<small>Suitability and safety check</small></h3>
+<p class="d">An honest check before anything else: safety, control, how you talk and how complicated things are. The result is one-sided on purpose: it never clears anyone, and any sign of fear or control means “get advice first”, with the right helplines and what may be different for them.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Start</span><i>→</i><span>Five short groups</span><i>→</i><span>Result</span><i>→</i><span>Does this feel right?</span></div></div>
+<div><div class="lbl">Reuses</div><ul class="sc"><li>The guide’s safety check-in, its tone and helplines</li><li>The toolkit’s Quick exit</li></ul></div>
+<div><div class="lbl">Leaves out on purpose</div><ul class="sc"><li>Saving answers: they’re never stored or sent, only the result band</li><li>A score or a pass mark</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Tweaks jump straight to each of the three results.</span><a class="go" href="MVP 02 · Right for Us.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">MVP 02</span><span class="bk">Questions &amp; assumptions</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Is doing it ourselves right for us?<small>What we need to learn before building it</small></h3>
+<div class="bg">
+<div><div class="lbl">Assumptions</div><ul class="ol"><li>People answer honestly when nothing is saved</li><li>An honest “get advice first” builds trust rather than putting people off</li><li>Flagging complexity early saves people money later</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Do the safety questions feel caring, or intrusive?</li><li><b class="q ux">UX</b>Is it safe to have on a shared phone?</li><li><b class="q biz">Business</b>Does turning people away lose us users, or win trust?</li><li><b class="q legal">Legal</b>Who reviews the wording and the helplines?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Review by a domestic abuse specialist before it goes public</li><li>What happens if a partner finds it</li><li>Referral partners for the people it sends elsewhere</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>A check that sometimes says “not for you” makes the whole toolkit more trusted</p></div><div><small>We’ll test it with</small><p>Moderated sessions, plus a review by a domestic abuse specialist</p></div><div><small>We’re right if</small><p>≥4/5 trust the result, nobody finds it judgemental, ≥80% agree with their result</p></div></div></div>
+</div>
+</div></article>
+<article class="card rv" id="mvp03" style="--t1:#FFFBEB;--t2:#FAFAF7;order:3"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="MVP 03 · To-do &amp; Journal.html"><div class="fr"><img src="atlas/hub/mvp03.png" alt="To-do list made from the guide" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">MVP 03</span><span class="pill ph1">Get organised</span><span class="pill rev">Ready for testing</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Questions &amp; assumptions</button></div>
+<h3>To-do list &amp; journal<small>Made from the guide, private to you</small></h3>
+<p class="d">A to-do list built from the guide’s answers, grouped Do now, Coming up and When you can, each with a “why”. Beside it, a private journal with categories, and a companion that helps talk an entry through and write it down factually.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>To-do list</span><i>→</i><span>Tick it, or open the tool</span><i>→</i><span>Journal</span><i>→</i><span>Talk it through</span></div></div>
+<div><div class="lbl">Reuses</div><ul class="sc"><li>Proto 10’s to-dos, journal and AI companion</li><li>The guide’s “this week” list</li></ul></div>
+<div><div class="lbl">Leaves out on purpose</div><ul class="sc"><li>Reminders by email or text</li><li>Sharing: the journal is never shared</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Tweaks change the stage and children, and the list follows. “Talk it through” is live AI in the preview.</span><a class="go" href="MVP 03 · To-do &amp; Journal.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">MVP 03</span><span class="bk">Questions &amp; assumptions</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>To-do list &amp; journal<small>What we need to learn before building it</small></h3>
+<div class="bg">
+<div><div class="lbl">Assumptions</div><ul class="ol"><li>A list made from the guide gives people a reason to come back</li><li>People will keep a journal here rather than in their notes app</li><li>A factual record helps if things turn difficult</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Is the order right: safety, children, then money?</li><li><b class="q ux">UX</b>Does the companion feel supportive, or intrusive?</li><li><b class="q biz">Business</b>Does the list bring people back each week?</li><li><b class="q legal">Legal</b>What can we say about a journal as a record?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Reminders, and how often</li><li>Exporting the journal</li><li>Shared devices</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>A living to-do list brings people back over months, not once</p></div><div><small>We’ll test it with</small><p>Moderated sessions now, return visits on the site later</p></div><div><small>We’re right if</small><p>≥4/5 on usefulness, and most say they’d come back weekly</p></div></div></div>
+</div>
+</div></article>
+<article class="card rv" id="mvp04" style="--t1:#FCE7F3;--t2:#FAFAF7;order:4"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="MVP 04 · Parenting Plan.html"><div class="fr"><img src="atlas/hub/mvp04.png" alt="Parenting plan: a two-week pattern" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">MVP 04</span><span class="pill ph1">The children</span><span class="pill rev">Ready for testing</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Questions &amp; assumptions</button></div>
+<h3>Parenting plan<small>Before the money</small></h3>
+<p class="d">Where the children live, on a two-week calendar. Then handovers, holidays and special days, how decisions get made, and a rough child maintenance estimate. It ends as one plan to read through together. When the guide says there are no children under 18, the toolkit folds it away rather than hiding it.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>The children</span><i>→</i><span>Where they live</span><i>→</i><span>Handovers</span><i>→</i><span>Holidays</span><i>→</i><span>Decisions</span><i>→</i><span>Money</span><i>→</i><span>Your plan</span></div></div>
+<div><div class="lbl">Reuses</div><ul class="sc"><li>The guide’s children answers and its tone</li><li>The Child Maintenance Service’s published rates, for a rough estimate</li></ul></div>
+<div><div class="lbl">Leaves out on purpose</div><ul class="sc"><li>Sharing with Mark and a shared calendar (a fake door)</li><li>Applying to court for a child arrangements order</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Tap the calendar to set your own pattern. The shared-calendar fake door is under Decisions.</span><a class="go" href="MVP 04 · Parenting Plan.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">MVP 04</span><span class="bk">Questions &amp; assumptions</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Parenting plan<small>What we need to learn before building it</small></h3>
+<div class="bg">
+<div><div class="lbl">Assumptions</div><ul class="ol"><li>Couples will agree the children first, before the money</li><li>A visual two-week pattern makes it easier to agree</li><li>A free plan builds trust for the paid packs later</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Is the calendar clear on a phone?</li><li><b class="q ux">UX</b>Does the maintenance estimate help, or start a row?</li><li><b class="q biz">Business</b>Would people pay for a shared calendar with their ex?</li><li><b class="q legal">Legal</b>Is the maintenance estimate worded safely?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Children on different patterns</li><li>The children’s own views, by age</li><li>Updating the plan later</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>A simple plan, made before the money, makes the financial talks calmer</p></div><div><small>We’ll test it with</small><p>Moderated sessions with parents</p></div><div><small>We’re right if</small><p>≥80% finish a plan, ≥4/5 on the calendar, and most would share it</p></div></div></div>
+</div>
+</div></article>
+<article class="card rv" id="mvp06" style="--t1:#E0F2FE;--t2:#FAFAF7;order:6"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="MVP 06 · Split Planner.html"><div class="fr"><img src="atlas/hub/mvp06.png" alt="Split planner with court tags" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">MVP 06</span><span class="pill ph1">Agree what’s fair</span><span class="pill rev">Ready for testing</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Questions &amp; assumptions</button></div>
+<h3>Split planner<small>Simple settlement, and the agreement pack</small></h3>
+<p class="d">Sarah’s agreed figures, then four decisions: the home, pensions, savings and debts. Each shows Strong, Reasonable or A stretch, with the reason, beside the running split. It ends in a plain-English agreement summary, the paid agreement pack at the visitor’s test price, and two fake doors.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Figures</span><i>→</i><span>Plan</span><i>→</i><span>Agreement summary</span><i>→</i><span>Agreement pack</span></div></div>
+<div><div class="lbl">Reuses</div><ul class="sc"><li>Proto 08’s court tags and sliders</li><li>The agreed figures from MVP 05</li><li>The finished-pack screen, shared with MVP 05</li></ul></div>
+<div><div class="lbl">Leaves out on purpose</div><ul class="sc"><li>Versions and negotiating with Mark (a fake door)</li><li>Spousal maintenance</li><li>Filing with the court (a fake door)</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Tweaks try three plans: an even split, a likely fair one, and Sarah keeping the house (a stretch).</span><a class="go" href="MVP 06 · Split Planner.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">MVP 06</span><span class="bk">Questions &amp; assumptions</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Split planner<small>What we need to learn before building it</small></h3>
+<div class="bg">
+<div><div class="lbl">Assumptions</div><ul class="ol"><li>People understand court tags without feeling judged</li><li>A planner on agreed figures is useful without a professional</li><li>People will pay for the finished agreement pack</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Do the tags read as guidance, or as advice?</li><li><b class="q ux">UX</b>Are sliders right for pensions?</li><li><b class="q biz">Business</b>Which test price works for the agreement pack?</li><li><b class="q legal">Legal</b>Can we produce a draft consent order without being regulated?</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>Spousal maintenance</li><li>Valuing pensions for offsetting</li><li>Who signs off the rules behind the tags</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>Seeing how a court would likely see a split moves people towards fair agreements</p></div><div><small>We’ll test it with</small><p>Moderated sessions at three test prices</p></div><div><small>We’re right if</small><p>≥4/5 understand the tags, and ≥30% would pay at the middle price</p></div></div></div>
+</div>
+</div></article>
+<article class="card rv" id="mvp07" style="--t1:#F3EEFE;--t2:#FAFAF7;order:7"><div class="flip">
+<div class="pc face front">
+<a class="shot" href="MVP 07 · Ask.html"><div class="fr"><img src="atlas/hub/mvp07.png" alt="Ask: an answer with its sources" loading="lazy"></div><span class="btn sm ink open">Open</span></a>
+<div class="bd">
+<div class="meta"><span class="num">MVP 07</span><span class="pill ph1">Any time</span><span class="pill rev">Ready for testing</span><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Questions &amp; assumptions</button></div>
+<h3>Ask<small>The AI sounding board, five modes</small></h3>
+<p class="d">Ask anything, get ready for a meeting, explain a letter, say it calmly, or talk it through. It knows what the guide knows, answers from a fixed list of official sources with links, puts safety first and says when someone needs a solicitor. Every answer can be rated.</p>
+<div><div class="lbl">Journey</div><div class="flow"><span>Pick a mode</span><i>→</i><span>Ask</span><i>→</i><span>Answer and sources</span><i>→</i><span>Rate it</span></div></div>
+<div><div class="lbl">Reuses</div><ul class="sc"><li>Proto 10’s companion and its safety wording</li><li>The guide’s answers, as context</li></ul></div>
+<div><div class="lbl">Leaves out on purpose</div><ul class="sc"><li>Memory: conversations are never saved</li><li>Uploading files: letters are pasted, with names taken out</li></ul></div>
+<div class="ft"><span class="tip"><b>Demo tip:</b> Answers are live in the preview. Try “Use an example” in Explain this letter and Say it calmly.</span><a class="go" href="MVP 07 · Ask.html">Open prototype<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg></a></div>
+</div>
+</div>
+<div class="pc face back" aria-hidden="true">
+<div class="bh"><div class="meta"><span class="num">MVP 07</span><span class="bk">Questions &amp; assumptions</span></div><button class="flipb" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.6-3.6M13.5 8a5.5 5.5 0 0 1-9.6 3.6"></path><path d="M12.5 1.8v2.8H9.7M3.5 14.2v-2.8h2.8"></path></svg>Back to what’s built</button></div>
+<h3>Ask<small>What we need to learn before building it</small></h3>
+<div class="bg">
+<div><div class="lbl">Assumptions</div><ul class="ol"><li>People trust answers that show their sources</li><li>Knowing their situation makes it better than a general chatbot</li><li>Explaining letters is valued enough to pay for later</li></ul></div>
+<div><div class="lbl">Key questions</div><ul class="ol qs"><li><b class="q ux">UX</b>Which mode do people use most?</li><li><b class="q ux">UX</b>Do they read the sources?</li><li><b class="q biz">Business</b>Why would they use this over ChatGPT?</li><li><b class="q legal">Legal</b>Data protection for what people paste in, and where the line on advice sits</li></ul></div>
+<div><div class="lbl">Gaps to think through</div><ul class="ol"><li>The server piece it needs on the live site</li><li>Cost per conversation</li><li>Checking answer quality over time</li></ul></div>
+</div>
+<div class="bet"><div class="lbl">MVP bet</div><div class="bt3"><div><small>We believe</small><p>A cited, situation-aware AI is why people come back between steps</p></div><div><small>We’ll test it with</small><p>Moderated sessions trying at least two modes</p></div><div><small>We’re right if</small><p>≥4/5 trust the answers, and most rate it better than a general chatbot</p></div></div></div>
+</div>
+</div></article>
 </div>
 </div>
 </section>
 
-<section class="dark" id="next">
+<section class="dark" id="next" data-ptn="full">
 <div class="wrap">
 <div class="sh rv"><div><div class="kick">Still to build</div><h2>What&rsquo;s next on <em>the map.</em></h2></div><p>Sarah&rsquo;s side is complete end to end. The next work is Mark&rsquo;s own experience, phone-first use, and the edge cases that matter most in real separations.</p></div>
 <div class="tb rv">
@@ -483,7 +707,7 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 </div>
 </section>
 
-<section id="decide">
+<section id="decide" data-ptn="full">
 <div class="wrap">
 <div class="sh rv"><div><div class="kick">Open decisions</div><h2>Calls still <em>to make.</em></h2></div><p>Each has a working recommendation. Several depend on legal input before launch.</p></div>
 <div class="dl rv">
@@ -499,7 +723,7 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 </div>
 </section>
 
-<section id="test" style="padding-top:0">
+<section id="test" style="padding-top:0" data-ptn="full">
 <div class="wrap">
 <div class="sh rv"><div><div class="kick">What we&rsquo;ll test</div><h2>The riskiest assumptions, <em>first.</em></h2></div><p>Moderated sessions with people mid-separation, ordered by how much the business depends on each answer.</p></div>
 <div class="tests rv">
@@ -512,6 +736,37 @@ footer .wm{color:var(--ink)}footer p{margin:10px 0 0;font-size:13px;line-height:
 <div class="tt"><span class="where">All</span><h4>Can someone leave in under two seconds?</h4><p>Quick exit and safety help must be findable at once, on every screen and every device.</p><div class="sig"><b>Signal</b>Time to exit; found without being prompted</div></div>
 <div class="tt"><span class="where">09 Finalise</span><h4>Does the Finalise upgrade feel fair?</h4><p>Guided users pay the difference to get court documents. It must read as the natural next step, not a trap.</p><div class="sig"><b>Signal</b>Upgrade rate; price described as fair</div></div>
 </div>
+</div>
+</section>
+
+<section class="dark" id="mvplive" data-ptn="mvp" hidden>
+<div class="wrap">
+<div class="sh rv"><div><div class="kick">Before it&rsquo;s live</div><h2>What has to happen <em>first.</em></h2></div><p>The prototypes work here today. To test them on decouple.uk, the site, the sheets and some reviews need to catch up. The full list is in the MVP go-live checklist.</p></div>
+<div class="tb rv">
+<div class="tc"><span class="num">L1</span><h4>Accept the MVP tests</h4><p>The site only accepts three test names today, so every MVP answer would be rejected. Claude Code adds them, one sheet tab each.</p></div>
+<div class="tc"><span class="num">L2</span><h4>Let testers in</h4><p>Testers can open the protos but not the MVP pages. Recommended: the same switch covers both.</p></div>
+<div class="tc"><span class="num">L3</span><h4>AI on the site</h4><p>Ask and the journal companion need a small server piece, with a spend cap. Until then they answer only in sessions run from here.</p></div>
+<div class="tc"><span class="num">L4</span><h4>Questions and tabs</h4><p>Paste the 75 MVP questions into the live sheet, then redo the Results sheet setup for eight tabs.</p></div>
+<div class="tc"><span class="num">L5</span><h4>Safety review</h4><p>The &ldquo;Right for us?&rdquo; wording and helplines, checked by a domestic abuse specialist.</p></div>
+<div class="tc"><span class="num">L6</span><h4>Legal review</h4><p>The rules behind the court tags, a &ldquo;draft consent order&rdquo;, the child maintenance wording, and the AI&rsquo;s prompts and sources.</p></div>
+</div>
+</div>
+</section>
+
+<section id="mvptest" data-ptn="mvp" hidden>
+<div class="wrap">
+<div class="sh rv"><div><div class="kick">What the MVP tests</div><h2>The full vision&rsquo;s riskiest bets, <em>cheaply.</em></h2></div><p>Each one is an assumption the full vision depends on, matched to the part of the MVP that can test it with real people.</p></div>
+<div class="tests rv">
+<div class="tt"><span class="where">05 Statement</span><h4>Will the partner take part?</h4><p>The full vision needs both people. Inviting Mark into the statement is the MVP&rsquo;s one joint step.</p><div class="sig"><b>Signal</b>Invite rate; reasons for not inviting</div></div>
+<div class="tt"><span class="where">02 · 06</span><h4>Will people settle without a professional?</h4><p>The core bet. The check says who shouldn&rsquo;t try; the planner shows how a court would likely see a split.</p><div class="sig"><b>Signal</b>Share flagged by the check; solicitor-check waitlist</div></div>
+<div class="tt"><span class="where">05 · 06</span><h4>Will people pay, and how much?</h4><p>Only finished packs cost money, at one of three test prices per visitor.</p><div class="sig"><b>Signal</b>&ldquo;Get the pack&rdquo; and &ldquo;would you have paid&rdquo;, by price</div></div>
+<div class="tt"><span class="where">05 Statement</span><h4>Will people connect their bank?</h4><p>A fake door where it would really live, asking what they&rsquo;d need to trust it.</p><div class="sig"><b>Signal</b>Clicks, usefulness, and the trust reasons they pick</div></div>
+<div class="tt"><span class="where">07 · 03</span><h4>Do people trust AI with this?</h4><p>Answers with sources and safety first, and never presented as advice.</p><div class="sig"><b>Signal</b>Ratings; &ldquo;would you rely on it?&rdquo;</div></div>
+<div class="tt"><span class="where">01 · 03</span><h4>Will people come back over months?</h4><p>A divorce takes a year. The to-do list and journal are the reasons to return.</p><div class="sig"><b>Signal</b>Saves; return visits once it&rsquo;s live</div></div>
+<div class="tt"><span class="where">01–06</span><h4>Do people save, and when?</h4><p>No account to start, and one prompt after real progress.</p><div class="sig"><b>Signal</b>Save rate by reason; leaving without saving</div></div>
+<div class="tt"><span class="where">00 Site</span><h4>Is it clear what&rsquo;s free?</h4><p>Free to use, save when you want, pay for the paperwork, in seconds.</p><div class="sig"><b>Signal</b>&ldquo;Clear what&rsquo;s free&rdquo; 4/5 or more; starts the guide unprompted</div></div>
+</div>
+<p class="mvp-note">Not testable with users: whether generated packs get through court first time. That needs a legal review and a pilot.</p>
 </div>
 </section>
 
@@ -572,9 +827,9 @@ $('utfmb').onclick=function(){var v=$('utfm').value.trim(),m=$('utfmm');U.set({f
 U.subscribe(render);render();})();
 </script>
 <script>
-(function(){var tabs=document.querySelectorAll('.ptabs [data-pt]');function show(k){tabs.forEach(function(b){var on=b.dataset.pt===k;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});document.querySelectorAll('.protos[data-pt]').forEach(function(p){p.hidden=p.dataset.pt!==k;p.querySelectorAll('.rv').forEach(function(e){e.classList.add('in')})});document.querySelectorAll('[data-ptn]').forEach(function(n){n.hidden=n.dataset.ptn!==k});if(window.hubFlipSync)window.hubFlipSync()}
-tabs.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.pt);history.replaceState(null,'',b.dataset.pt==='mvp'?'#mvp':'#protos')})});
-if(location.hash==='#mvp'||location.hash==='#mvp01'){show('mvp');var s=document.getElementById('protos');if(s)window.scrollTo(0,s.getBoundingClientRect().top+scrollY-70)}})();
+(function(){var tabs=document.querySelectorAll('.ptabs [data-pt]');function show(k){tabs.forEach(function(b){var on=b.dataset.pt===k;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});document.querySelectorAll('.protos[data-pt]').forEach(function(p){p.hidden=p.dataset.pt!==k;p.querySelectorAll('.rv').forEach(function(e){e.classList.add('in')})});document.querySelectorAll('[data-ptn]').forEach(function(n){n.hidden=n.dataset.ptn!==k;if(!n.hidden){if(n.classList.contains('rv'))n.classList.add('in');n.querySelectorAll('.rv').forEach(function(e){e.classList.add('in')})}});if(window.hubFlipSync)window.hubFlipSync()}
+tabs.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.pt);history.replaceState(null,'',b.dataset.pt==='mvp'?'#mvp':location.pathname+location.search)})});
+if(/^#mvp/.test(location.hash)){show('mvp');var t=location.hash!=='#mvp'&&document.getElementById(location.hash.slice(1));if(t)setTimeout(function(){window.scrollTo(0,t.getBoundingClientRect().top+scrollY-80)},50)}})();
 </script>
 </body>
 </html>

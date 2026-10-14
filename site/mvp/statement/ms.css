@@ -1,4 +1,4 @@
-/* MVP 01 · Shared statement. Sits on discover.css + iv.css tokens (--ink --sub --mute --soft --line --violet --vdeep --vsoft) */
+/* MVP 05 · Financial statement. Sits on discover.css + iv.css tokens (--ink --sub --mute --soft --line --violet --vdeep --vsoft) */
 .ms-start{max-width:1200px;margin:0 auto;padding:48px 36px 96px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:56px;align-items:center}
 .ms-start h1{font-size:clamp(40px,5vw,64px);font-weight:600;letter-spacing:-.03em;line-height:1.02;margin:18px 0 0;text-wrap:balance}
 .ms-lede{margin:20px 0 0;font-size:19px;line-height:1.55;color:var(--sub);max-width:54ch;text-wrap:pretty}
@@ -93,3 +93,6 @@ button.ms-ln{cursor:pointer}button.ms-ln:hover{background:#FAFAF7}button.ms-ln.s
 .lnk{all:unset;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--vdeep)}.lnk:hover{text-decoration:underline}
 @media (max-width:1000px){.ms-start{grid-template-columns:1fr;gap:36px}.ms-cols{grid-template-columns:1fr}.ms-rail{position:static}.ms-sum{grid-template-columns:repeat(3,minmax(0,1fr))}.ms-outs{grid-template-columns:1fr}}
 @media (max-width:760px){.ms-start{padding:24px 20px 72px}.ms-wrap{padding:22px 16px 88px}.ms-f2,.ms-f3,.ms-see,.ms-agree{grid-template-columns:1fr}.ms-ln{grid-template-columns:minmax(0,1fr) 84px 84px;row-gap:6px}.ms-ln .ms-st{grid-column:1/-1}.ms-ln.th span:last-child{display:none}.ms-ln.solo{grid-template-columns:minmax(0,1fr) 96px}.ms-sum{grid-template-columns:1fr 1fr}.ms-mini-r{grid-template-columns:minmax(0,1fr) 70px 90px}.ms-mini-r .v:nth-child(3){display:none}.ms-paper{padding:28px 20px}.ms-hint{grid-template-columns:minmax(0,1fr) 30px}.ms-hint .ms-money{grid-column:1;max-width:none}}
+.ms-fd{margin-top:26px;max-width:600px}
+.ms-rail>.kit-fd{border-style:dashed}
+.kit-ctx{font-size:12.5px;color:var(--mute);max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media (max-width:900px){.kit-ctx{display:none}}

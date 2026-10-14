@@ -1,4 +1,4 @@
-/* MVP 01 · start screen and the wizard (Proto 02 question engine for the gating questions, item cards for the exact figures) */
+/* MVP 05 · start screen and the wizard (Proto 02 question engine for the gating questions, item cards for the exact figures) */
 (function () {
   const { useState, useEffect } = React;
   const Ic = window.DIc, MS = window.MS;
@@ -22,6 +22,7 @@
             <span>{example ? "Sarah’s example figures are filled in. Change anything." : "Have your bank app and latest statements to hand."}</span>
           </div>
           <div className="ms-trust"><span><Ic.Lock s={13} c="#78716C"/> Nothing is shared until you invite them</span><span><Ic.Shield s={13} c="#78716C"/> Your address and phone are never shared</span></div>
+          <div className="ms-fd"><window.KitFakeDoor id="bank"/></div>
         </div>
         <div className="ms-start-r" aria-hidden="true">
           <div className="ms-mini">

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-stage="mvp00">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decouple — MVP 00 · Your divorce toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="mvp/kit/kit.css">
+<link rel="stylesheet" href="mvp/fit/fit.css">
+<link rel="stylesheet" href="mvp/site/site.css">
+<style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="mvp/kit/kit.js"></script>
+<script>window.Journey = KIT.journey("mvp00", "MVP 00", "Public site", "MVP · the toolkit's public pages", "MVP 00 · Public Site.html", "decouple.mvp00.v1");</script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="mvp/site/site-data.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="mvp/kit/kit.jsx"></script>
+<script type="text/babel" src="mvp/fit/fit.jsx"></script>
+<script type="text/babel" src="mvp/site/site.jsx"></script>
+<script type="text/babel" src="proto/tweaks-panel.jsx"></script>
+<script type="text/babel">
+/* MVP 00 · The toolkit's public pages, in the hub only: nothing on decouple.uk changes. Every start goes to the free guide (MVP 01).
+   Pages are #home, #how, #tools, #tool/<id>, #prices, #fit, #safety, #faq. Keeps nothing of its own; the price level comes from decouple.kit.v1. */
+const { useState } = React;
+function App() {
+  const [, tick] = useState(0);
+  const tierL = ["Low", "Middle", "High"];
+  const PG = [["home", "Home"], ["how", "How it works"], ["tools", "Tools"], ["tool/statement", "A tool page"], ["prices", "Prices"], ["fit", "Right for us?"], ["safety", "Safety & privacy"], ["faq", "FAQ"]];
+  return <>
+    <SiteApp key={KIT.tier()}/>
+    <TweaksPanel title="Tweaks · MVP 00">
+      <TweakSection label="Jump to"/>
+      <TweakSelect label="Page" value={(location.hash || "#home").slice(1)} options={PG.map(([value, label]) => ({ value, label }))} onChange={(v) => { location.hash = v; window.scrollTo(0, 0); tick((n) => n + 1); }}/>
+      <TweakSection label="Tests"/>
+      <TweakSelect label={"Price level (now " + tierL[KIT.tier()] + ")"} value={String(KIT.tier())} options={tierL.map((label, i) => ({ value: String(i), label: label + " · £" + KIT.PACKS.disclosure.prices[i] + " / £" + KIT.PACKS.agreement.prices[i] }))} onChange={(v) => { KIT.write({ tier: +v }); tick((n) => n + 1); }}/>
+    </TweaksPanel>
+  </>;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
