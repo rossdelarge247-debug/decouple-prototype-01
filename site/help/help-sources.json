@@ -36,7 +36,7 @@
       "advice": "Citizens Advice can go through your claim with you." },
     { "id": "counciltax", "t": "Council Tax", "covers": "The single person discount, telling your council",
       "sum": "If you now live on your own, you may get a discount on your Council Tax. You apply to your own council.",
-      "gov": [{ "path": "/council-tax", "t": "Council Tax", "confirm": true }],
+      "gov": [{ "path": "/council-tax", "t": "Council Tax" }],
       "links": [{ "t": "Find your council", "url": "https://www.gov.uk/find-local-council", "d": "Your council’s own page explains its discounts and how to apply." }],
       "advice": "Your council’s Council Tax team." },
     { "id": "childbenefit", "t": "Child Benefit", "covers": "Who claims, a child living with the other parent, the High Income Child Benefit Charge",
