@@ -18,7 +18,7 @@ The checks in the change note:
 - **The header link.** Logged out, it opens the help page from `/guide` and, with mode = guide, from `/`, with no console errors. In the interview it opens a new tab (`rel=noopener`) and the guide keeps its place. It is hidden in print.
   - It opens the page at its file address, `/Marketing 03 · Help & Support.html`, not `/help`, the same way the pages link to `privacy.html`. Both addresses serve the same public page, and its canonical link is `https://decouple.uk/help`.
 - **`/privacy`** names Anthropic, in the Ask item and in "Who else handles it".
-- **The help build:** pending, from this pull request's CI build (the only place that reaches GOV.UK).
+- **The help build** reports no warnings. This pull request's CI build got 24 of 24 GOV.UK pages and forms D81, A, E, E1, E2. No path is marked `confirm` now, and the warn-on-confirm code stays.
 
 **Ross.**
 - **Anthropic's API retention period.**
