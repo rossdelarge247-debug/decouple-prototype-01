@@ -98,7 +98,7 @@ export function cleanAnswers(body: unknown, who: Sender): CleanResult {
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-export const SIGNUP_SOURCE_RE = /^(holding:[A-Za-z0-9._-]{1,40}|guide|guide-optin)$/
+export const SIGNUP_SOURCE_RE = /^(holding:[A-Za-z0-9._-]{1,40}|guide|guide-optin|help)$/
 
 export interface Signup {
   email: string

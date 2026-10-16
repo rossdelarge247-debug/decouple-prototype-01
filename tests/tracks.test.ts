@@ -11,7 +11,9 @@ describe('tracks (spec §4.4)', () => {
     expect([...trackFiles('m00,m07,p10,p01')]).toEqual(['MVP 00 · Public Site.html', 'MVP 07 · Ask.html', 'Proto 10 · Dashboard.html', 'Proto 01 · Discover.html'])
     expect(trackFiles('').size).toBe(0)
     expect(trackFiles(undefined).size).toBe(0)
-    expect(trackFiles('p00,p11,m08').size).toBe(0)
+    expect(trackFiles('p00,p11,m09').size).toBe(0)
+    expect([...trackFiles('m08')]).toEqual(['MVP 08 · Help & Support.html'])
+    expect(trackFiles('mvp').size).toBe(9)
   })
 
   it('normalises tracks and modes from the sheet', () => {

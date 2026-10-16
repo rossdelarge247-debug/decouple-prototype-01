@@ -1,5 +1,5 @@
-/* Routing middleware (spec §4). Runs in front of every request: the public allow-list goes
-   straight through, / and /guide pick the guide or the holding page, /take-part opens the
+/* Routing middleware (spec §4). Runs in front of every request: the public allow-list and the public
+   pages go straight through, / and /guide pick the guide or the holding page, /take-part opens the
    participant hub or its code page, the aliases in §2 map to files, and everything else needs the
    owner's session, or a tester whose track includes it, or returns a plain 404.
    Web APIs only (fetch, crypto.subtle), so it runs on the Node runtime or the edge alike. */
@@ -11,7 +11,7 @@ import { NOT_FOUND_HTML } from './lib/generated/not-found.js'
 import { PUBLIC_PATHS } from './lib/generated/public.js'
 import { clientIp, securityHeaders } from './lib/http.js'
 import { isPublicPath, loadPublicList } from './lib/public.js'
-import { indexable, robotsTxt, sitemapXml } from './lib/search.js'
+import { indexable, lastmodFor, robotsTxt, sitemapXml, type BuildDates } from './lib/search.js'
 import { testerCookie } from './lib/session.js'
 import { readSettings } from './lib/settings.js'
 import { trackAllows } from './lib/tracks.js'
@@ -37,6 +37,31 @@ function notFound(): Response {
 
 function redirect(location: string, extra: Record<string, string> = {}, status = 302): Response {
   return new Response(null, { status, headers: { ...securityHeaders(true), location, ...extra } })
+}
+
+/* The sitemap's lastmod dates (spec §5.1): the deployment's build and the help content's last GOV.UK
+   fetch, read from the deployment's own public files and kept for an hour */
+let dates: { at: number; value: BuildDates } | null = null
+async function buildDates(url: URL): Promise<BuildDates> {
+  if (dates && Date.now() - dates.at < (dates.value.built ? 3_600_000 : 300_000)) return dates.value
+  const get = async (path: string): Promise<string | null> => {
+    try {
+      const res = await fetch(new URL(path, url), { signal: AbortSignal.timeout(2000) })
+      if (!res.ok) return null
+      const j = (await res.json()) as { built?: unknown }
+      return typeof j.built === 'string' ? j.built : null
+    } catch {
+      return null
+    }
+  }
+  const [built, help] = await Promise.all([get('/_build.json'), get('/help/help-content.json')])
+  dates = { at: Date.now(), value: { built, help } }
+  return dates.value
+}
+
+/** tests start each case with no dates kept */
+export function clearBuildDates(): void {
+  dates = null
 }
 
 function serve(file: string, url: URL, headers: Record<string, string>): Response {
@@ -83,13 +108,13 @@ export default async function middleware(request: Request): Promise<Response> {
   if (path === loginPath()) return serve(FILES.login, url, closed)
   if (path === '/favicon.ico') return next({ headers: open })
   if (path === '/holding') return serve(FILES.holding, url, { ...open, 'cache-control': HTML })
-  if (path === '/privacy') {
+  if (path === '/privacy' || path === '/help') {
     const { indexing } = await readSettings()
-    return serve(FILES.privacy, url, { ...openHeaders(path, indexing), 'cache-control': HTML })
+    return serve(path === '/help' ? FILES.help : FILES.privacy, url, { ...openHeaders(path, indexing), 'cache-control': HTML })
   }
   if (path === '/robots.txt' || path === '/sitemap.xml') {
     const { indexing } = await readSettings()
-    const body = path === '/robots.txt' ? robotsTxt(indexing, PUBLIC, origin) : sitemapXml(indexing, origin)
+    const body = path === '/robots.txt' ? robotsTxt(indexing, PUBLIC, origin) : sitemapXml(indexing, origin, indexing ? lastmodFor(await buildDates(url)) : {})
     if (body === null) return notFound()
     const type = path === '/robots.txt' ? 'text/plain; charset=utf-8' : 'application/xml; charset=utf-8'
     return new Response(body, { status: 200, headers: { ...open, 'content-type': type, 'cache-control': 'public, max-age=300' } })

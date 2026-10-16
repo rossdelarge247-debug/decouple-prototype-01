@@ -3,7 +3,8 @@
    1. copy  2. compile every Babel script with esbuild, one IIFE each  3. production React from vendor/
    4. self-hosted fonts  5. cache-busting  6. the public allow-list  7. questions.json from the sheet
    8. minify every script and stylesheet, comments out  9. canonical links on the public pages
-   10. fail on anything left over or unresolved. Also copies the login, code and 404 pages from pages-src/. */
+   10. fail on anything left over or unresolved. Also the help content from GOV.UK (§5.2), and the
+   login, code and 404 pages from pages-src/. */
 import { createRequire } from 'node:module'
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
@@ -32,6 +33,7 @@ import {
   swapReact,
   withoutInlineScripts,
 } from '../lib/build/transform.mjs'
+import { USER_AGENT, buildHelpContent } from '../lib/build/help.mjs'
 
 const require = createRequire(import.meta.url)
 const esbuild = require('esbuild')
@@ -51,13 +53,17 @@ const PAGES = join(ROOT, 'pages-src')
 const DIST = join(ROOT, 'dist')
 const GENERATED = join(ROOT, 'lib', 'generated')
 
-const PUBLIC_PAGES = ['Marketing 02 · Divorce Guide.html', 'Marketing 01 · Holding Page.html', 'privacy.html']
+const HELP_PAGE = 'Marketing 03 · Help & Support.html'
+const PUBLIC_PAGES = ['Marketing 02 · Divorce Guide.html', 'Marketing 01 · Holding Page.html', 'privacy.html', HELP_PAGE]
+/* fetched by the help page's script, so the tag scan can't see them (spec §5.6) */
+const PUBLIC_DATA = ['help/help-sources.json', 'help/help-content.json', '_build.json']
 /* spec §5.9: the guide and the holding page are both served at /, so both point there */
 const CANONICAL_ORIGIN = (process.env.SITE_ORIGIN || 'https://decouple.uk').replace(/\/+$/, '')
 const CANONICAL = {
   'Marketing 02 · Divorce Guide.html': CANONICAL_ORIGIN + '/',
   'Marketing 01 · Holding Page.html': CANONICAL_ORIGIN + '/',
   'privacy.html': CANONICAL_ORIGIN + '/privacy',
+  [HELP_PAGE]: CANONICAL_ORIGIN + '/help',
 }
 const CSS_TARGET = ['chrome87', 'edge88', 'firefox78', 'safari14']
 const OWN_PAGES = ['studio.html', 'take-part-code.html', '404.html']
@@ -241,6 +247,32 @@ async function main() {
   } else log('questions.json: APPS_SCRIPT_URL not set; the page uses its built-in questions')
   write('m02/guide/questions.json', JSON.stringify(questions))
 
+  /* help content from GOV.UK (§5.2): a path that doesn't exist fails the build, GOV.UK down reuses the live copy */
+  if (inDist('help/help-sources.json')) {
+    let sources
+    try {
+      sources = JSON.parse(read('help/help-sources.json'))
+    } catch (e) {
+      fail(`help/help-sources.json is not valid JSON: ${e.message}`)
+    }
+    const fetchJson = async (url) => {
+      const res = await fetch(url, { headers: { 'user-agent': USER_AGENT, accept: 'application/json' }, redirect: 'follow', signal: AbortSignal.timeout(15000) })
+      let json = null
+      if (res.ok) {
+        try {
+          json = await res.json()
+        } catch {
+          json = null
+        }
+      } else await res.arrayBuffer().catch(() => null)
+      return { status: res.status, json }
+    }
+    const help = await buildHelpContent(sources, { fetchJson, log, warn: (w) => console.warn('[build] WARNING help: ' + w) })
+    if (help.problems.length) fail('help paths that are not on GOV.UK (fix or remove them in help/help-sources.json, or mark them "confirm": true):\n  ' + help.problems.join('\n  '))
+    write('help/help-content.json', JSON.stringify(help.content))
+  }
+  write('_build.json', JSON.stringify({ built: new Date().toISOString() }))
+
   /* 5. cache-busting: hashes of the final JS and CSS, references rewritten in HTML and CSS */
   const hashes = new Map()
   const hashFor = (rel) => {
@@ -313,6 +345,7 @@ async function main() {
   }
   visitCss('fonts.css')
   add('m02/guide/questions.json')
+  for (const f of PUBLIC_DATA) add(f)
   add('favicon.ico')
   const list = [...pub].sort()
   write('_public.json', JSON.stringify(list, null, 1) + '\n')

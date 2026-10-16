@@ -10,6 +10,7 @@ import { POST as signup } from '../api/signup.js'
 import { POST as tester } from '../api/tester.js'
 import { GET as codesGet, POST as codesPost } from '../api/admin/codes.js'
 import { POST as publish } from '../api/admin/publish.js'
+import { GET as rebuild } from '../api/cron/rebuild.js'
 import { GET as siteGet, POST as sitePost } from '../api/admin/site.js'
 import { hashPassword } from '../lib/password.js'
 import { cookieFor, post, req, setup } from './helpers.js'
@@ -153,6 +154,8 @@ describe('/api/signup and /api/email', () => {
     expect((await signup(post('/api/signup', body, await cookieFor('human')))).status).toBe(200)
     expect(JSON.parse(String(fetch.mock.calls[0][1]?.body))).toMatchObject({ kind: 'signup', email: 'you@example.com', source: 'holding:direct' })
     expect((await signup(post('/api/signup', { ...body, source: 'x' }, await cookieFor('human')))).status).toBe(400)
+    expect((await signup(post('/api/signup', { ...body, source: 'help' }, await cookieFor('human')))).status).toBe(200)
+    expect(JSON.parse(String(fetch.mock.calls[1][1]?.body))).toMatchObject({ kind: 'signup', source: 'help' })
     setup({ testMode: true })
     expect(await (await signup(post('/api/signup', body, await cookieFor('owner')))).json()).toEqual({ ok: true, test: true })
   })
@@ -293,6 +296,43 @@ describe('owner-only routes', () => {
     process.env.DEPLOY_HOOK_URL = 'https://api.vercel.com/v1/integrations/deploy/prj_x/abc'
     expect((await publish(post('/api/admin/publish', {}, owner))).status).toBe(200)
     expect(fetch.mock.calls[0][1]?.method).toBe('POST')
+  })
+})
+
+describe('/api/cron/rebuild', () => {
+  const cron = (auth?: string) => req('/api/cron/rebuild', auth ? { headers: { authorization: auth } } : {})
+  /* made at run time and low in entropy, so the secret scan never mistakes a test value for a key */
+  const SECRET = 'cron'.repeat(5)
+  const WRONG = 'nope'.repeat(5)
+
+  it('calls the deploy hook only for Vercel Cron, with the secret', async () => {
+    const fetch = mockFetch(() => ({ job: {} }))
+    process.env.DEPLOY_HOOK_URL = 'https://api.vercel.com/v1/integrations/deploy/prj_x/abc'
+    expect((await rebuild(cron('Bearer anything'))).status).toBe(401)
+    process.env.CRON_SECRET = SECRET
+    expect((await rebuild(cron())).status).toBe(401)
+    expect((await rebuild(cron(`Bearer ${WRONG}`))).status).toBe(401)
+    expect((await rebuild(cron(SECRET))).status).toBe(401)
+    expect(fetch).not.toHaveBeenCalled()
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const ok = await rebuild(cron(`Bearer ${SECRET}`))
+    log.mockRestore()
+    expect(ok.status).toBe(200)
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(String(fetch.mock.calls[0][0])).toBe('https://api.vercel.com/v1/integrations/deploy/prj_x/abc')
+    expect(fetch.mock.calls[0][1]?.method).toBe('POST')
+    delete process.env.CRON_SECRET
+  })
+
+  it('refuses a short secret, and says when the hook is missing', async () => {
+    mockFetch(() => ({ job: {} }))
+    process.env.CRON_SECRET = 'short'
+    expect((await rebuild(cron('Bearer short'))).status).toBe(401)
+    process.env.CRON_SECRET = SECRET
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    expect((await rebuild(cron(`Bearer ${SECRET}`))).status).toBe(503)
+    vi.restoreAllMocks()
+    delete process.env.CRON_SECRET
   })
 })
 
