@@ -1,4 +1,4 @@
-/* Decouple MVP toolkit · shared store and registry for MVP 01–07, numbered in journey order.
+/* Decouple MVP toolkit · shared store and registry for MVP 01–08, numbered in journey order. Its UI is kit-ui.jsx.
    decouple.kit.v1 holds what the tools share: the stage and children from the guide, each tool's status, the visitor's price level,
    paid packs, fake-door answers and a local log of events. Each MVP page also keeps its own key (decouple.mvpNN.v1). */
 (function migrate() {
@@ -33,6 +33,8 @@ window.KIT = (function () {
   const ASK = { id: "ask", stage: "mvp07", n: "MVP 07", t: "Ask", ic: "Chat", file: "MVP 07 · Ask.html", c: "#5B21B6", soft: "#F3EEFE",
     d: "A sounding board, any time. Answers from official sources, with links, and never legal advice.",
     modes: [["ask", "Ask anything"], ["meet", "Get ready for a meeting"], ["explain", "Explain this letter"], ["calm", "Say it calmly"], ["talk", "Talk it through"]] };
+  /* help & support: the same content as the public /help page (help/) */
+  const HELP = { id: "help", stage: "mvp08", n: "MVP 08", t: "Help & support", ic: "Help", file: "MVP 08 · Help & Support.html" };
 
   /* finished documents: the only paid things. Prices are tested per visitor */
   const PACKS = {
@@ -131,5 +133,5 @@ window.KIT = (function () {
   }
 
   tier();
-  return { acct, save, load, drop, progress, needAcct, signup, signOut, on: (f) => (bus.add(f), () => bus.delete(f)), isDirty: () => dirty, SITE: "MVP 00 · Public Site.html", KEY, HOME, read: rd, write: wr, subscribe: (f) => (subs.add(f), () => subs.delete(f)), TOOLS, ASK, PACKS, DOORS, STAGES, STAGE_L, PERSONA, kids, stage, price, tier, status, setStatus, journey, open, home, exit, log };
+  return { acct, save, load, drop, progress, needAcct, signup, signOut, on: (f) => (bus.add(f), () => bus.delete(f)), isDirty: () => dirty, SITE: "MVP 00 · Public Site.html", KEY, HOME, read: rd, write: wr, subscribe: (f) => (subs.add(f), () => subs.delete(f)), TOOLS, ASK, HELP, PACKS, DOORS, STAGES, STAGE_L, PERSONA, kids, stage, price, tier, status, setStatus, journey, open, home, exit, log };
 })();

@@ -1,6 +1,6 @@
 /* Tester tracks (spec §3, §4.4). Each tester code has a track: which prototype pages its tester may
-   open. Tokens: p01…p10 → Proto 01…10, m00…m07 → MVP 00…07, "full" = all ten Protos, "mvp" = all
-   eight MVPs, or a list like "p03,m05". An empty track means the guide only.
+   open. Tokens: p01…p10 → Proto 01…10, m00…m08 → MVP 00…08, "full" = all ten Protos, "mvp" = all
+   nine MVPs, or a list like "p03,m05". An empty track means the guide only.
    A tester with a track may also open /take-part and everything under the folders the pages share. */
 import { FILES, MVPS, PROTOS, slugOf } from './aliases.js'
 

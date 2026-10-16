@@ -6,6 +6,7 @@ export const FILES = {
   guide: 'Marketing 02 · Divorce Guide.html',
   holding: 'Marketing 01 · Holding Page.html',
   privacy: 'privacy.html',
+  help: 'Marketing 03 · Help & Support.html',
   hub: 'Decouple · Prototype Hub.html',
   marketing: 'Decouple · Marketing Hub.html',
   results: 'Decouple · Results.html',
@@ -29,7 +30,7 @@ export const PROTOS: readonly string[] = [
   'Proto 10 · Dashboard.html',
 ]
 
-/** MVP 00 to MVP 07. MVP 00 · Public Site is a prototype, not a public page. */
+/** MVP 00 to MVP 08. MVP 00 · Public Site is a prototype, not a public page. */
 export const MVPS: readonly string[] = [
   'MVP 00 · Public Site.html',
   'MVP 01 · Toolkit.html',
@@ -39,6 +40,7 @@ export const MVPS: readonly string[] = [
   'MVP 05 · Financial Statement.html',
   'MVP 06 · Split Planner.html',
   'MVP 07 · Ask.html',
+  'MVP 08 · Help & Support.html',
 ]
 
 /** files an export renamed: the old address redirects to the new one, behind the same rules */
@@ -54,6 +56,7 @@ export const ALIASES: Readonly<Record<string, Alias>> = {
   '/guide': { file: FILES.guide, level: 'public', via: 'rewrite' },
   '/holding': { file: FILES.holding, level: 'public', via: 'rewrite' },
   '/privacy': { file: FILES.privacy, level: 'public', via: 'rewrite' },
+  '/help': { file: FILES.help, level: 'public', via: 'rewrite' },
   '/hub': { file: FILES.hub, level: 'owner', via: 'rewrite' },
   '/hub/marketing': { file: FILES.marketing, level: 'owner', via: 'redirect' },
   '/hub/results': { file: FILES.results, level: 'owner', via: 'redirect' },

@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest'
-import middleware, { cacheFor } from '../middleware.js'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import middleware, { cacheFor, clearBuildDates } from '../middleware.js'
 import { cookieFor, req, setup } from './helpers.js'
 
 const GUIDE = '/Marketing%2002%20%C2%B7%20Divorce%20Guide.html'
@@ -7,7 +7,11 @@ const HOLDING = '/Marketing%2001%20%C2%B7%20Holding%20Page.html'
 const rewriteOf = (r: Response) => new URL(r.headers.get('x-middleware-rewrite') as string).pathname
 const isNext = (r: Response) => r.headers.get('x-middleware-next') === '1'
 
-beforeEach(() => setup())
+beforeEach(() => {
+  setup()
+  clearBuildDates()
+})
+afterEach(() => vi.unstubAllGlobals())
 
 describe('middleware: straight through', () => {
   it('lets /api, the login path, the public pages and the allow-list through with the security headers', async () => {
@@ -18,6 +22,11 @@ describe('middleware: straight through', () => {
     expect(rewriteOf(await middleware(req('/studio')))).toBe('/studio.html')
     expect(rewriteOf(await middleware(req('/privacy')))).toBe('/privacy.html')
     expect(rewriteOf(await middleware(req('/holding')))).toBe(HOLDING)
+    const help = await middleware(req('/help'))
+    expect(rewriteOf(help)).toBe('/Marketing%2003%20%C2%B7%20Help%20%26%20Support.html')
+    expect(help.headers.get('cache-control')).toBe('no-cache')
+    for (const p of ['/help/help.js', '/help/help.css', '/help/help-sources.json', '/help/help-content.json', '/_build.json', '/Marketing%2003%20%C2%B7%20Help%20%26%20Support.html']) expect(isNext(await middleware(req(p))), p).toBe(true)
+    expect((await middleware(req('/help/help-content.json'))).headers.get('cache-control')).toBe('no-cache')
     const css = await middleware(req('/fonts.css'))
     expect(isNext(css)).toBe(true)
     expect(css.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
@@ -130,16 +139,28 @@ describe('middleware: search engines (spec §5.1)', () => {
     expect((await middleware(req('/sitemap.xml'))).status).toBe(404)
     expect((await middleware(req('/'))).headers.get('x-robots-tag')).toBe('noindex, nofollow')
     expect((await middleware(req('/privacy'))).headers.get('x-robots-tag')).toBe('noindex, nofollow')
+    expect((await middleware(req('/help'))).headers.get('x-robots-tag')).toBe('noindex, nofollow')
   })
 
-  it('lets / and /privacy be listed when indexing is on, and names no private path', async () => {
+  it('leaves lastmod out when the dates cannot be read', async () => {
     setup({ indexing: true })
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 404 })))
+    const xml = await (await middleware(req('/sitemap.xml'))).text()
+    expect(xml).toContain('<url><loc>https://decouple.uk/help</loc></url>')
+    expect(xml).not.toContain('lastmod')
+  })
+
+  it('lets /, /privacy and /help be listed when indexing is on, and names no private path', async () => {
+    setup({ indexing: true })
+    vi.stubGlobal('fetch', vi.fn(async (u: string | URL) => new Response(JSON.stringify({ built: String(u).includes('help-content') ? '2026-10-12T05:01:00.000Z' : '2026-10-16T09:00:00.000Z' }), { status: 200 })))
     expect((await middleware(req('/'))).headers.get('x-robots-tag')).toBeNull()
     expect((await middleware(req('/privacy'))).headers.get('x-robots-tag')).toBeNull()
+    expect((await middleware(req('/help'))).headers.get('x-robots-tag')).toBeNull()
     for (const p of ['/guide', '/holding', '/studio', '/api/session', '/fonts.css', '/privacy.html']) expect((await middleware(req(p))).headers.get('x-robots-tag'), p).toBe('noindex, nofollow')
     const text = await (await middleware(req('/robots.txt'))).text()
     const lines = text.trim().split('\n')
-    expect(lines.slice(0, 3)).toEqual(['User-agent: *', 'Allow: /$', 'Allow: /privacy$'])
+    expect(lines.slice(0, 4)).toEqual(['User-agent: *', 'Allow: /$', 'Allow: /privacy$', 'Allow: /help$'])
+    expect(text).toContain('Allow: /help/help-content.json')
     expect(lines.slice(-2)).toEqual(['Disallow: /', 'Sitemap: https://decouple.uk/sitemap.xml'])
     expect(text).toContain('Allow: /fonts.css')
     for (const bad of ['Hub', 'Proto%20', 'MVP', 'studio', 'take-part', 'results/', 'settings/', 'ut-questions']) expect(text, bad).not.toContain(bad)
@@ -147,8 +168,9 @@ describe('middleware: search engines (spec §5.1)', () => {
     expect(map.status).toBe(200)
     const xml = await map.text()
     expect(xml).toContain('<loc>https://decouple.uk/</loc>')
-    expect(xml).toContain('<loc>https://decouple.uk/privacy</loc>')
-    expect(xml.match(/<loc>/g)).toHaveLength(2)
+    expect(xml).toContain('<url><loc>https://decouple.uk/privacy</loc><lastmod>2026-10-16T09:00:00.000Z</lastmod></url>')
+    expect(xml).toContain('<url><loc>https://decouple.uk/help</loc><lastmod>2026-10-12T05:01:00.000Z</lastmod></url>')
+    expect(xml.match(/<loc>/g)).toHaveLength(3)
   })
 })
 
@@ -189,6 +211,8 @@ describe('middleware: private paths', () => {
     const mvp = await cookieFor('tester', { l: 'P02', c: 'OAK-WREN-40' })
     for (const p of [M03, M05, '/MVP%2000%20%C2%B7%20Public%20Site.html', '/mvp/kit/kit.js', '/proto/ut/ut.js', '/shared/dc-site.js', '/take-part/tp.js', '/inline/mvp-05-financial-statement-1.js', '/inline/decouple-take-part-1.js', '/Decouple%20%C2%B7%20Take%20Part.html']) expect(isNext(await middleware(req(p, { cookie: mvp }))), p).toBe(true)
     expect((await middleware(req('/p/mvp05', { cookie: mvp }))).headers.get('location')).toBe(M05)
+    expect((await middleware(req('/p/mvp08', { cookie: mvp }))).status).toBe(302)
+    expect(isNext(await middleware(req('/MVP%2008%20%C2%B7%20Help%20%26%20Support.html', { cookie: mvp })))).toBe(true)
     for (const p of [P01, '/p/01', '/hub', '/hub/results', '/Decouple%20%C2%B7%20Prototype%20Hub.html', '/results/r-app.js', '/hub/hub-switch.js', '/inline/proto-01-discover-1.js', '/inline/decouple-prototype-hub-1.js']) expect((await middleware(req(p, { cookie: mvp }))).status, p).toBe(404)
 
     const chosen = await cookieFor('tester', { l: 'P03', c: 'ASH-FINCH-55' })
@@ -213,6 +237,7 @@ describe('middleware: private paths', () => {
     expect((await middleware(req('/p/mvp00', { cookie: owner }))).headers.get('location')).toBe('/MVP%2000%20%C2%B7%20Public%20Site.html')
     expect((await middleware(req('/p/mvp03', { cookie: owner }))).headers.get('location')).toBe('/MVP%2003%20%C2%B7%20To-do%20%26%20Journal.html')
     expect((await middleware(req('/p/mvp07?test=1', { cookie: owner }))).headers.get('location')).toBe('/MVP%2007%20%C2%B7%20Ask.html?test=1')
+    expect((await middleware(req('/p/mvp08', { cookie: owner }))).headers.get('location')).toBe('/MVP%2008%20%C2%B7%20Help%20%26%20Support.html')
     const old = await middleware(req('/MVP%2001%20%C2%B7%20Shared%20Statement.html#doc', { cookie: owner }))
     expect(old.status).toBe(302)
     expect(old.headers.get('location')).toBe('/MVP%2005%20%C2%B7%20Financial%20Statement.html')

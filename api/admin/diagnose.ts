@@ -28,6 +28,7 @@ const VARIABLES = [
   'VERCEL_API_TOKEN',
   'VERCEL_TEAM_ID',
   'DEPLOY_HOOK_URL',
+  'CRON_SECRET',
   'ANTHROPIC_API_KEY',
   'CLAUDE_MODEL',
   'CLAUDE_MONTHLY_CAP_USD',
@@ -110,6 +111,18 @@ export async function GET(request: Request): Promise<Response> {
     note: 'until the key, the model and the cap are all set, /api/claude answers 503 and the AI features say they are unavailable',
   }
 
+  /* the help content this deployment serves: how much of GOV.UK the last build fetched (spec §5.2) */
+  let help: Record<string, unknown> = { read: 'skipped' }
+  try {
+    const res = await timed(5000, fetch(new URL('/help/help-content.json', request.url)))
+    const c = res.ok ? ((await res.json()) as { built?: unknown; pages?: Record<string, unknown>; forms?: unknown[] }) : null
+    help = c
+      ? { read: 'ok', built: c.built ?? null, pages: c.pages ? Object.keys(c.pages).length : 0, forms: Array.isArray(c.forms) ? c.forms.length : 0, note: 'built null or 0 pages: the last build could not reach GOV.UK, and the page shows links instead' }
+      : { read: `failed: ${res.status}` }
+  } catch (err) {
+    help = { read: 'failed', error: message(err) }
+  }
+
   /* ?email=1 sends the guide email, with a dummy link, to the from address, and reports what Resend said */
   const url = new URL(request.url)
   let emailTest: Record<string, unknown> | undefined
@@ -141,6 +154,8 @@ export async function GET(request: Request): Promise<Response> {
     turnstile: { siteKey: !!e.TURNSTILE_SITE_KEY, secret: !!e.TURNSTILE_SECRET_KEY },
     ai,
     deployHook: { configured: !!e.DEPLOY_HOOK_URL, looksRight: /^https:\/\/api\.vercel\.com\//.test(e.DEPLOY_HOOK_URL || '') },
+    weeklyRebuild: { cronSecret: (e.CRON_SECRET || '').trim().length >= 16, schedule: 'Mondays 05:00 UTC (vercel.json)', note: 'refreshes the help content from GOV.UK; needs CRON_SECRET (16+ characters) and the deploy hook' },
+    help,
     whatTheSwitchesNeed: ['GLOBAL_CONFIG (added by connecting the store)', 'VERCEL_API_TOKEN', 'then a redeploy'],
   }
   return new Response(JSON.stringify(report, null, 2), {

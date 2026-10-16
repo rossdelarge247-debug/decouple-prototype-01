@@ -20,7 +20,7 @@ export function setup(settings: Partial<Settings> = {}, codes: CodeRow[] = CODES
   process.env.LOGIN_PATH = '/studio'
   process.env.SITE_ORIGIN = 'https://decouple.uk'
   delete process.env.TESTER_CODES
-  for (const k of ['APPS_SCRIPT_URL', 'APPS_SCRIPT_SECRET', 'OWNER_PASSWORD_HASH', 'RESEND_API_KEY', 'TURNSTILE_SECRET_KEY', 'DEPLOY_HOOK_URL', 'GLOBAL_CONFIG', 'GLOBAL_CONFIG_ID', 'EDGE_CONFIG', 'EDGE_CONFIG_ID', 'VERCEL_API_TOKEN', 'VERCEL_TEAM_ID']) delete process.env[k]
+  for (const k of ['APPS_SCRIPT_URL', 'APPS_SCRIPT_SECRET', 'OWNER_PASSWORD_HASH', 'RESEND_API_KEY', 'TURNSTILE_SECRET_KEY', 'DEPLOY_HOOK_URL', 'CRON_SECRET', 'GLOBAL_CONFIG', 'GLOBAL_CONFIG_ID', 'EDGE_CONFIG', 'EDGE_CONFIG_ID', 'VERCEL_API_TOKEN', 'VERCEL_TEAM_ID']) delete process.env[k]
   Object.assign(process.env, env)
   useSettingsReader(async () => ({ mode: 'holding', requireCode: true, testMode: false, landing: 'a', indexing: false, ...settings }))
   clearSettingsCache()
