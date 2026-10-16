@@ -30,6 +30,8 @@ https://vercel.com/rossdelarge247-debugs-projects/decouple-prototype-01/settings
 
 `SITE_ORIGIN` `https://decouple.uk` · `LOGIN_PATH` `/studio` · `OWNER_PASSWORD_HASH` from `npm run hash-password` · `SESSION_SECRET` from `openssl rand -hex 32` · `TESTER_CODES` (optional fallback) · `APPS_SCRIPT_URL` and `APPS_SCRIPT_SECRET` from `apps-script/SETUP.md` · `RESEND_API_KEY` · `MAIL_FROM` `Decouple <hello@decouple.uk>` · `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` from Cloudflare › Turnstile › Add widget (domain decouple.uk, managed mode) · `VERCEL_API_TOKEN` · `VERCEL_TEAM_ID` · `DEPLOY_HOOK_URL` (`GLOBAL_CONFIG` comes from the Connect step; `GLOBAL_CONFIG_ID` only if you prefer to set it by hand).
 
+For the weekly help refresh (`/api/cron/rebuild`, spec §5.2): `CRON_SECRET`, a random string of 16 or more characters (`openssl rand -hex 32`). Vercel Cron sends it on the Monday call that `vercel.json` schedules; without it the call gets 401 and the help content refreshes only when you press Publish.
+
 For the AI proxy (`/api/claude`, spec §7): `ANTHROPIC_API_KEY` (a new key made for this site, not the retired app's), `CLAUDE_MODEL` and `CLAUDE_MONTHLY_CAP_USD`. Until all three are set the AI features say they are unavailable. The proxy keeps its monthly spend estimate in the Global Config store as `aiSpend`, so it needs `VERCEL_API_TOKEN` too.
 
 Then remove `TINK_CLIENT_ID` and `TINK_CLIENT_SECRET` from Production, and any `ANTHROPIC_API_KEY` left from the old app, and rotate them at Tink and Anthropic: the app that used them is retired. `TESTERS_CAN_OPEN_PROTOS` is retired too (export 2026-10-14d): delete it if it is there. Deployments › the latest › Redeploy, so the functions pick everything up.

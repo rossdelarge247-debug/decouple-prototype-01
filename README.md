@@ -33,8 +33,9 @@ variables from spec §9 in `.env.local` (never committed).
 
 ## How a request is served
 
-1. The middleware lets `/api/*`, the login path, `/holding`, `/privacy` and every path in the
-   public allow-list through, and answers `/robots.txt` and `/sitemap.xml` from the indexing switch.
+1. The middleware lets `/api/*`, the login path, `/holding`, `/privacy`, `/help` and every path in
+   the public allow-list through, and answers `/robots.txt` and `/sitemap.xml` from the indexing switch.
+   The build fills `/help` with GOV.UK text from the Content API (`lib/build/help.mjs`, spec §5.2).
 2. `/` shows the guide or the holding page, by the mode switch and the visitor's session.
    `/guide` always shows the guide. `?code=` redeems a tester code.
 3. `/take-part` is the participant hub for a tester whose code has a track, or a small code page
