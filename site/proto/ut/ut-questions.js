@@ -149,5 +149,14 @@ mvp07,3,m7-q1,rating5,How much did you trust the answers?,,y,y
 mvp07,4,m7-q2,yesno,Would you rely on it for a real decision?,,y,y
 mvp07,5,m7-q3,choice,Which mode was most useful?,Ask anything|Get ready for a meeting|Explain this letter|Say it calmly|Talk it through,y,y
 mvp07,6,m7-q4,rating5,"Compared with asking ChatGPT, how much better was it?",,n,y
-mvp07,7,m7-q5,yesno,Would you be comfortable pasting a real letter into it?,,y,y`
+mvp07,7,m7-q5,yesno,Would you be comfortable pasting a real letter into it?,,y,y
+mvp08,0,m8-in,intro,"Help & support: official information and where to get help, in the order a separation usually runs. Find the answer to one real question you have, then look at the financial disclosure section.",5 min,,y
+mvp08,1,m8-r1,recap,Found a topic that matters to you and read it,,,y
+mvp08,2,m8-r2,recap,Looked at the financial disclosure section,,,y
+mvp08,3,m8-q1,ease7,How easy was it to find what you were looking for?,,y,y
+mvp08,4,m8-q2,yesno,Did it answer your question?,,y,y
+mvp08,5,m8-q3,rating5,How much did you trust it?,,y,y
+mvp08,6,m8-q4,choice,"Compared with searching GOV.UK yourself, was it…",Much easier|A bit easier|About the same|Harder,y,y
+mvp08,7,m8-q5,choice,What was missing?,Nothing|A topic I needed|Plainer words|What to do next|Someone to ask,n,y
+mvp08,8,m8-q6,yesno,Would you come back to it?,,y,y`
 };

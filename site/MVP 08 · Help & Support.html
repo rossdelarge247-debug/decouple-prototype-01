@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-stage="mvp08">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decouple — MVP 08 · Help &amp; Support</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto/discover/discover.css">
+<link rel="stylesheet" href="proto/interview/iv.css">
+<link rel="stylesheet" href="mvp/kit/kit.css">
+<link rel="stylesheet" href="help/help.css">
+<style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}.kit-wrap .kit-head{margin-bottom:28px}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="mvp/kit/kit.js"></script>
+<script>window.Journey = KIT.journey("mvp08", "MVP 08", "Help & support", "MVP · help and support, from GOV.UK and charities", "MVP 08 · Help & Support.html", "decouple.mvp08.v1");</script>
+<script src="proto/ut/ut-questions.js"></script>
+<script src="proto/ut/ut.js"></script>
+<script src="proto/proto-chrome.js"></script>
+<script src="help/help.js"></script>
+<script type="text/babel" src="proto/discover/parts.jsx"></script>
+<script type="text/babel" src="mvp/kit/kit-ui.jsx"></script>
+<script type="text/babel">
+/* MVP 08 · Help & support. The same content and renderer as Marketing 03 (/help), from help/. Nothing is saved.
+   In testing mode only, it logs which topics were opened, links followed and the hand-off to the financial statement. */
+const { useEffect, useRef } = React;
+function App() {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!ref.current || ref.current.dataset.on) return; ref.current.dataset.on = 1;
+    HELP.mount(ref.current, { ctx: "kit", onStart: () => KIT.open(KIT.TOOLS.find((t) => t.id === "statement").file), onEvent: (qid, q, a, step) => KIT.log(qid, q, "help", a, { step: "Help · " + step }) });
+  }, []);
+  return (
+    <div className="site bg-paper" style={{ minHeight: "100vh" }} data-screen-label="MVP 08 · Help & support">
+      <window.KitTop tool/>
+      <main className="kit-wrap">
+        <window.KitHead kick="Help & support · free" title="Help, in the order" em="you’ll need it." lede="Official information from GOV.UK, and the charities and services that can help, from staying safe to sorting out the money. The same page is public at decouple.uk/help."/>
+        <div ref={ref}></div>
+      </main>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

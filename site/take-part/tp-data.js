@@ -1,5 +1,5 @@
 /* Take part · the participant hub's catalogue, screener and copy. Track tokens (set per tester code in Site settings):
-   "full" = Protos 01–10, "mvp" = MVP 00–07, or a list like "p03,p06,m05". Empty = guide only. */
+   "full" = Protos 01–10, "mvp" = MVP 00–08, or a list like "p03,p06,m05". Empty = guide only. */
 window.TP = (function () {
   const P = [
     ["p01", "discover", "Proto 01 · Discover.html", "01", "Discover", "A website for a divorce service: what it does and what it costs.", 3],
@@ -22,6 +22,7 @@ window.TP = (function () {
     ["m05", "mvp05", "MVP 05 · Financial Statement.html", "6", "Financial statement", "Everything you both own and owe, with the documents to show it.", 10],
     ["m06", "mvp06", "MVP 06 · Split Planner.html", "7", "Split planner", "Try ways of splitting things, and see how a court might see them.", 6],
     ["m07", "mvp07", "MVP 07 · Ask", "8", "Ask", "An AI sounding board, with answers from official sources.", 6],
+    ["m08", "mvp08", "MVP 08 · Help & Support.html", "9", "Help & support", "Official information and where to get help, in one place.", 5],
   ];
   M[7][2] = "MVP 07 · Ask.html";
   const ALL = [...P, ...M].map(([tok, stage, file, n, t, d, min]) => ({ tok, stage, file, n, t, d, min, kind: tok[0] === "p" ? "full" : "mvp" }));
@@ -33,7 +34,7 @@ window.TP = (function () {
     const want = t.split(/[\s,]+/).map((x) => (/^\d{2}$/.test(x) ? "p" + x : x)).filter(Boolean);
     return ALL.filter((x) => want.includes(x.tok));
   }
-  const trackLabel = (track) => { const t = String(track || "").toLowerCase(); return !t ? "Guide only" : t === "full" ? "Full vision · 10" : t === "mvp" ? "MVP · 8" : "Chosen · " + parts(t).map((x) => x.tok.toUpperCase()).join(", "); };
+  const trackLabel = (track) => { const t = String(track || "").toLowerCase(); return !t ? "Guide only" : t === "full" ? "Full vision · 10" : t === "mvp" ? "MVP · " + M.length : "Chosen · " + parts(t).map((x) => x.tok.toUpperCase()).join(", "); };
 
   /* the screener. Sent as test "Screener" (one row each). The wellbeing answer is never sent. */
   const SCREEN = [

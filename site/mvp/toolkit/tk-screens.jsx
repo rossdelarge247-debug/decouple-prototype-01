@@ -71,6 +71,7 @@
               <b className="serif">Need someone now?</b>
               <div className="tk-help"><Ic.Phone s={15}/><div><b>Samaritans · 116 123</b><small>Free, any time, day or night</small></div></div>
               <div className="tk-help"><Ic.Phone s={15}/><div><b>National Domestic Abuse Helpline · 0808 2000 247</b><small>Free, 24 hours</small></div></div>
+              <button type="button" className="kit-lnk tk-hall" onClick={() => K.open(K.HELP.file)}>All help &amp; support, from GOV.UK and charities <Ic.Arrow s={13}/></button>
             </div>
           </aside>
         </div>

@@ -1,6 +1,6 @@
 # Decouple site · build and housework spec
 
-For Claude Code. Owned by the design project; last updated 14 Oct 2026 (export `2026-10-14d`). Changes since the last export are listed in that export's `CHANGES.md`. The owner is Ross. There is one login, Ross's. Domain: **decouple.uk** (already connected to Vercel). Contact: **hello@decouple.uk**.
+For Claude Code. Owned by the design project; last updated 15 Oct 2026 (export `2026-10-15a`). Changes since the last export are listed in that export's `CHANGES.md`. The owner is Ross. There is one login, Ross's. Domain: **decouple.uk** (already connected to Vercel). Contact: **hello@decouple.uk**.
 
 ---
 
@@ -8,9 +8,9 @@ For Claude Code. Owned by the design project; last updated 14 Oct 2026 (export `
 
 | Area | Who | What |
 |---|---|---|
-| **Public** | Anyone | `/`: the M02 guide's landing page, or the M01 holding page (switchable). `/privacy`. |
+| **Public** | Anyone | `/`: the M02 guide's landing page, or the M01 holding page (switchable). `/privacy`. `/help`, the help and support hub (Marketing 03). |
 | **Testers** | Anyone with a tester code | Everything in the guide after the landing page. If their code has a `track`, also the participant hub (`/take-part`) and the prototypes in that track. Never the hubs. |
-| **Owner** | Ross, signed in | Prototype hub, Marketing hub, Results, Site settings, Protos 01–10, MVP 00–07, and every other file. |
+| **Owner** | Ross, signed in | Prototype hub, Marketing hub, Results, Site settings, Protos 01–10, MVP 00–08, and every other file. |
 
 - The guide's landing page is public. Starting the guide needs a tester code, until the owner turns that off (`requireCode`). The page asks for the code; the server enforces it, because answers and email need a tester or owner session.
 - Holding mode only changes `/`, which then shows the holding page. `/guide` always serves the guide file, so emailed guide links keep working. Without a code, nobody can start the guide there while `requireCode` is on.
@@ -18,7 +18,7 @@ For Claude Code. Owned by the design project; last updated 14 Oct 2026 (export `
 
 ## 2. Addresses
 
-The files in `site/` keep their names, spaces and `·` included, because the pages link to each other by file name. The addresses below are aliases; each file's own path keeps working too, behind the same rules. Single-segment aliases (`/`, `/guide`, `/holding`, `/privacy`, `/hub`) **rewrite**. Aliases with a path segment (`/hub/marketing`, `/hub/results`, `/hub/site`, `/p/01` to `/p/10`) **redirect** to the file's own path: pages load assets by relative path and route with `location.hash`, so a rewrite would break them, and a `<base>` tag would break their `#` links.
+The files in `site/` keep their names, spaces and `·` included, because the pages link to each other by file name. The addresses below are aliases; each file's own path keeps working too, behind the same rules. Single-segment aliases (`/`, `/guide`, `/holding`, `/privacy`, `/help`, `/hub`) **rewrite**. Aliases with a path segment (`/hub/marketing`, `/hub/results`, `/hub/site`, `/p/01` to `/p/10`) **redirect** to the file's own path: pages load assets by relative path and route with `location.hash`, so a rewrite would break them, and a `<base>` tag would break their `#` links.
 
 | Address | File in `site/` | Level |
 |---|---|---|
@@ -26,6 +26,7 @@ The files in `site/` keep their names, spaces and `·` included, because the pag
 | `/guide` | `Marketing 02 · Divorce Guide.html` | Public, always |
 | `/holding` | `Marketing 01 · Holding Page.html` | Public |
 | `/privacy` | `privacy.html` | Public |
+| `/help` | `Marketing 03 · Help & Support.html` (help and support; loads `help/`) | Public. Rewrite, like `/privacy`. |
 | `/studio` | Login page (you build it, §8) | Public, unlinked |
 | `/hub` | `Decouple · Prototype Hub.html` | Owner |
 | `/hub/marketing` | `Decouple · Marketing Hub.html` | Owner |
@@ -33,7 +34,7 @@ The files in `site/` keep their names, spaces and `·` included, because the pag
 | `/hub/site` | `Decouple · Site Settings.html` (site settings: public mode, tester codes, test mode) | Owner |
 | `/p/01` … `/p/10` | `Proto 01 · Discover.html` … `Proto 10 · Dashboard.html` | Owner, and testers whose track includes it (§4.4) |
 | `/take-part` | `Decouple · Take Part.html` (the participant hub) | Testers whose code has a `track`, and the owner. Rewrite. |
-| `/p/mvp00` … `/p/mvp07` | `MVP 00 · Public Site.html`, `MVP 01 · Toolkit.html`, `MVP 02 · Right for Us.html`, `MVP 03 · To-do & Journal.html`, `MVP 04 · Parenting Plan.html`, `MVP 05 · Financial Statement.html`, `MVP 06 · Split Planner.html`, `MVP 07 · Ask.html` | Owner, and testers whose track includes it (§4.4). Redirect, like `/p/01`. MVP 00 is a prototype, **not** a public page. |
+| `/p/mvp00` … `/p/mvp08` | `MVP 00 · Public Site.html`, `MVP 01 · Toolkit.html`, `MVP 02 · Right for Us.html`, `MVP 03 · To-do & Journal.html`, `MVP 04 · Parenting Plan.html`, `MVP 05 · Financial Statement.html`, `MVP 06 · Split Planner.html`, `MVP 07 · Ask.html`, `MVP 08 · Help & Support.html` (the `&` in 03 and 08 encodes as `%26`) | Owner, and testers whose track includes it (§4.4). Redirect, like `/p/01`. MVP 00 is a prototype, **not** a public page. |
 
 ## 3. Sessions
 
@@ -48,8 +49,8 @@ The files in `site/` keep their names, spaces and `·` included, because the pag
 For each request:
 1. **Allow straight through:**
    - `/api/*`: each function does its own checks.
-   - `LOGIN_PATH`, `/holding`, `/privacy`, `/favicon.ico`, `/robots.txt`, `/sitemap.xml`.
-   - Every path in `dist/_public.json`, which the build generates (§5).
+   - `LOGIN_PATH`, `/holding`, `/privacy`, `/help`, `/favicon.ico`, `/robots.txt`, `/sitemap.xml`.
+   - Every path in `dist/_public.json`, which the build generates (§5). It includes `help/help-sources.json` and `help/help-content.json`, which the help page fetches by script.
 2. **`/` or `/guide`:**
    - Read the site settings from Global Config, formerly Edge Config (`mode`, `requireCode`, `testMode`, `landing`, `indexing`), cached for 60 seconds per instance. Defaults: `{ mode: "holding", requireCode: true, testMode: false, landing: "a", indexing: false }`.
    - If `?code=` is present: check it (§3). If it's valid, set `dc_tester` and send a 302 to `/` with the code removed. If not, send a 302 to `/?code_error=1`.
@@ -57,9 +58,9 @@ For each request:
    - At `/`: serve the guide when mode = guide, or the request has a tester or owner session. Otherwise serve the holding page. `/guide` always serves the guide.
    - The owner can preview with `/?view=holding` or `/?view=guide`.
 3. **Aliases:** rewrite or redirect the addresses in §2 to their files, as §2 says. The destinations need encoding, e.g. `/Decouple%20%C2%B7%20Results.html`.
-4. **Everything else:** owner session required. **Testers and tracks.** Each tester code has a `track` (§3). A tester whose track is not empty may open `/take-part`, the prototype pages in their track, and everything under `proto/`, `mvp/`, `shared/` and `take-part/`. Track tokens map to files: `p01`…`p10` → `Proto 01 · …` … `Proto 10 · …`; `m00`…`m07` → `MVP 00 · …` … `MVP 07 · …`; `full` = all ten Protos; `mvp` = all eight MVPs. Read the track from the cached codes list using the session's `c`. An empty track means the guide only, as before. **`TESTERS_CAN_OPEN_PROTOS` is retired**: remove it. The hubs (`/hub`, `/hub/*`, and their files) are always owner-only. Without a session, return 404 with the 404 page.
+4. **Everything else:** owner session required. **Testers and tracks.** Each tester code has a `track` (§3). A tester whose track is not empty may open `/take-part`, the prototype pages in their track, and everything under `proto/`, `mvp/`, `shared/` and `take-part/`. Track tokens map to files: `p01`…`p10` → `Proto 01 · …` … `Proto 10 · …`; `m00`…`m08` → `MVP 00 · …` … `MVP 08 · …`; `full` = all ten Protos; `mvp` = all nine MVPs. Read the track from the cached codes list using the session's `c`. An empty track means the guide only, as before. **`TESTERS_CAN_OPEN_PROTOS` is retired**: remove it. The hubs (`/hub`, `/hub/*`, and their files) are always owner-only. Without a session, return 404 with the 404 page.
 5. **Headers on every response:**
-   - `X-Robots-Tag: noindex, nofollow` on everything, except: when `indexing` is true, `/` and `/privacy` get no robots header. `/guide` always keeps it (it duplicates `/`). The pages carry no robots meta tag of their own, so this header decides.
+   - `X-Robots-Tag: noindex, nofollow` on everything, except: when `indexing` is true, `/`, `/privacy` and `/help` get no robots header. `/guide` always keeps it (it duplicates `/`). The pages carry no robots meta tag of their own, so this header decides.
    - `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera, mic, geolocation off) and `X-Frame-Options: DENY`.
    - Private responses also get `Cache-Control: private, no-store`.
 
@@ -74,12 +75,12 @@ For each request:
    - Remove the Babel standalone tag.
 3. **React:** swap the unpkg development builds of React and ReactDOM 18.3.1 for the production builds. Serve them from the site, not unpkg: copy them from `node_modules` into `dist/vendor/`.
 4. **Fonts:** self-host them instead of Google Fonts. That keeps visitor IPs away from Google, which matters for the privacy notice. Families and weights in use: Inter 400–700, Source Serif Pro 400/600/700 with italics, JetBrains Mono 400–600, plus the signature fonts on Protos 08 and 09: Caveat, Mrs Saint Delafield and Homemade Apple. A new family in an export is flagged in its `CHANGES.md`. Rewrite each `<link href="https://fonts.googleapis.com/...">` to a local `fonts.css`.
-5. **Cache-busting:** add `?v=<content hash>` to every local JS and CSS reference. Serve `dist/**/*.{js,css,woff2,png}` with `Cache-Control: public, max-age=31536000, immutable` and HTML with `no-cache`.
-6. **Public allow-list:** scan the guide, the holding page and the privacy page, after rewriting, for every local `src` and `href`, and every `url()` in their CSS. Write the list to `dist/_public.json`. The middleware imports it, so nothing else is public.
-7. **Questions:** if `APPS_SCRIPT_URL` is set, fetch `?action=questions` and write `dist/m02/guide/questions.json` (an array of row objects keyed by the tab's column names). If the fetch fails or the tab is empty, write an empty list. The page then uses its built-in questions, with no failed request.
+5. **Cache-busting:** add `?v=<content hash>` to every local JS and CSS reference, including `<link rel="prefetch">` (the help page names `shared/dc-site.js` that way and loads it only when someone signs up). Serve `dist/**/*.{js,css,woff2,png}` with `Cache-Control: public, max-age=31536000, immutable`, and HTML and `help/*.json` with `no-cache`.
+6. **Public allow-list:** scan the guide, the holding page, the privacy page and the help page (`Marketing 03 · Help & Support.html`), after rewriting, for every local `src` and `href`, and every `url()` in their CSS. Add `help/help-sources.json` and `help/help-content.json`. Write the list to `dist/_public.json`. The middleware imports it, so nothing else is public.
+7. **Questions:** if `APPS_SCRIPT_URL` is set, fetch `?action=questions` and write `dist/m02/guide/questions.json` (an array of row objects keyed by the tab's column names). If the fetch fails or the tab is empty, write an empty list. The page then uses its built-in questions, with no failed request. Then fetch the help content (§5.2).
 8. **Minify all JS and CSS**, not just compiled JSX, and strip comments. Comments in the public files describe the prototypes and how things work.
-9. **Canonical:** add `<link rel="canonical" href="https://decouple.uk/">` to the guide and the holding page, and `https://decouple.uk/privacy` to the privacy page.
-10. **Fail the build** if any HTML still contains `text/babel`, `unpkg.com` or `fonts.googleapis.com`, or if a local reference doesn't resolve.
+9. **Canonical:** add `<link rel="canonical" href="https://decouple.uk/">` to the guide and the holding page, `https://decouple.uk/privacy` to the privacy page, and `https://decouple.uk/help` to the help page.
+10. **Fail the build** if any HTML still contains `text/babel`, `unpkg.com` or `fonts.googleapis.com`, if a local reference doesn't resolve, or if a help path doesn't exist (§5.2).
 
 Target: a Lighthouse mobile performance score of 90 or more for `/`.
 
@@ -87,9 +88,26 @@ Target: a Lighthouse mobile performance score of 90 or more for `/`.
 
 Both files are served by a function, from the `indexing` setting.
 - **`/robots.txt`**, `indexing` false: `User-agent: *` and `Disallow: /`.
-- **`/robots.txt`**, `indexing` true: `User-agent: *`, `Allow: /$`, `Allow: /privacy$`, one `Allow:` line for each path in `_public.json` (so crawlers can render the page), then `Disallow: /` and `Sitemap: https://decouple.uk/sitemap.xml`. **Never name a private path** (the hubs, the protos, `LOGIN_PATH`): robots.txt is public, and listing them would point people to them.
-- **`/sitemap.xml`**: `/` and `/privacy` when `indexing` is true. 404 otherwise.
+- **`/robots.txt`**, `indexing` true: `User-agent: *`, `Allow: /$`, `Allow: /privacy$`, `Allow: /help$`, one `Allow:` line for each path in `_public.json` (so crawlers can render the page), then `Disallow: /` and `Sitemap: https://decouple.uk/sitemap.xml`. **Never name a private path** (the hubs, the protos, `LOGIN_PATH`): robots.txt is public, and listing them would point people to them.
+- **`/sitemap.xml`**: `/`, `/privacy` and `/help` when `indexing` is true, each with `lastmod` (for `/help`, the help content's `built` date). 404 otherwise.
 - Private pages keep `noindex, nofollow` and return 404 without a session (§1), so nothing private can be indexed even if it's linked from elsewhere.
+
+### 5.2 Help content (`help/help-content.json`)
+
+The help page (Marketing 03, `/help`) and MVP 08 read the same two files. `help/help-sources.json` belongs to the design project, like the questions template: per topic, its `id`, title, GOV.UK paths (`gov[].path`) and linked sites. The build writes the other one from GOV.UK. GOV.UK content is reused under the Open Government Licence v3.0; the page shows the attribution and each page's updated date.
+
+1. Read `site/help/help-sources.json`. Collect every `topics[].gov[].path`, every `disclosure.gov[].path`, and `disclosure.collection.path`.
+2. For each path, `GET https://www.gov.uk/api/content<path>`, one at a time with a short pause, `User-Agent: decouple.uk build (hello@decouple.uk)`. Retry twice on a network error or 5xx.
+3. Keep, per path: `title`, `description`, `updated` (= `public_updated_at`), `url` (= `https://www.gov.uk` + the path) and `body`:
+   - `details.body` when there is one;
+   - for a guide (`details.parts`), every part in order, each under an `<h2>` of its title; if the path names one part (`/guide/part-slug`), that part only;
+   - cleaned to `h2`–`h4`, `p`, `ul`, `ol`, `li`, `table`, `thead`, `tbody`, `tr`, `th`, `td`, `a` (`href` only, relative links made absolute to `https://www.gov.uk`), `strong`, `em`, `abbr`, `br`. Drop everything else: images, scripts, styles, iframes, classes, ids. The page cleans it again.
+4. **Forms:** from the collection, list its documents (`links.documents`) and keep those whose title matches `^Form (D81|A|E|E1|E2)\b` as `forms: [{code, title, url}]`. The Content API doesn't serve the PDFs, so the page links each form's GOV.UK page, never a copy.
+5. Write `dist/help/help-content.json`: `{built: <ISO>, pages: {"<path>": {title, description, updated, url, body}}, forms: [...]}`.
+6. **A path that doesn't exist (404 or 410) fails the build**, naming the path and its topic. Paths marked `"confirm": true` are the exception: print a warning naming them, leave them out, and list them in the handoff, so the design project confirms or removes them.
+7. **If GOV.UK can't be reached** after the retries, reuse `https://decouple.uk/help/help-content.json` (the copy already live) and warn. If that fails too, write `{built: null, pages: {}, forms: []}`: the page then links each GOV.UK page instead of showing its text, so it never empties.
+8. Never type a figure: the page has no fees, amounts or dates of its own, only what this file carries.
+9. **Refresh:** weekly, through `/api/cron/rebuild` (§7), and whenever the owner presses Publish in Site settings.
 
 ## 6. Google script (`apps-script/Code.gs` + `apps-script/SETUP.md`)
 
@@ -124,14 +142,15 @@ All JSON. Reject any body over 64 KB.
 | `POST /api/tester` | Anyone | `{code}` | Checks the code (§3) | 200 `{label}` and sets `dc_tester`, or 404 |
 | `POST /api/human` | Anyone | `{token}` | Verifies the Turnstile token | 200 and sets `dc_human`, or 403 |
 | `POST /api/answers` | Owner or tester; or human, when `requireCode` is off | `{batchKey, sid, pid?, test, step, price?, landing?, device, hp, rows:[{qid, qv, q, type, a}]}` | Validates and cleans (below), then sends to the Google script | 200 `{ok}` only after the script confirms. 400 bad shape, 401 no session, 502 script failed. |
-| `POST /api/signup` | Human | `{email, stage?, source, sid, hp}` | Checks the email, then sends `kind: "signup"`. Sources: `holding:<utm_source>`, `guide`, `guide-optin`. `stage` can be a `;` list. | 200, 400 or 403 |
+| `POST /api/signup` | Human | `{email, stage?, source, sid, hp}` | Checks the email, then sends `kind: "signup"`. Sources: `holding:<utm_source>`, `guide`, `guide-optin`, `help` (the help page's "Start your financial statement"). `stage` can be a `;` list. | 200, 400 or 403 |
 | `POST /api/email` | Same as `/api/answers` | `{email, link, sid}` | Sends the guide email (below) | 200, 400, 401 or 429 |
 | `GET /api/results` | Owner | `?test=&since=` | Passes the request to `action=results` | `{rows:[{sid,pid,test,step,price,landing,qid,qv,q,type,a,at,device}], signups}` |
 | `GET` and `POST /api/admin/site` | Owner | `{mode?: "guide"\|"holding", requireCode?: boolean, testMode?: boolean, landing?: "a"…"i"\|"random", indexing?: boolean}` | Reads or writes the Edge Config items through the Vercel REST API (`EDGE_CONFIG_ID`, `VERCEL_API_TOKEN`) | `{mode, requireCode, testMode, landing, indexing}` |
-| `GET` and `POST /api/admin/codes` | Owner | POST: `{action: "create", codes:[{code, label, expires, test, track, mode}]}`, `{action: "update", code, active?, label?, expires?, test?, track?, mode?}` or `{action: "delete", code}` | Passes the change to the script's `kind: "codes"` (GET reads `action=codes`). On create, check the format `^[A-Z]{2,6}-[A-Z]{2,6}-\d{2}$`, labels of 40 characters at most, `track` matching `^(|full|mvp|[pm]\d{2}(,[pm]\d{2})*)| `GET` and `POST /api/admin/codes` | Owner | POST: `{action: "create", codes:[{code, label, expires, test, track, mode}]}`, `{action: "update", code, active?, label?, expires?, test?, track?, mode?}` or `{action: "delete", code}` | Passes the change to the script's `kind: "codes"` (GET reads `action=codes`). On create, check the format `^[A-Z]{2,6}-[A-Z]{2,6}-\d{2}$`, , `mode` of `un` or `mod`, and at most 20 codes per request. The page makes the code strings. | `{codes:[{code,label,active,test,expires,created,uses,last_used,track,mode}]}` |
+| `GET` and `POST /api/admin/codes` | Owner | POST: `{action: "create", codes:[{code, label, expires, test, track, mode}]}`, `{action: "update", code, active?, label?, expires?, test?, track?, mode?}` or `{action: "delete", code}` | Passes the change to the script's `kind: "codes"` (GET reads `action=codes`). On create, check the format `^[A-Z]{2,6}-[A-Z]{2,6}-\d{2}$`, labels of 40 characters at most, `track` matching `^(|full|mvp|[pm]\d{2}(,[pm]\d{2})*)$`, `mode` of `un` or `mod` (empty when there's no track), and at most 20 codes per request. The page makes the code strings. | `{codes:[{code,label,active,test,expires,created,uses,last_used,track,mode}]}` |
 | `POST /api/participant` | Tester (or owner) | `{sid, followup, voucher, email, hp}` | The participant hub's thank-you step. Checks `email` when given. Sends `kind: "participant"` to the script, which appends to `Participants` with the tester's label as `pid`. Test codes and test mode: 200 `{ok, test}`, nothing stored. At most 3 per `sid`. | 200, 400 or 401 |
 | `POST /api/claude` | Owner or tester | `{system, messages:[{role, content}], max_tokens}` | The AI proxy (below) | 200 `{text}`; 400 bad shape; 401 no session; 429 over the rate limit; 503 no key or over the monthly cap |
-| `POST /api/admin/publish` | Owner | — | Calls `DEPLOY_HOOK_URL`, which rebuilds and so picks up edited questions | `{ok}` |
+| `POST /api/admin/publish` | Owner | — | Calls `DEPLOY_HOOK_URL`, which rebuilds and so picks up edited questions and fresh help content (§5.2) | `{ok}` |
+| `GET /api/cron/rebuild` | Vercel Cron only: `Authorization: Bearer CRON_SECRET` | — | Calls `DEPLOY_HOOK_URL`, so the help content refreshes weekly. Schedule in `vercel.json`: `0 5 * * 1`. Anything else gets 401. | `{ok}` |
 
 **Cleaning answers:**
 - If `hp` (a hidden trap field) isn't empty, return 200 and drop the batch.
@@ -175,7 +194,7 @@ The design project owns every other page. The client side of the API is `site/sh
 
 ## 9. Environment variables (Vercel; never in git)
 
-`SITE_ORIGIN=https://decouple.uk` · `LOGIN_PATH=/studio` · `OWNER_PASSWORD_HASH` · `SESSION_SECRET` (32+ random bytes) · `TESTER_CODES` (fallback) · `APPS_SCRIPT_URL` · `APPS_SCRIPT_SECRET` · `RESEND_API_KEY` · `MAIL_FROM` · `TURNSTILE_SITE_KEY` · `TURNSTILE_SECRET_KEY` · `EDGE_CONFIG` (the connection string, added when the store is connected) · `EDGE_CONFIG_ID` · `VERCEL_API_TOKEN` (scoped to this project) · `DEPLOY_HOOK_URL`.
+`SITE_ORIGIN=https://decouple.uk` · `LOGIN_PATH=/studio` · `OWNER_PASSWORD_HASH` · `SESSION_SECRET` (32+ random bytes) · `TESTER_CODES` (fallback) · `APPS_SCRIPT_URL` · `APPS_SCRIPT_SECRET` · `RESEND_API_KEY` · `MAIL_FROM` · `TURNSTILE_SITE_KEY` · `TURNSTILE_SECRET_KEY` · `EDGE_CONFIG` (the connection string, added when the store is connected) · `EDGE_CONFIG_ID` · `VERCEL_API_TOKEN` (scoped to this project) · `DEPLOY_HOOK_URL` · `CRON_SECRET` (for `/api/cron/rebuild`; Vercel Cron sends it).
 
 **For `/api/claude`:** `ANTHROPIC_API_KEY` (a new key, just for this; rotate the old app's key), `CLAUDE_MODEL` (agree with Ross), `CLAUDE_MONTHLY_CAP_USD` (e.g. 50).
 
@@ -188,6 +207,7 @@ The design project owns every other page. The client side of the API is `site/sh
 - **hello@decouple.uk needs a real mailbox** to receive replies, from any provider. Resend only sends.
 - **AI features** (Protos 08 and 10, MVP 03 and MVP 07) now reach `/api/claude` through `shared/dc-site.js`. Agree the model, the monthly cap and the provider's data terms (no training on inputs, retention) with Ross before setting the key. Until the key is set they fail quietly, with a message saying so.
 - **Participants:** a tester code with a `track` opens the participant hub at `/take-part` (consent, screener, then only that track). Make them in Site settings. `TESTERS_CAN_OPEN_PROTOS` is gone.
+- **Help (`/help`):** public from this export, and refreshed from GOV.UK every Monday. Keep `indexing` off until a family solicitor or mediator has checked it. Set `CRON_SECRET`.
 
 ## 11. Checks before merging (in the Vercel preview)
 
@@ -205,6 +225,8 @@ The design project owns every other page. The client side of the API is `site/sh
 10. **MVP prototypes and tracks:** owner opens `/p/mvp00` and walks MVP 00 → 01 → each tool with no failed requests. Make a code with track `mvp`: its link opens `/take-part`, the tester can open MVP pages, and `/p/01` and `/hub` give 404. A code with track `p03,m05` opens only those two. A code with no track sees the guide only. In testing mode, finishing a part lands rows on that MVP's own tab (e.g. `MVP 05 · Financial statement`). `/api/answers` with `test` = `MVP 99 · <b>` returns 400.
 11. **`/api/claude`:** no session → 401. As a tester, MVP 07 · Ask answers a question. The 41st call in an hour → 429. The logs hold no message content.
 12. **Participant hub:** `/take-part` with no session shows the code page. In it: consent, screener (rows land on the `Screener` tab; the wellbeing answer never arrives), the session list, then the thank-you step (a row in `Participants`, nothing on the answer tabs, and `/api/results` never returns it).
+
+13. **Help:** logged out, `/help` loads with every request public, both JSON files included, and makes no `/api` request until someone submits its sign-up. Its GOV.UK text shows with "Source: GOV.UK, updated …". A made-up path added to `help-sources.json` fails the build by name. A tester with track `mvp` opens `/p/mvp08`. `/help` is in the sitemap, and loses the noindex header, only while `indexing` is on. `/api/cron/rebuild` without the secret → 401.
 
 Then switch mode back to **holding** before the production deploy. The guide goes public only when the next export lands, with consent and the tester-code screen.
 

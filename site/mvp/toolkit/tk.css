@@ -67,3 +67,5 @@
 .tk-tool.mini{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;background:#FAFAF7;border-style:dashed}.tk-tool.mini b{font-size:15px}.tk-tool.mini small{display:block;margin-top:2px;font-size:12.5px;color:var(--mute)}
 .tk-path li.skip .tk-step b{background:#FAFAF7;color:var(--soft);border-style:dashed}.tk-path li.skip .tk-step span{color:var(--soft)}
 @media (max-width:760px){.tk-tool.mini{grid-template-columns:40px minmax(0,1fr)}.tk-tool.mini .kit-lnk{grid-column:2}}
+
+.tk-hall{display:inline-flex!important;align-items:center;gap:6px;margin-top:2px;font-weight:600;color:#166534!important}
