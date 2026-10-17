@@ -36,6 +36,15 @@ The checks in the change note:
   - **Interview and guide header** (`header.iv-top .r`): the same from about 340 px down.
   - Without the link, both fit at 320 px. The link is 97 px wide even with the `max-width:560px` rule.
   - Quick exit is the safety control, so it should be the last thing to lose room. Two ways to fix it: a shorter label ("Help") or an icon below about 400 px, or on phones keeping the link in the footer only and leaving the header to Quick exit.
+- **A `?landing=` link sticks for good, so Site settings › Guide landing page seems to stop working.**
+  - In `m02/guide/g-store.js`, `GS.load` saves `?landing=x` as `lvFixed` in the guide's saved state (`decouple.m02.v2`), and `?landing=random` as `lvRotate`. Nothing ever clears them.
+  - From then on, that browser shows that design whatever Site settings says. After `?landing=random`, it keeps showing the same one random pick (`lvRand`).
+  - Reproduced on the emulator. With Site settings set to B and then C, a fresh browser showed B and then C. A browser that had opened `?landing=f` once showed F both times. One that had opened `?landing=random` showed its pick, F, both times.
+  - The fix: apply `?landing=` to that visit only, and don't save `lvFixed` or `lvRotate`. Keep saving `lvRand`, so a visitor rotated at random sees the same design each time.
+- **The Marketing hub's guide card is out of date** (`Decouple · Marketing Hub.html`).
+  - It says there are five designs, A to E, switched in Tweaks. There are nine, A to I.
+  - On decouple.uk, Site settings decides the design. The Tweaks picker only works in the design project.
+  - The comment at the top of the guide page's script also says `?landing=a–e`.
 - Nothing else failed.
 
 **Next.** The parked items: the end-to-end tester-code run, the spreadsheet's tabs per test, the Results playback, analytics and session tools.
