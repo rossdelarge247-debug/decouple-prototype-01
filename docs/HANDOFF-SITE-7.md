@@ -34,7 +34,14 @@
   - Paste `proto/ut/mvp-questions.csv` into the question sheet, then redo Results › Sheet setup.
   - Keep Show in search engines off until a family solicitor or mediator has checked `/help`, including the assistant.
 
+**Found after landing: landing A's start buttons open a white screen.** Ross saw it on decouple.uk. In headless Chromium every link and button on all nine landings was clicked, as a logged-out visitor with mode = guide:
+- On landing A, the hero's "Get my free guide" and the "Start now" button below the chapters leave a blank page. The console says `TypeError: Converting circular structure to JSON … HTMLButtonElement … property 'stateNode' closes the circle`.
+- The header's "Get my free guide" on A works, and so does every link and button on B to I. Each start button opens the guide's first screen ("Your guide is made on this device."). Help & support, Privacy and the email link resolve, and Quick exit leaves the site.
+
 **In `site/`, for the design project.**
-- Nothing failed.
+- **Landing A: two start buttons crash the guide.** In `m02/guide/g-intake.jsx`, line 52 (the hero's "Get my free guide") and line 68 ("Start now") have `onClick={onStart}`.
+  - React passes the click event, so `start(pre)` spreads the event into the answers: `a: { ...o.a, ...pre }`.
+  - Saving the state then fails on the event's DOM references, and the page stops rendering.
+  - The other landings use `onClick={() => onStart()}`, as `g-landings.jsx` and `g-landings2.jsx` do. Change both buttons to that.
 
 **Next.** The parked items: the end-to-end tester-code run, the spreadsheet tabs per test, Results playback, analytics and session tools.
