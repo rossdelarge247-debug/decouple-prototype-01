@@ -97,6 +97,7 @@ a.hp-form:hover{background:#E9DFFD}
 .hp-fsafe,.hp-ffine{margin:0;font-size:12px;line-height:1.45;color:rgba(255,255,255,.66)}.hp-ffine a{color:#C4B5FD!important;text-decoration:underline}
 .hp-ferr{margin:0;font-size:13px;color:#FCA5A5}.hp-ferr:empty{display:none}
 .hp-su .hp-btn{justify-self:start}
+@media (max-width:360px){.hp-t .hp-start .hp-btn{width:100%;justify-content:center;white-space:normal;text-align:center;height:auto;min-height:46px;padding:11px 18px;line-height:1.3}.hp-t .hp-start .hp-btn svg{flex-shrink:0}}
 .hp-trap{position:absolute!important;left:-9999px!important;width:1px;height:1px;opacity:0}
 /* the assistant panel (help-ai.js) */
 .hpa{margin:0 0 28px;padding:26px 28px 20px;border-radius:24px;background:linear-gradient(180deg,var(--vs),#FFF 160px);border:1px solid #DDD0FE;box-shadow:0 18px 40px -30px rgba(60,30,120,.35);display:grid;gap:14px}

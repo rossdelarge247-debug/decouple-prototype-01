@@ -11,8 +11,8 @@ window.DC = (function () {
     try { return await fetch(url, { credentials: "same-origin", cache: "no-store", ...opt, signal: c.signal, headers: { "Content-Type": "application/json" } }); }
     finally { clearTimeout(t); }
   };
-  const api = async (path, body, method) => {
-    try { const r = await j(path, { method: method || "POST", body: body ? JSON.stringify(body) : undefined }); let d = null; try { d = await r.json(); } catch (e) {} return { ok: r.ok, status: r.status, data: d }; }
+  const api = async (path, body, method, ms) => {
+    try { const r = await j(path, { method: method || "POST", body: body ? JSON.stringify(body) : undefined }, ms); let d = null; try { d = await r.json(); } catch (e) {} return { ok: r.ok, status: r.status, data: d }; }
     catch (e) { return { ok: false, status: 0, data: null }; }
   };
 
@@ -105,7 +105,7 @@ window.DC = (function () {
   /* AI: on the site, the pages' window.claude.complete goes to /api/claude (spec §7). In the design tool window.claude already exists. */
   if (!window.claude && /(^|\.)decouple\.uk$|\.vercel\.app$/.test(location.hostname)) window.claude = { complete: async (o) => {
     const b = typeof o === "string" ? { messages: [{ role: "user", content: o }] } : o || {};
-    const r = await api("/api/claude", { kind: b.kind === "help" ? "help" : undefined, system: String(b.system || ""), messages: (b.messages || []).slice(-20), max_tokens: Math.min(+b.max_tokens || 700, 1200) });
+    const r = await api("/api/claude", { kind: b.kind === "help" ? "help" : undefined, system: String(b.system || ""), messages: (b.messages || []).slice(-20), max_tokens: Math.min(+b.max_tokens || 700, 1200) }, "POST", 60000); /* the model thinks first; the server allows it 45s plus one retry */
     if (!r.ok || !r.data) throw new Error(r.status === 401 || r.status === 404 || r.status === 503 ? "offline" : "ai");
     return r.data.text;
   } };
