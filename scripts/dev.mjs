@@ -133,8 +133,15 @@ if (MOCK) {
       const b = JSON.parse(String(init?.body || '{}'))
       const last = (b.messages || []).at(-1)
       /* content stays in this process; the log below counts it, as the real proxy does */
-      mock.ai.push({ at: new Date().toISOString(), model: b.model, max_tokens: b.max_tokens, messages: (b.messages || []).length, fallbacks: b.fallbacks || null, effort: b.output_config?.effort || null })
-      return jsonRes({ id: 'msg_mock', type: 'message', role: 'assistant', model: b.model, stop_reason: 'end_turn', stop_sequence: null, content: [{ type: 'text', text: `(mock reply to a ${String(last?.content || '').length}-character question)` }], usage: { input_tokens: 400, output_tokens: 120, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 } })
+      const sys = String(b.system || '')
+      const help = sys.startsWith('You are the help assistant')
+      mock.ai.push({ at: new Date().toISOString(), model: b.model, max_tokens: b.max_tokens, messages: (b.messages || []).length, fallbacks: b.fallbacks || null, effort: b.output_config?.effort || null, help, system: sys.length, pageSystem: /IGNORE|pirate/i.test(sys) })
+      /* the help assistant answers in the JSON its prompt asks for, pointing at the topics the prompt put nearest */
+      const near = [...sys.matchAll(/^\[([a-z0-9-]+)\] [^\n(]*?: /gm)].map((m) => m[1]).slice(0, 2)
+      const text = help
+        ? JSON.stringify({ answer: `(mock) What the page says, for a ${String(last?.content || '').length}-character question.\n\nThe topics below have more.`, topics: near, gov: [], pro: false, follow: ['What happens next?'] })
+        : `(mock reply to a ${String(last?.content || '').length}-character question)`
+      return jsonRes({ id: 'msg_mock', type: 'message', role: 'assistant', model: b.model, stop_reason: 'end_turn', stop_sequence: null, content: [{ type: 'text', text }], usage: { input_tokens: 400, output_tokens: 120, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 } })
     }
     if (host === 'api.vercel.com') {
       if (url.includes('/global-config/') || url.includes('/edge-config/')) {
@@ -212,7 +219,12 @@ async function handle(request) {
   for (const [k, v] of mw.headers) if (!k.startsWith('x-middleware-')) extra.append(k, v)
   let res
   const rewrite = mw.headers.get('x-middleware-rewrite')
-  if (rewrite) res = staticFile(new URL(rewrite, request.url).pathname) || notFound()
+  const to = rewrite ? new URL(rewrite, request.url) : null
+  if (to && to.pathname.startsWith('/api/')) {
+    /* a rewrite to a function, as Vercel does it: the function sees the new address */
+    const fn = api.get(to.pathname)?.[request.method]
+    res = fn ? await fn(new Request(to, request)) : notFound()
+  } else if (to) res = staticFile(to.pathname) || notFound()
   else if (mw.headers.get('x-middleware-next') === '1') {
     if (url.pathname.startsWith('/api/')) {
       const mod = api.get(url.pathname)

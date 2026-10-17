@@ -3,6 +3,7 @@ import { useCodeStore } from '../lib/auth.js'
 import { clearSettingsCache, useSettingsReader, type Settings } from '../lib/settings.js'
 import { COOKIE, sign } from '../lib/session.js'
 import { answersLimiter, claudeLimiter, emailLimiter, loginLimiter, participantLimiter } from '../lib/ratelimit.js'
+import { clearHelpContent, resetHelpLimits } from '../lib/help.js'
 
 export const SECRET = 'test-secret-for-the-site-cookies'
 
@@ -30,6 +31,8 @@ export function setup(settings: Partial<Settings> = {}, codes: CodeRow[] = CODES
   loginLimiter.reset()
   participantLimiter.reset()
   claudeLimiter.reset()
+  resetHelpLimits()
+  clearHelpContent()
 }
 
 export async function cookieFor(role: 'owner' | 'tester' | 'human', extra: Record<string, unknown> = {}): Promise<string> {

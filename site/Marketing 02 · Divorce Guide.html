@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="proto/interview/iv.css">
 <link rel="stylesheet" href="proto/playback/pb.css">
 <link rel="stylesheet" href="m02/guide/g.css">
+<link rel="stylesheet" href="m02/guide/g-themes.css">
+<script src="shared/dc-look.js"></script>
 <style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
@@ -37,13 +39,20 @@
 <script type="text/babel" src="m02/guide/g-guide.jsx"></script>
 <script type="text/babel">
 /* M02 · Your personalised divorce guide. State in decouple.m02.v2; unsent batches in decouple.outbox.v1 (shared/dc-site.js).
-   ?pid=NAME tags a participant · ?v=A|B forces the price set · ?landing=a–e|random picks the landing ·
+   ?pid=NAME tags a participant · ?v=A|B forces the price set · ?landing=a–i|random picks the landing for this visit only ·
    ?demo=1[&phase=landing|guide|full] shows Sarah's example (owner only on the site; never saved or sent).
    Nothing is sent without consent. Safety answers, names and emails are never sent. */
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "landing": "e",
-  "rotate": false
+  "rotate": false,
+  "theme": "service"
 }/*EDITMODE-END*/;
+/* look and feel: the help hub's treatments (m02/guide/g-themes.css), same names and attribute as help/help-tweaks.js */
+const THEMES = [["studio", "Studio · today’s look"], ["flat", "Flat · hairlines, one accent"], ["lilac", "Lilac & warm"], ["field", "Field guide · editorial print"], ["service", "Category norm · green, sand, yellow"]];
+const setTheme = (v) => { const ok = THEMES.some((x) => x[0] === v); if (!ok || v === "studio") document.documentElement.removeAttribute("data-hpt"); else document.documentElement.setAttribute("data-hpt", v); };
+/* Site settings › Look and feel (shared/dc-look.js) beats the saved Tweak; "as designed" leaves it empty */
+const SITE_LOOK = document.documentElement.getAttribute("data-site-theme");
+setTheme(SITE_LOOK || TWEAK_DEFAULTS.theme);
 const { useState, useEffect, useRef } = React;
 const Ic = window.DIc, G = window.G, GS = window.GS, IV = window.IV, DC = window.DC;
 const exit = () => location.replace("https://www.bbc.co.uk/weather");
@@ -123,6 +132,9 @@ function App() {
   };
   const tweaks = (
     <TweaksPanel title="Tweaks · M02">
+      <TweakSection label="Look and feel"/>
+      <TweakSelect label="Treatment" value={t.theme || "studio"} options={THEMES.map(([value, label]) => ({ value, label }))} onChange={(v) => { setTweak("theme", v); setTheme(v); }}/>
+      <div style={{ fontSize: 11.5, color: "#78716C", lineHeight: 1.4 }}>{SITE_LOOK ? `Site settings › Look and feel is set to ${(THEMES.find((x) => x[0] === SITE_LOOK) || [0, SITE_LOOK])[1]}, so the live site shows that. This pick is the page’s own, used when it says “As designed”.` : "Same treatments as Help & support. Site settings › Look and feel can set one for the whole site."}</div>
       <TweakSection label="Landing screen"/>
       <TweakSelect label="Design" value={pref === "random" ? t.landing : pref} options={Object.entries(LANDS).map(([k, v]) => ({ value: k, label: v.name }))} onChange={(v) => { setTweak("landing", v); setLocalLanding(v); if (phase !== "landing") up({ phase: "landing" }); }}/>
       <TweakToggle label="Rotate at random for visitors" value={pref === "random"} onChange={(v) => { setTweak("rotate", v); setLocalLanding(v ? "random" : t.landing); }}/>
@@ -138,7 +150,7 @@ function App() {
   if (phase === "landing" && site === undefined) return <div className="site bg-wash" style={{ minHeight: "100vh" }}></div>;
   if (phase === "landing") return (
     <div className={"site " + L.bg} data-screen-label={"M02 · Landing " + L.name}>
-      <header className="nav"><span className="wm" style={{ cursor: "default" }}>Decouple<i>.</i></span><div className="nav-right" style={{ display: "flex" }}>{testPill}<a className="g-help" href="Marketing 03 · Help &amp; Support.html">Help &amp; support</a><button className="pillbtn exit" onClick={exit}><Ic.X s={12} c="#B91C1C"/> Quick exit</button><button className="btn g-navcta" onClick={() => start()}>Get my free guide <Ic.Arrow s={14}/></button></div></header>
+      <header className="nav"><span className="wm" style={{ cursor: "default" }}>Decouple<i>.</i></span><div className="nav-right" style={{ display: "flex" }}>{testPill}<a className="g-help" href="Marketing 03 · Help &amp; Support.html" aria-label="Help and support">Help<span className="g-help-l"> &amp; support</span></a><button className="pillbtn exit" onClick={exit}><Ic.X s={12} c="#B91C1C"/> Quick exit</button><button className="btn g-navcta" onClick={() => start()}>Get my free guide <Ic.Arrow s={14}/></button></div></header>
       <L.C onStart={start} resume={!!s.a.stage}/>
       <footer className="foot"><div className="wrap"><span className="wm" ref={footWm} style={{ cursor: "default", userSelect: "none" }}>Decouple<i>.</i></span><nav><a href="Marketing 03 · Help &amp; Support.html">Help &amp; support</a><a href="privacy.html">Privacy</a><a href="mailto:hello@decouple.uk">hello@decouple.uk</a></nav><small>Decouple is not a law firm and this guide is not legal advice. If you’re worried about your safety, call the National Domestic Abuse Helpline free on 0808 2000 247, any time.</small></div></footer>
       <div className="mcta"><button className="btn lg full" onClick={() => start()}>Get my free guide <Ic.Arrow s={16}/></button></div>
@@ -149,7 +161,7 @@ function App() {
     <div className="site iv bg-paper" data-screen-label={"M02 · " + label}>
       <header className="iv-top">
         <div className="l"><button className="wm" onClick={() => up({ phase: "landing" })} aria-label="Back to the start">Decouple<i>.</i></button><small>{["iv", "build", "stop", "code", "consent"].includes(phase) ? "Your free guide · about 6 minutes" : "Your personalised guide · private to you"}</small></div>
-        <div className="r">{testPill}<a className="g-help" href="Marketing 03 · Help &amp; Support.html" target="_blank" rel="noopener" title="Opens in a new tab. Your progress is kept.">Help &amp; support</a><button className="pillbtn exit" onClick={exit}><Ic.X s={12} c="#B91C1C"/> Quick exit</button></div>
+        <div className="r">{testPill}<a className="g-help" href="Marketing 03 · Help &amp; Support.html" target="_blank" rel="noopener" title="Opens in a new tab. Your progress is kept." aria-label="Help and support (opens in a new tab)">Help<span className="g-help-l"> &amp; support</span></a><button className="pillbtn exit" onClick={exit}><Ic.X s={12} c="#B91C1C"/> Quick exit</button></div>
       </header>
       <div className="iv-prog"><div className="track"><i style={{ width: pct + "%", background: phase === "stop" ? "#B91C1C" : undefined }}></i></div></div>
       {phase === "code" && <main className="iv-body"><GCode sid={s.sid} stage={s.a.stage} codeError={GS.qp.get("code_error") === "1"} onBack={() => up({ phase: "landing" })} onDone={() => refreshSite().then((x) => up((o) => ({ ...o, phase: o.consent == null ? "consent" : "iv" })))}/></main>}

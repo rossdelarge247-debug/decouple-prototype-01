@@ -153,10 +153,13 @@ mvp07,7,m7-q5,yesno,Would you be comfortable pasting a real letter into it?,,y,y
 mvp08,0,m8-in,intro,"Help & support: official information and where to get help, in the order a separation usually runs. Find the answer to one real question you have, then look at the financial disclosure section.",5 min,,y
 mvp08,1,m8-r1,recap,Found a topic that matters to you and read it,,,y
 mvp08,2,m8-r2,recap,Looked at the financial disclosure section,,,y
-mvp08,3,m8-q1,ease7,How easy was it to find what you were looking for?,,y,y
-mvp08,4,m8-q2,yesno,Did it answer your question?,,y,y
-mvp08,5,m8-q3,rating5,How much did you trust it?,,y,y
-mvp08,6,m8-q4,choice,"Compared with searching GOV.UK yourself, was it…",Much easier|A bit easier|About the same|Harder,y,y
-mvp08,7,m8-q5,choice,What was missing?,Nothing|A topic I needed|Plainer words|What to do next|Someone to ask,n,y
-mvp08,8,m8-q6,yesno,Would you come back to it?,,y,y`
+mvp08,3,m8-r3,recap,Asked the assistant at the top a question,,,y
+mvp08,4,m8-q1,ease7,How easy was it to find what you were looking for?,,y,y
+mvp08,5,m8-q2,yesno,Did it answer your question?,,y,y
+mvp08,6,m8-q3,rating5,How much did you trust it?,,y,y
+mvp08,7,m8-q4,choice,"Compared with searching GOV.UK yourself, was it…",Much easier|A bit easier|About the same|Harder,y,y
+mvp08,8,m8-q5,choice,What was missing?,Nothing|A topic I needed|Plainer words|What to do next|Someone to ask,n,y
+mvp08,9,m8-q6,yesno,Would you come back to it?,,y,y
+mvp08,10,m8-q7,rating5,How useful were the assistant’s answers?,,n,y
+mvp08,11,m8-q8,choice,Where did you look first?,The assistant|The topics|Both,n,y`
 };

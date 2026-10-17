@@ -10,7 +10,8 @@ import { loginPath, sessionSecret, siteOrigin } from './lib/env.js'
 import { NOT_FOUND_HTML } from './lib/generated/not-found.js'
 import { PUBLIC_PATHS } from './lib/generated/public.js'
 import { clientIp, securityHeaders } from './lib/http.js'
-import { isPublicPath, loadPublicList } from './lib/public.js'
+import { LOOK_PATH } from './lib/look.js'
+import { isPublicPath, loadPublicList, normalisePath } from './lib/public.js'
 import { indexable, lastmodFor, robotsTxt, sitemapXml, type BuildDates } from './lib/search.js'
 import { testerCookie } from './lib/session.js'
 import { readSettings } from './lib/settings.js'
@@ -119,6 +120,8 @@ export default async function middleware(request: Request): Promise<Response> {
     const type = path === '/robots.txt' ? 'text/plain; charset=utf-8' : 'application/xml; charset=utf-8'
     return new Response(body, { status: 200, headers: { ...open, 'content-type': type, 'cache-control': 'public, max-age=300' } })
   }
+  /* the look is the live setting from /api/look, never the design project's preview file (spec §4) */
+  if (normalisePath(path) === LOOK_PATH) return rewrite(new URL('/api/look' + url.search, url))
   if (isPublicPath(path, PUBLIC)) return next({ headers: { ...open, 'cache-control': cacheFor(decoded) } })
 
   /* 2. the front door */

@@ -4,6 +4,7 @@ import { createClient } from '@vercel/global-config'
 import { unauthorised, who } from '../../lib/api.js'
 import { PRICES, monthOf, readSpend } from '../../lib/claude.js'
 import { guideEmail, sendEmail } from '../../lib/email.js'
+import { helpReady } from '../../lib/help.js'
 import { env, siteOrigin } from '../../lib/env.js'
 import { securityHeaders } from '../../lib/http.js'
 import { scriptConfigured, scriptGet } from '../../lib/script.js'
@@ -108,6 +109,7 @@ export async function GET(request: Request): Promise<Response> {
     modelPriced: e.CLAUDE_MODEL ? e.CLAUDE_MODEL in PRICES : null,
     monthlyCapUsd: capUsd > 0 ? capUsd : null,
     spendThisMonth: aiSpend,
+    helpAssistant: helpReady() ? 'in this build: anyone on /help who passes the person check may ask it, 15 an hour and 40 a day each' : 'not in this build',
     note: 'until the key, the model and the cap are all set, /api/claude answers 503 and the AI features say they are unavailable',
   }
 
