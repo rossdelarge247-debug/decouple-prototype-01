@@ -2,6 +2,8 @@
 export interface Limiter {
   /** true when the hit is allowed */
   hit(key: string, now?: number): boolean
+  /** true when a hit would be allowed; records nothing */
+  allows(key: string, now?: number): boolean
   reset(): void
 }
 
@@ -19,6 +21,10 @@ export function createLimiter(limit: number, windowMs: number): Limiter {
       hits.set(key, list)
       if (hits.size > 5000) for (const [k, v] of hits) if (!v.some((t) => t > from)) hits.delete(k)
       return true
+    },
+    allows(key, now = Date.now()) {
+      const from = now - windowMs
+      return (hits.get(key) || []).filter((t) => t > from).length < limit
     },
     reset() {
       hits.clear()

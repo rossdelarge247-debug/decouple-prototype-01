@@ -212,7 +212,12 @@ async function handle(request) {
   for (const [k, v] of mw.headers) if (!k.startsWith('x-middleware-')) extra.append(k, v)
   let res
   const rewrite = mw.headers.get('x-middleware-rewrite')
-  if (rewrite) res = staticFile(new URL(rewrite, request.url).pathname) || notFound()
+  const to = rewrite ? new URL(rewrite, request.url) : null
+  if (to && to.pathname.startsWith('/api/')) {
+    /* a rewrite to a function, as Vercel does it: the function sees the new address */
+    const fn = api.get(to.pathname)?.[request.method]
+    res = fn ? await fn(new Request(to, request)) : notFound()
+  } else if (to) res = staticFile(to.pathname) || notFound()
   else if (mw.headers.get('x-middleware-next') === '1') {
     if (url.pathname.startsWith('/api/')) {
       const mod = api.get(url.pathname)

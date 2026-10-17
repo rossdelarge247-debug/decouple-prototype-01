@@ -4,6 +4,12 @@
   "outputDirectory": "dist",
   "cleanUrls": false,
   "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/shared/dc-look.js",
+      "destination": "/api/look"
+    }
+  ],
   "headers": [
     {
       "source": "/vendor/(.*)",

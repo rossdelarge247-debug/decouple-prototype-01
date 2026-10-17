@@ -1,4 +1,4 @@
-/* Site settings (spec §4): mode, requireCode, testMode, landing and indexing, read from the Global
+/* Site settings (spec §4): mode, requireCode, testMode, landing, indexing and theme, read from the Global
    Config store (Vercel renamed Edge Config in 2026; the old names still work) and cached for 60 seconds per
    instance. Written through the Vercel REST API (spec §7, /api/admin/site). */
 import { createClient } from '@vercel/global-config'
@@ -8,6 +8,11 @@ export type Landing = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'ran
 
 export const LANDINGS: readonly Landing[] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'random']
 
+/** the site-wide look (Site settings › Look and feel): "page" leaves each page's own look */
+export type Theme = 'page' | 'studio' | 'flat' | 'lilac' | 'field' | 'service'
+
+export const THEMES: readonly Theme[] = ['page', 'studio', 'flat', 'lilac', 'field', 'service']
+
 export interface Settings {
   mode: 'guide' | 'holding'
   requireCode: boolean
@@ -16,14 +21,17 @@ export interface Settings {
   landing: Landing
   /** search engines may list / and /privacy (spec §5.1). Nothing else, ever. */
   indexing: boolean
+  /** the look the guide and the help page open in, served by /api/look (spec §4, §7) */
+  theme: Theme
 }
 
-export const DEFAULTS: Readonly<Settings> = { mode: 'holding', requireCode: true, testMode: false, landing: 'a', indexing: false }
+export const DEFAULTS: Readonly<Settings> = { mode: 'holding', requireCode: true, testMode: false, landing: 'a', indexing: false, theme: 'page' }
 
 /** the items read from the store */
-export const SETTINGS_KEYS = ['mode', 'requireCode', 'testMode', 'landing', 'indexing'] as const
+export const SETTINGS_KEYS = ['mode', 'requireCode', 'testMode', 'landing', 'indexing', 'theme'] as const
 
 const isLanding = (v: unknown): v is Landing => typeof v === 'string' && (LANDINGS as readonly string[]).includes(v)
+const isTheme = (v: unknown): v is Theme => typeof v === 'string' && (THEMES as readonly string[]).includes(v)
 export const SETTINGS_TTL_MS = 60_000
 
 export function normaliseSettings(raw: unknown): Settings {
@@ -34,6 +42,7 @@ export function normaliseSettings(raw: unknown): Settings {
     testMode: typeof r.testMode === 'boolean' ? r.testMode : DEFAULTS.testMode,
     landing: isLanding(r.landing) ? r.landing : DEFAULTS.landing,
     indexing: r.indexing === true,
+    theme: isTheme(r.theme) ? r.theme : DEFAULTS.theme,
   }
 }
 
@@ -61,6 +70,10 @@ export function parsePatch(body: unknown): { ok: true; patch: Partial<Settings> 
   if ('indexing' in b) {
     if (typeof b.indexing !== 'boolean') return { ok: false, error: 'indexing must be true or false.' }
     patch.indexing = b.indexing
+  }
+  if ('theme' in b) {
+    if (!isTheme(b.theme)) return { ok: false, error: 'theme must be "page", "studio", "flat", "lilac", "field" or "service".' }
+    patch.theme = b.theme
   }
   if (!Object.keys(patch).length) return { ok: false, error: 'Nothing to change.' }
   return { ok: true, patch }

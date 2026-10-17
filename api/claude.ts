@@ -2,15 +2,17 @@ import Anthropic from '@anthropic-ai/sdk'
 import { waitUntil } from '@vercel/functions'
 import { unauthorised, who } from '../lib/api.js'
 import { EFFORT_MODELS, FALLBACK_MODELS, cleanClaudeRequest, costUsd, createSpendTracker, type SpendTracker } from '../lib/claude.js'
-import { env, type Env } from '../lib/env.js'
+import { env, siteOrigin, type Env } from '../lib/env.js'
+import { cleanHelpRequest, helpContent, helpReady, helpVisitorAllowed } from '../lib/help.js'
 import { bad, json, readJson } from '../lib/http.js'
 import { claudeLimiter } from '../lib/ratelimit.js'
 import { readItem, upsertItems } from '../lib/settings.js'
 
-/* The AI proxy (spec §7). Owner or tester. Calls the Messages API with ANTHROPIC_API_KEY and
-   CLAUDE_MODEL: no tools, no web, no streaming. 503 until the key, the model and the monthly cap
-   (CLAUDE_MONTHLY_CAP_USD) are all set, and once the month's estimated spend passes the cap.
-   Logs time, route, role, model, token counts and status. Never content. */
+/* The AI proxy (spec §7). Owner or tester; with kind "help", also a visitor who passed the person
+   check, and then the server builds the system prompt itself (lib/help.ts). Calls the Messages API with
+   ANTHROPIC_API_KEY and CLAUDE_MODEL: no tools, no web, no streaming. 503 until the key, the model and
+   the monthly cap (CLAUDE_MONTHLY_CAP_USD) are all set, and once the month's estimated spend passes
+   the cap. Logs time, route, role, kind, model, token counts and status. Never content. */
 
 export const spend: SpendTracker = createSpendTracker({
   read: () => readItem('aiSpend'),
@@ -37,21 +39,36 @@ const offline = (): Response => json({ ok: false, error: 'The AI is not availabl
 
 export async function POST(request: Request): Promise<Response> {
   const w = await who(request)
-  const role = w.owner ? 'owner' : w.tester ? 'tester' : 'none'
-  if (!w.owner && !w.tester) return unauthorised()
-  const cfg = claudeConfig()
-  if (!cfg) return offline()
-  if (!claudeLimiter.hit(w.key)) {
-    log({ role, status: 429 })
-    return bad('Too many questions. Try again in an hour.', 429)
-  }
+  if (!w.owner && !w.tester && !w.human) return unauthorised()
   const body = await readJson(request)
   if (!body.ok) return body.response
-  const cleaned = cleanClaudeRequest(body.body)
+  const help = !!body.body && typeof body.body === 'object' && (body.body as { kind?: unknown }).kind === 'help'
+  const kind = help ? 'help' : undefined
+  /* a visitor who only passed the person check may ask the help assistant, and nothing else */
+  const visitor = !w.owner && !w.tester
+  const role = w.owner ? 'owner' : w.tester ? 'tester' : 'human'
+  if (visitor && !help) return unauthorised()
+  const cfg = claudeConfig()
+  if (!cfg) return offline()
+  if (!(visitor ? helpVisitorAllowed(w.key) : claudeLimiter.hit(w.key))) {
+    log({ role, kind, status: 429 })
+    return bad(visitor ? 'Too many questions. Try again later.' : 'Too many questions. Try again in an hour.', 429)
+  }
+  let govuk: string | undefined
+  let cleaned: ReturnType<typeof cleanClaudeRequest>
+  if (help) {
+    if (!helpReady()) {
+      log({ role, kind, status: 503, reason: 'no help prompt builder' })
+      return offline()
+    }
+    const page = await helpContent(new URL(request.url).origin, siteOrigin())
+    govuk = page.from
+    cleaned = cleanHelpRequest(body.body, page.value)
+  } else cleaned = cleanClaudeRequest(body.body)
   if (!cleaned.ok) return bad(cleaned.error)
   await spend.refresh()
   if (spend.total() >= cfg.capUsd) {
-    log({ role, status: 503, reason: 'monthly cap' })
+    log({ role, kind, status: 503, reason: 'monthly cap' })
     return offline()
   }
 
@@ -70,7 +87,7 @@ export async function POST(request: Request): Promise<Response> {
     })
   } catch (e) {
     const status = e instanceof Anthropic.APIError ? e.status : null
-    log({ role, model: cfg.model, status: 502, upstream: status ?? (e instanceof Error ? e.name : 'error') })
+    log({ role, kind, model: cfg.model, status: 502, upstream: status ?? (e instanceof Error ? e.name : 'error') })
     return json({ ok: false, error: 'The AI did not answer just now.' }, 502)
   }
 
@@ -83,7 +100,7 @@ export async function POST(request: Request): Promise<Response> {
     .join('')
     .trim()
   const status = res.stop_reason === 'refusal' || !text ? 502 : 200
-  log({ role, model: res.model, status, stop: res.stop_reason, in: res.usage.input_tokens, out: res.usage.output_tokens, usd: Math.round(cost * 1e6) / 1e6 })
+  log({ role, kind, govuk, model: res.model, status, stop: res.stop_reason, in: res.usage.input_tokens, out: res.usage.output_tokens, usd: Math.round(cost * 1e6) / 1e6 })
   if (status !== 200) return json({ ok: false, error: 'The AI did not answer that one.' }, 502)
   return json({ text })
 }
