@@ -127,11 +127,9 @@ export async function readSettings(now: number = Date.now(), ttlMs: number = SET
   return value
 }
 
-/* The store's id: GLOBAL_CONFIG_ID or EDGE_CONFIG_ID when set, otherwise the first path segment of
-   the connection string (https://global-config.vercel.com/<id>?token=…) */
-export function storeId(e: Env = env()): string | null {
-  const given = e.GLOBAL_CONFIG_ID || e.EDGE_CONFIG_ID
-  if (given) return given.trim()
+/* The id of the store a connection string names: its first path segment
+   (https://global-config.vercel.com/<id>?token=…). This is the store the site reads. */
+export function connectionStoreId(e: Env = env()): string | null {
   const conn = connectionString(e)
   if (!conn) return null
   try {
@@ -140,6 +138,18 @@ export function storeId(e: Env = env()): string | null {
   } catch {
     return null
   }
+}
+
+/** GLOBAL_CONFIG_ID or EDGE_CONFIG_ID, if one was set by hand */
+export function configuredStoreId(e: Env = env()): string | null {
+  return (e.GLOBAL_CONFIG_ID || e.EDGE_CONFIG_ID || '').trim() || null
+}
+
+/* The store the switches write to: always the one the site reads, so a change is read back. An id set
+   by hand is used only when the connection string names none; one that names another store is ignored
+   (the diagnostics page shows the difference). */
+export function storeId(e: Env = env()): string | null {
+  return connectionStoreId(e) || configuredStoreId(e)
 }
 
 /** whether the store can be written: its id and the API token */
@@ -170,10 +180,27 @@ export async function readItem(key: string, e: Env = env()): Promise<unknown> {
 }
 
 /* Upsert the changed keys in the Edge Config store, then return the merged settings */
-export async function writeSettings(patch: Partial<Settings>, e: Env = env()): Promise<Settings> {
+export async function writeSettings(patch: Partial<Settings>, e: Env = env(), waits: readonly number[] = [300, 700, 1500]): Promise<Settings> {
   const current = await readSettings()
   const next: Settings = { ...current, ...patch }
   await upsertItems(patch, e)
+  /* read it back from the store, so a change that didn't land says so instead of looking saved */
+  const read = reader || defaultReader(e)
+  let stored: Settings | null = null
+  for (let i = 0; i <= waits.length; i++) {
+    try {
+      const raw = await read()
+      stored = raw ? normaliseSettings(raw) : null
+    } catch {
+      stored = null
+    }
+    if (stored && (Object.keys(patch) as (keyof Settings)[]).every((k) => stored![k] === patch[k])) break
+    if (i < waits.length) await new Promise((r) => setTimeout(r, waits[i]))
+    else {
+      const k = (Object.keys(patch) as (keyof Settings)[]).find((key) => !stored || stored[key] !== patch[key]) as keyof Settings
+      throw new Error(`Vercel accepted the change, but store ${storeId(e)} still reads ${k} = ${JSON.stringify(stored ? stored[k] : null)}. See /api/admin/diagnose › store.`)
+    }
+  }
   cache = { at: Date.now(), value: next }
   return next
 }

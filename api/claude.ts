@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { waitUntil } from '@vercel/functions'
 import { unauthorised, who } from '../lib/api.js'
-import { EFFORT_MODELS, FALLBACK_MODELS, cleanClaudeRequest, costUsd, createSpendTracker, type SpendTracker } from '../lib/claude.js'
+import { EFFORT_MODELS, FALLBACK_MODELS, apiMaxTokens, cleanClaudeRequest, costUsd, createSpendTracker, type SpendTracker } from '../lib/claude.js'
 import { env, siteOrigin, type Env } from '../lib/env.js'
 import { cleanHelpRequest, helpContent, helpReady, helpVisitorAllowed } from '../lib/help.js'
 import { bad, json, readJson } from '../lib/http.js'
@@ -12,7 +12,8 @@ import { readItem, upsertItems } from '../lib/settings.js'
    check, and then the server builds the system prompt itself (lib/help.ts). Calls the Messages API with
    ANTHROPIC_API_KEY and CLAUDE_MODEL: no tools, no web, no streaming. 503 until the key, the model and
    the monthly cap (CLAUDE_MONTHLY_CAP_USD) are all set, and once the month's estimated spend passes
-   the cap. Logs time, route, role, kind, model, token counts and status. Never content. */
+   the cap. Logs time, route, role, kind, model, token counts, status and how long the model took.
+   Never content. */
 
 export const spend: SpendTracker = createSpendTracker({
   read: () => readItem('aiSpend'),
@@ -75,11 +76,12 @@ export async function POST(request: Request): Promise<Response> {
   const { system, messages, max_tokens } = cleaned.request
   const client = new Anthropic({ apiKey: cfg.key, maxRetries: 1, timeout: 45_000 })
   const fallback = FALLBACK_MODELS.has(cfg.model)
+  const started = Date.now()
   let res: Anthropic.Beta.BetaMessage
   try {
     res = await client.beta.messages.create({
       model: cfg.model,
-      max_tokens,
+      max_tokens: apiMaxTokens(cfg.model, max_tokens),
       messages,
       ...(system ? { system } : {}),
       ...(EFFORT_MODELS.has(cfg.model) ? { output_config: { effort: 'low' as const } } : {}),
@@ -87,7 +89,7 @@ export async function POST(request: Request): Promise<Response> {
     })
   } catch (e) {
     const status = e instanceof Anthropic.APIError ? e.status : null
-    log({ role, kind, model: cfg.model, status: 502, upstream: status ?? (e instanceof Error ? e.name : 'error') })
+    log({ role, kind, model: cfg.model, status: 502, upstream: status ?? (e instanceof Error ? e.name : 'error'), ms: Date.now() - started })
     return json({ ok: false, error: 'The AI did not answer just now.' }, 502)
   }
 
@@ -100,7 +102,7 @@ export async function POST(request: Request): Promise<Response> {
     .join('')
     .trim()
   const status = res.stop_reason === 'refusal' || !text ? 502 : 200
-  log({ role, kind, govuk, model: res.model, status, stop: res.stop_reason, in: res.usage.input_tokens, out: res.usage.output_tokens, usd: Math.round(cost * 1e6) / 1e6 })
+  log({ role, kind, govuk, model: res.model, status, stop: res.stop_reason, in: res.usage.input_tokens, out: res.usage.output_tokens, usd: Math.round(cost * 1e6) / 1e6, ms: Date.now() - started })
   if (status !== 200) return json({ ok: false, error: 'The AI did not answer that one.' }, 502)
   return json({ text })
 }

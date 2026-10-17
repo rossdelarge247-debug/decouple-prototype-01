@@ -43,6 +43,12 @@ Two readings of the spec:
 - The middleware wasn't affected, which is why the mode switch kept working.
 - Every read now asks the store itself (`consistentRead`): the site settings, the AI spend and the diagnostics page. The site still keeps its own copy for 5 seconds in functions and 60 in the middleware.
 
+**Fixed after landing: the help assistant.** On decouple.uk, the panel on `/help` answered "Something went wrong. Please ask again."
+- Claude Opus 5.5 always thinks, and its thinking counts toward `max_tokens`. The panel asks for 700. The first question on the site spent all 700 thinking, so the reply had no text and the proxy returned 502. The month's AI spend shows it: $0.019976 is 1,494 tokens in and exactly 700 out.
+- A model that always thinks is now sent the page's `max_tokens` plus 4,000. The page's figure is still what the reply itself gets, and the prompt keeps it short. This covers every AI page, not just the help assistant.
+- Each `/api/claude` log line now gives `ms`, how long the model took.
+- The page also gives up after 9 seconds; see below.
+
 **Ross.**
 - **Look and feel:** set it in Site settings, or leave As designed. `?theme=studio|flat|lilac|field|service` previews any look on `/` and `/help`.
 - **Try the help assistant** with a few real questions, and check its answers stick to the page.
@@ -63,6 +69,9 @@ Two readings of the spec:
 - **MVP 08 records what testers ask the assistant.** In testing mode, `help/help-ai.js` sends the first 200 characters of each question as an answer row (`help-ai-q`, through `KIT.log`). MVP 07 Ask does the same for "Ask anything".
   - `privacy.html` says "What you type into a tool isn't sent to us".
   - Either log only that a question was asked, or say in `privacy.html` that testing mode keeps the questions asked in Ask and the help assistant.
+- **The site gives an AI call 9 seconds.** On the site, `window.claude.complete` in `shared/dc-site.js` posts through `api()`, and `j()` aborts every request after 9 seconds by default.
+  - Opus 5.5 thinks before it answers, so a help answer, an Ask reply or a journal reply can take longer than that. The page then shows its error while the server is still answering, and the call is still paid for.
+  - Give `/api/claude` its own limit, such as 60 seconds: `j(path, opt, 60000)`. The server allows the model 45 seconds, with one retry.
 - Nothing else failed.
 
 **Next.** The parked items: the end-to-end tester-code run, the spreadsheet tabs per test, Results playback, analytics and session tools.

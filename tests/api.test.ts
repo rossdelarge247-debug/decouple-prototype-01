@@ -13,6 +13,7 @@ import { POST as publish } from '../api/admin/publish.js'
 import { GET as rebuild } from '../api/cron/rebuild.js'
 import { GET as siteGet, POST as sitePost } from '../api/admin/site.js'
 import { hashPassword } from '../lib/password.js'
+import { useSettingsReader } from '../lib/settings.js'
 import { cookieFor, post, req, setup } from './helpers.js'
 
 const SCRIPT = { APPS_SCRIPT_URL: 'https://script.google.com/macros/s/x/exec', APPS_SCRIPT_SECRET: 'shh' }
@@ -252,7 +253,13 @@ describe('owner-only routes', () => {
   })
 
   it('writes settings through the Vercel API when configured', async () => {
-    const fetch = mockFetch(() => ({ status: 'ok' }))
+    /* a store that takes the writes, as Vercel's does */
+    const store: Record<string, unknown> = { mode: 'holding', requireCode: true, testMode: false, landing: 'a', indexing: false }
+    useSettingsReader(async () => ({ ...store }))
+    const fetch = mockFetch((_url, init) => {
+      for (const it of (JSON.parse(String(init?.body)) as { items: { key: string; value: unknown }[] }).items) store[it.key] = it.value
+      return { status: 'ok' }
+    })
     Object.assign(process.env, { GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_1?token=t', VERCEL_API_TOKEN: 'tok', VERCEL_TEAM_ID: 'team_9' })
     const owner = await cookieFor('owner')
     const r = await sitePost(post('/api/admin/site', { mode: 'guide', testMode: true, landing: 'random', indexing: true, theme: 'field' }, owner))
@@ -264,6 +271,24 @@ describe('owner-only routes', () => {
     expect((await sitePost(post('/api/admin/site', { indexing: 'yes' }, owner))).status).toBe(400)
     expect((await sitePost(post('/api/admin/site', { theme: 'neon' }, owner))).status).toBe(400)
     expect(fetch.mock.calls).toHaveLength(1)
+  })
+
+  it('says so when a change Vercel accepted does not read back', async () => {
+    useSettingsReader(async () => ({ mode: 'guide', landing: 'd' }))
+    mockFetch(() => ({ status: 'ok' }))
+    Object.assign(process.env, { GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_1?token=t', VERCEL_API_TOKEN: 'tok' })
+    const r = await sitePost(post('/api/admin/site', { landing: 'b' }, await cookieFor('owner')))
+    expect(r.status).toBe(502)
+    expect((await r.json()).error).toContain('store ecfg_1 still reads landing = "d"')
+  }, 10_000)
+
+  it('writes to the store the site reads, whatever an id set by hand says', async () => {
+    const fetch = mockFetch(() => ({ status: 'ok' }))
+    const store: Record<string, unknown> = {}
+    useSettingsReader(async () => ({ ...store, landing: 'b' }))
+    Object.assign(process.env, { GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_read?token=t', EDGE_CONFIG_ID: 'ecfg_other', VERCEL_API_TOKEN: 'tok' })
+    expect((await sitePost(post('/api/admin/site', { landing: 'b' }, await cookieFor('owner')))).status).toBe(200)
+    expect(String(fetch.mock.calls[0][0])).toBe('https://api.vercel.com/v1/global-config/ecfg_read/items')
   })
 
   it('validates code operations before passing them to the script', async () => {
@@ -359,4 +384,48 @@ describe('/api/admin/diagnose', () => {
     expect(d.vercelApi.check).toMatch(/^ok/)
     expect(d.script).toMatchObject({ configured: true, check: 'ok', codes: 1 })
   })
+
+  it('shows where the site reads and writes, and what each store holds', async () => {
+    const { GET: diagnose } = await import('../api/admin/diagnose.js')
+    mockFetch((url) => {
+      if (url.includes('/global-config/ecfg_1/items')) return [{ key: 'landing', value: 'd' }, { key: 'aiSpend', value: { usd: 3 } }]
+      if (url.includes('/global-config/ecfg_other/items')) return [{ key: 'landing', value: 'b' }, { key: 'theme', value: 'field' }]
+      if (url.includes('api.vercel.com')) return { id: 'ecfg_1' }
+      if (url.includes('global-config.vercel.com')) return { landing: 'd' }
+      return { ok: true, codes: [] }
+    })
+    Object.assign(process.env, { GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_1?token=secret-token', EDGE_CONFIG_ID: 'ecfg_other', VERCEL_API_TOKEN: 'vcp_secret' })
+    const d = await (await diagnose(req('/api/admin/diagnose', { cookie: await cookieFor('owner') }))).json()
+    expect(d.store).toMatchObject({ readsFrom: 'ecfg_1', readsVia: 'GLOBAL_CONFIG', writesTo: 'ecfg_1', idSetByHand: 'ecfg_other' })
+    expect(d.store.warning).toMatch(/ecfg_other, a different store/)
+    expect(d.vercelApi.itemsInStoreWrittenTo).toEqual({ store: 'ecfg_1', landing: 'd' })
+    expect(d.vercelApi.itemsInStoreSetByHand).toEqual({ store: 'ecfg_other', landing: 'b', theme: 'field' })
+  })
+
+  it('with ?write=1, writes a probe, reads it back both ways and removes it', async () => {
+    const { GET: diagnose } = await import('../api/admin/diagnose.js')
+    const items: Record<string, unknown> = { landing: 'd' }
+    const writes: unknown[] = []
+    mockFetch((url, init) => {
+      if (url.includes('api.vercel.com') && init?.method === 'PATCH') {
+        const body = JSON.parse(String(init.body)) as { items: { operation: string; key: string; value?: unknown }[] }
+        writes.push(...body.items.map((it) => it.operation + ' ' + it.key))
+        for (const it of body.items) if (it.operation === 'delete') delete items[it.key]
+        else items[it.key] = it.value
+        return { status: 'ok' }
+      }
+      if (url.includes('/global-config/ecfg_1/items')) return Object.entries(items).map(([key, value]) => ({ key, value }))
+      if (url.includes('api.vercel.com')) return { id: 'ecfg_1' }
+      if (url.includes('global-config.vercel.com/ecfg_1/item/diagnoseProbe')) return items.diagnoseProbe ?? null
+      if (url.includes('global-config.vercel.com')) return { ...items }
+      return { ok: true, codes: [] }
+    })
+    Object.assign(process.env, { GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_1?token=secret-token', VERCEL_API_TOKEN: 'vcp_secret' })
+    const text = await (await diagnose(req('/api/admin/diagnose?write=1', { cookie: await cookieFor('owner') }))).text()
+    expect(text).not.toContain('vcp_secret')
+    const d = JSON.parse(text)
+    expect(d.writeTest).toMatchObject({ store: 'ecfg_1', write: { status: 200 }, readByApi: expect.stringMatching(/^ok/), removed: 'ok' })
+    expect(writes).toEqual(['upsert diagnoseProbe', 'delete diagnoseProbe'])
+    expect(items.diagnoseProbe).toBeUndefined()
+  }, 10_000)
 })

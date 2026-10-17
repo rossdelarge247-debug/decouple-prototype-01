@@ -167,13 +167,14 @@ All JSON. Reject any body over 64 KB.
 - Used by Ask (MVP 07), the journal companion (MVP 03) and Protos 08 and 10. `shared/dc-site.js` defines `window.claude.complete` on the site and posts here; the pages are unchanged.
 - Calls the Anthropic Messages API with `ANTHROPIC_API_KEY` and `CLAUDE_MODEL`. No tools, no web access, no streaming. Returns the reply text as `{text}`.
 - Limits: `max_tokens` at most 1,200; at most 20 messages; `system` at most 8,000 characters; body at most 64 KB. 40 calls per hour per session.
+- A model that thinks on every request (Opus 5.5 and 5, Fable 5.1 and 5, Sonnet 5.5 and 5, Haiku 5.5) is sent the page's `max_tokens` plus 4,000. Its thinking counts toward `max_tokens`, so without the extra room a short allowance can go entirely on thinking and leave no reply.
 - **Spend cap:** estimate cost from the usage the API returns, keep a running total per calendar month (Global Config item `aiSpend: {month, usd}`, written at most once a minute per instance), and return 503 once it passes `CLAUDE_MONTHLY_CAP_USD`.
-- **Never log content.** Log only time, route, session role, token counts and status.
+- **Never log content.** Log only time, route, session role, token counts, status and how long the model took.
 - Works in test mode too: it stores nothing.
 - For now the other pages send their own system prompts, which is acceptable while only the owner and testers can reach them.
 - **The help assistant (`kind: "help"`) is public, so its prompt is built on the server.** The panel at the top of `/help` (and MVP 08) sends `{kind: "help", messages, max_tokens}`; the page also sends `system`, but the server ignores it. Instead:
   - Load `site/help/help-prompt.js` as a module (`require(...).HELPPROMPT`; it's plain JS with no DOM and no network) and read the deployment's own `help/help-sources.json` and `help/help-content.json` (cache both per instance).
-  - `messages = HELPPROMPT.trim(messages)` (the last 8 turns; a user turn at most 1,000 characters, an assistant turn at most 2,000), then `system = HELPPROMPT.build(sources, content, messages)` (always under 8,000 characters). `max_tokens` at most 700.
+  - `messages = HELPPROMPT.trim(messages)` (the last 8 turns; a user turn at most 1,000 characters, an assistant turn at most 2,000), then `system = HELPPROMPT.build(sources, content, messages)` (always under 8,000 characters). `max_tokens` at most 700, plus the room for thinking above.
   - Who: owner, tester, or a session with `human` (the existing Turnstile check through `/api/human`). Anyone else gets 401. The page runs the check before the first question.
   - Limits for `human` sessions: 15 calls per hour and 40 per day per session, plus 300 per hour across all visitors; 429 past any of them. The monthly spend cap covers it too. Owner and tester sessions keep their limits.
   - Nothing is stored, and content is never logged (as above). Log `kind` with the rest.
