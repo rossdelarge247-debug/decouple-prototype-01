@@ -36,7 +36,7 @@ Two readings of the spec:
   - **§11 15.** In each of the five looks, `/` (as the owner), `/guide` and `/help` open in it, with `<html data-site-theme>` set before `<body>` exists, so there is no flash of another look. `/help` makes no `/api` request. With As designed set, `?theme=flat` and `?theme=lilac` preview their looks. As designed shows both pages in Category norm, their saved look.
   - **At 320 px:** `/`, `/guide`, the guide's questions and `/p/mvp08` don't scroll sideways in any look, and Quick exit, Help and the back lozenge are fully visible. `/help` does scroll sideways in two looks; see below.
   - **16b.** `/?landing=f` shows F, and the next `/` shows the Site settings design.
-- **The help build:** pending, from this pull request's CI build (the only place that reaches GOV.UK).
+- **The help build** in this pull request's CI got 24 of 24 GOV.UK pages and forms D81, A, E, E1, E2, with no warnings. `lib/generated/` wasn't stale.
 
 **Ross.**
 - **Look and feel:** set it in Site settings, or leave As designed. `?theme=studio|flat|lilac|field|service` previews any look on `/` and `/help`.
