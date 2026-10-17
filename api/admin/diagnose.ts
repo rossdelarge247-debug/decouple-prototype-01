@@ -8,7 +8,7 @@ import { helpReady } from '../../lib/help.js'
 import { env, siteOrigin } from '../../lib/env.js'
 import { securityHeaders } from '../../lib/http.js'
 import { scriptConfigured, scriptGet } from '../../lib/script.js'
-import { FRESH, SETTINGS_KEYS, connectionString, normaliseSettings, storeId } from '../../lib/settings.js'
+import { FRESH, SETTINGS_KEYS, configuredStoreId, connectionStoreId, connectionString, normaliseSettings, storeId } from '../../lib/settings.js'
 
 const VARIABLES = [
   'SITE_ORIGIN',
@@ -48,16 +48,27 @@ export async function GET(request: Request): Promise<Response> {
   const present = VARIABLES.filter((k) => !!e[k])
   const missing = VARIABLES.filter((k) => !e[k])
 
-  /* the store, read fresh */
+  /* the store, read fresh; where the site reads it from and where the switches write */
   const conn = connectionString(e)
   const id = storeId(e)
-  let store: Record<string, unknown> = { connected: !!conn, id, read: 'skipped: no connection string' }
+  const readsFrom = connectionStoreId(e)
+  const byHand = configuredStoreId(e)
+  const where = {
+    readsFrom,
+    readsVia: e.GLOBAL_CONFIG ? 'GLOBAL_CONFIG' : e.EDGE_CONFIG ? 'EDGE_CONFIG' : null,
+    writesTo: id,
+    idSetByHand: byHand,
+    ...(byHand && readsFrom && byHand !== readsFrom
+      ? { warning: `GLOBAL_CONFIG_ID or EDGE_CONFIG_ID names ${byHand}, a different store from the one the site reads (${readsFrom}). The switches write to ${readsFrom}; delete the ID variable in Vercel.` }
+      : {}),
+  }
+  let store: Record<string, unknown> = { connected: !!conn, id, ...where, read: 'skipped: no connection string' }
   if (conn) {
     try {
       const raw = await timed(8000, createClient(conn).getAll([...SETTINGS_KEYS], FRESH))
-      store = { connected: true, id, read: 'ok', raw, settings: normaliseSettings(raw) }
+      store = { connected: true, id, ...where, read: 'ok', raw, settings: normaliseSettings(raw) }
     } catch (err) {
-      store = { connected: true, id, read: 'failed', error: message(err) }
+      store = { connected: true, id, ...where, read: 'failed', error: message(err) }
     }
   }
 
@@ -74,6 +85,20 @@ export async function GET(request: Request): Promise<Response> {
         teamId: e.VERCEL_TEAM_ID || null,
         check: res.ok ? 'ok: the token can read the store, so it can write it' : `failed: Vercel returned ${res.status}`,
         detail: res.ok ? undefined : body.slice(0, 300),
+      }
+      /* the settings as the API sees them, in the store written to, and in any other store an ID variable names */
+      for (const [label, sid] of [['itemsInStoreWrittenTo', id], ['itemsInStoreSetByHand', byHand && byHand !== id ? byHand : null]] as const) {
+        if (!sid) continue
+        const iu = new URL(`https://api.vercel.com/v1/global-config/${encodeURIComponent(sid)}/items`)
+        if (e.VERCEL_TEAM_ID) iu.searchParams.set('teamId', e.VERCEL_TEAM_ID)
+        try {
+          const ir = await timed(8000, fetch(iu, { headers: { authorization: `Bearer ${e.VERCEL_API_TOKEN}` } }))
+          const list = ir.ok ? ((await ir.json()) as unknown) : null
+          const items = Array.isArray(list) ? Object.fromEntries((list as { key?: unknown; value?: unknown }[]).filter((it) => typeof it.key === 'string' && (SETTINGS_KEYS as readonly string[]).includes(it.key)).map((it) => [it.key as string, it.value])) : null
+          vercelApi[label] = items ? { store: sid, ...items } : { store: sid, read: `failed: Vercel returned ${ir.status}` }
+        } catch (err) {
+          vercelApi[label] = { store: sid, read: 'failed', error: message(err) }
+        }
       }
     } catch (err) {
       vercelApi = { token: true, teamId: e.VERCEL_TEAM_ID || null, check: 'failed', error: message(err) }
