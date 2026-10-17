@@ -12,7 +12,9 @@
   const ago = (d) => { if (!d) return "Never"; const m = (Date.now() - new Date(d)) / 60000; return m < 60 ? Math.max(1, Math.round(m)) + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago"; };
   const expired = (c) => c.expires && new Date(c.expires + "T23:59:59") < new Date();
 
-  let ON = false, st = { mode: "holding", requireCode: true, testMode: false, landing: "a", indexing: false }, codes = [], filter = "active", fresh = [];
+  let ON = false, st = { mode: "holding", requireCode: true, testMode: false, landing: "a", indexing: false, theme: "page" }, codes = [], filter = "active", fresh = [];
+  /* the help hub's treatments (help/help-themes.css, m02/guide/g-themes.css); "page" = each page's own Tweaks choice */
+  const LOOKS = [["page", "As designed", "Each page uses the look saved in its Tweaks", ""], ["studio", "Studio", "Today’s look: serif heads, soft cards, violet", "#5B21B6"], ["flat", "Flat", "Hairlines, no shadows or texture, one accent", "#1A1A1A"], ["lilac", "Lilac & warm", "Lilac washes, cream, plum ink, peach notes", "#B48BE0"], ["field", "Field guide", "Editorial print: ink rules, big numerals, orange", "#C2410C"], ["service", "Category norm", "Green band, sand, a yellow call to action", "#0F5C4A"]];
   const LANDS = [["a", "A · Chapters", "The original: hero, with the guide’s chapters alongside"], ["b", "B · First question", "The landing is the first question"], ["c", "C · A letter", "A calm note, beside a page from a guide"], ["d", "D · Questions people ask", "Eight common questions, each mapped to a chapter"], ["e", "E · See your guide", "A look at the guide itself"], ["f", "F · Where are you?", "Pick your stage and get help instantly, before starting"], ["g", "G · Facts, not noise", "Common beliefs, with the plain facts"], ["h", "H · One step at a time", "Calm and minimal: now, soon, later"], ["i", "I · What to do first", "A five-point checklist for this week"]];
   const origin = () => (ON ? location.origin : "https://decouple.uk");
   /* a code with prototypes opens the participant hub (Take part); without, the guide */
@@ -24,7 +26,7 @@
   const api = {
     async site(p) {
       if (ON) { const r = p ? await DC.admin.set(p) : await DC.admin.get(); if (!r.ok || !r.data) throw new Error(r.status === 401 || r.status === 404 ? "You’re signed out." : "Couldn’t reach the site."); return r.data; }
-      const s = rd(), cur = { mode: s.mode || "guide", requireCode: s.requireCode !== false, testMode: !!s.testMode, landing: s.landing || "a", indexing: !!s.indexing };
+      const s = rd(), cur = { mode: s.mode || "guide", requireCode: s.requireCode !== false, testMode: !!s.testMode, landing: s.landing || "a", indexing: !!s.indexing, theme: s.theme || "page" };
       return p ? (wr(p), { ...cur, ...p }) : cur;
     },
     async codes(op) {
@@ -53,7 +55,9 @@
   }
   function site() {
     const lb = $("#lands"); if (lb && !lb.children.length) lb.innerHTML = [...LANDS, ["random", "Rotate at random", "Each visitor sees one of the nine, so Results can compare them"]].map(([k, n, d]) => `<div class="lo" data-l="${k}"><button type="button" role="radio" data-l="${k}"><span class="rd"></span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>${k === "random" ? "" : `<a href="${encodeURI("Marketing 02 · Divorce Guide.html")}?demo=1&phase=landing&landing=${k}" target="_blank" rel="noopener">Preview ↗</a>`}</div>`).join("");
-    $$(".lo").forEach((o) => { const on = o.dataset.l === (st.landing || "a"); o.classList.toggle("on", on); o.querySelector("button").setAttribute("aria-checked", on); });
+    $$("#lands .lo").forEach((o) => { const on = o.dataset.l === (st.landing || "a"); o.classList.toggle("on", on); o.querySelector("button").setAttribute("aria-checked", on); });
+    const lk = $("#looks"); if (lk && !lk.children.length) lk.innerHTML = LOOKS.map(([k, n, d, c]) => `<div class="lo" data-t="${k}"><button type="button" role="radio" data-t="${k}"><span class="rd"></span><span><b>${c ? `<i class="lk-c" style="background:${c}"></i>` : ""}${esc(n)}</b><small>${esc(d)}</small></span></button>${k === "page" ? "" : `<span class="lo-l"><a href="${encodeURI("Marketing 02 · Divorce Guide.html")}?demo=1&phase=landing&theme=${k}" target="_blank" rel="noopener">Guide ↗</a><a href="${encodeURI("Marketing 03 · Help & Support.html").replace(/&/g, "%26")}?theme=${k}" target="_blank" rel="noopener">Help ↗</a></span>`}</div>`).join("");
+    $$("#looks .lo").forEach((o) => { const on = o.dataset.t === (st.theme || "page"); o.classList.toggle("on", on); o.querySelector("button").setAttribute("aria-checked", on); });
     $$(".mo").forEach((b) => { const on = b.dataset.m === st.mode; b.classList.toggle("on", on); b.setAttribute("aria-checked", on); });
     [["#sw-code", st.requireCode], ["#sw-test", st.testMode], ["#sw-index", st.indexing]].forEach(([s, v]) => { const b = $(s); b.classList.toggle("on", !!v); b.setAttribute("aria-checked", !!v); });
     $("#test-card").classList.toggle("on", !!st.testMode);
@@ -89,7 +93,7 @@
 
   /* ── actions ── */
   async function setSite(p, msg) {
-    const box = p.landing ? $("#land-msg") : $("#site-msg");
+    const box = p.landing ? $("#land-msg") : p.theme ? $("#look-msg") : $("#site-msg");
     const prev = st; st = { ...st, ...p }; site();
     try { st = { ...st, ...(await api.site(p)) }; site(); say(box, msg, "ok"); }
     catch (e) { st = prev; site(); say(box, e.message, "err"); }
@@ -103,6 +107,7 @@
     $("#sw-code").addEventListener("click", () => setSite({ requireCode: !st.requireCode }, !st.requireCode ? "A code is now needed to start the guide." : "Anyone can now start the guide."));
     $("#sw-index").addEventListener("click", () => setSite({ indexing: !st.indexing }, !st.indexing ? "Search engines can now list the landing page. It can take a few days to appear." : "Search engines are now asked not to list the site."));
     $("#lands").addEventListener("click", (e) => { const b = e.target.closest("button[data-l]"); if (!b || b.dataset.l === st.landing) return; const n = (LANDS.find((x) => x[0] === b.dataset.l) || [0, "Rotate at random"])[1]; setSite({ landing: b.dataset.l }, b.dataset.l === "random" ? "Visitors now see one of the nine designs at random." : `The guide now opens on ${n}.`); });
+    $("#looks").addEventListener("click", (e) => { const b = e.target.closest("button[data-t]"); if (!b || b.dataset.t === (st.theme || "page")) return; const n = LOOKS.find((x) => x[0] === b.dataset.t)[1]; setSite({ theme: b.dataset.t }, b.dataset.t === "page" ? "The guide and help page now use their own Tweaks look." : `The guide and help page now use ${n}.`); });
     $("#sw-test").addEventListener("click", () => setSite({ testMode: !st.testMode }, !st.testMode ? "Test mode is on. Nothing you do is saved." : "Test mode is off. Answers are saved again."));
     $("#pub").addEventListener("click", async (e) => { const b = e.currentTarget; if (!ON) return say($("#q-msg"), "Publishing works on decouple.uk.", ""); b.disabled = true; const r = await DC.admin.publish(); b.disabled = false; say($("#q-msg"), r.ok ? "Publishing. New questions are live in about a minute." : "Couldn’t start publishing. Try again.", r.ok ? "ok" : "err"); });
     $("#out").addEventListener("click", async () => { if (ON) { await DC.logout(); location.href = "/"; } else say($("#site-msg"), "Signing out works on decouple.uk.", ""); });

@@ -24,7 +24,7 @@
   }
 
   /* tool pages pass tool to get a "Your toolkit" link; the toolkit home passes onHome */
-  function Top({ signedIn, onHome, onSignOut, tool, children }) {
+  function Top({ signedIn, onHome, onSignOut, tool, back, children }) {
     const [o, setO] = useState(false), ref = useRef(null), P = window.KIT.PERSONA;
     const [acct, setAcct] = useState(window.KIT.acct());
     useEffect(() => window.KIT.subscribe(() => setAcct(window.KIT.acct())), []);
@@ -33,7 +33,7 @@
     useEffect(() => { if (!o) return; const f = (e) => { if (ref.current && !ref.current.contains(e.target)) setO(false); }; document.addEventListener("mousedown", f); return () => document.removeEventListener("mousedown", f); }, [o]);
     return (
       <header className="kit-top">
-        <div className="l"><Mark onClick={goHome}/>{tool && <button type="button" className="kit-crumb" onClick={goHome}><KIc.Back s={13}/> Your toolkit</button>}</div>
+        <div className="l"><Mark onClick={goHome}/>{tool && (back ? <button type="button" className="kit-crumb loz" onClick={goHome} aria-label={back}><KIc.Back s={14}/><span>{back}</span></button> : <button type="button" className="kit-crumb" onClick={goHome}><KIc.Back s={13}/> Your toolkit</button>)}</div>
         <div className="r">{children}
           <button type="button" className="pillbtn exit" onClick={window.KIT.exit}><Ic.X s={12} c="#B91C1C"/> Quick exit</button>
           {!signedIn && <button type="button" className="btn sm kit-savebtn" onClick={() => window.KIT.needAcct("save")}>Save my progress</button>}

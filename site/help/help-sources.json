@@ -2,6 +2,7 @@
   "_": "Help & support hub sources. Owned by the design project. The build fetches every gov[].path from https://www.gov.uk/api/content/<path> and writes help/help-content.json (spec §5). sum, advice, links[].d and disclosure.checklist are Decouple's own words: never put a fee, amount, deadline or date in them.",
   "version": 1,
   "scope": "This page covers England and Wales. The law is different in Scotland and Northern Ireland.",
+  "ask": { "sug": ["Do we have to go to mediation first?", "What’s the difference between Form A and Form E?", "Can I get help paying court fees?", "I live alone now. What about Council Tax?", "Who gets Child Benefit after we separate?"] },
   "topics": [
     { "id": "safety", "t": "Safety now", "urgent": true, "covers": "Immediate danger, the 24-hour helpline, protection orders",
       "sum": "If you or your children are in danger, call 999. If you can’t speak, stay on the line and press 55 when asked. The helplines below are free and confidential, and can help you plan to leave safely.",

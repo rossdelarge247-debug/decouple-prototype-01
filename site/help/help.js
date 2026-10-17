@@ -1,7 +1,8 @@
 /* Help & support hub · one renderer for both pages: MVP 08 (toolkit) and Marketing 03 (public, /help).
    Reads help/help-sources.json (ours) and help/help-content.json (written by the build from the GOV.UK Content API, spec §5).
-   Without the content file (the design project), each GOV.UK page is a plain link. Nothing is sent from here:
-   the kit page passes onEvent for its testing rows; the public page passes nothing. */
+   Without the content file (the design project), each GOV.UK page is a plain link. Nothing is sent from here, except by the
+   assistant at the top (help-ai.js), which sends a question to the AI only when someone asks one. The kit page passes onEvent
+   for its testing rows; the public page passes nothing. */
 window.HELP = (function () {
   const BASE = (document.currentScript && document.currentScript.src.replace(/help\.js(\?.*)?$/, "")) || "help/";
   const GOV = "https://www.gov.uk";
@@ -155,7 +156,9 @@ window.HELP = (function () {
     const notes = [el("p", { class: "hp-scope", text: S.scope })];
     if (!live && !onSite) notes.push(el("p", { class: "hp-proto" }, [el("b", { text: "Prototype" }), " GOV.UK’s own text is added when the site builds (spec §5). Until then, each GOV.UK page is a link."]));
     const main = el("div", { class: "hp-main" }, order.map(topic));
-    host.append(el("div", { class: "hp-notes" }, notes), el("div", { class: "hp-cols" }, [el("aside", { class: "hp-side" }, toc), main]),
+    const jump = (id) => { const s = document.getElementById("help-" + id); if (!s) return; window.scrollTo({ top: s.getBoundingClientRect().top + window.scrollY - 88, behavior: "smooth" }); s.classList.remove("hp-flash"); void s.offsetWidth; s.classList.add("hp-flash"); };
+    const ai = window.HELPAI && window.HELPPROMPT ? window.HELPAI.panel({ S, C, opts, ev, jump }) : null;
+    host.append(el("div", { class: "hp-notes" }, notes), el("div", { class: "hp-cols" + (ai ? " has-ai" : "") }, [ai, el("aside", { class: "hp-side" }, toc), main]),
       el("div", { class: "hp-foot" }, [
         el("p", {}, ["Contains public sector information licensed under the ", out(S.links_ogl, "Open Government Licence v3.0"), "."]),
         el("p", { text: "Decouple is not a law firm, and nothing here is legal advice." + (live && C.built ? " GOV.UK text last fetched " + fmt(C.built) + "." : "") }),
@@ -169,5 +172,5 @@ window.HELP = (function () {
     if (location.hash && location.hash.startsWith("#help-")) { const s = document.getElementById(location.hash.slice(1)); if (s) setTimeout(() => window.scrollTo({ top: s.getBoundingClientRect().top + window.scrollY - 88 }), 60); }
   }
 
-  return { load, mount, clean };
+  return { load, mount, clean, el, svg, IC };
 })();

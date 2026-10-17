@@ -1,6 +1,6 @@
 # Decouple site · build and housework spec
 
-For Claude Code. Owned by the design project; last updated 15 Oct 2026 (export `2026-10-15a`). Changes since the last export are listed in that export's `CHANGES.md`. The owner is Ross. There is one login, Ross's. Domain: **decouple.uk** (already connected to Vercel). Contact: **hello@decouple.uk**.
+For Claude Code. Owned by the design project; last updated 16 Oct 2026 (export `2026-10-16c`). Changes since the last export are listed in that export's `CHANGES.md`. The owner is Ross. There is one login, Ross's. Domain: **decouple.uk** (already connected to Vercel). Contact: **hello@decouple.uk**.
 
 ---
 
@@ -51,8 +51,9 @@ For each request:
    - `/api/*`: each function does its own checks.
    - `LOGIN_PATH`, `/holding`, `/privacy`, `/help`, `/favicon.ico`, `/robots.txt`, `/sitemap.xml`.
    - Every path in `dist/_public.json`, which the build generates (§5). It includes `help/help-sources.json` and `help/help-content.json`, which the help page fetches by script.
+   - **`/shared/dc-look.js` is served by `/api/look`, never the file** (a rewrite in `vercel.json`, ahead of the static file, with or without `?v=`). The file in `site/` is the design project's preview and reads the browser's storage.
 2. **`/` or `/guide`:**
-   - Read the site settings from Global Config, formerly Edge Config (`mode`, `requireCode`, `testMode`, `landing`, `indexing`), cached for 60 seconds per instance. Defaults: `{ mode: "holding", requireCode: true, testMode: false, landing: "a", indexing: false }`.
+   - Read the site settings from Global Config, formerly Edge Config (`mode`, `requireCode`, `testMode`, `landing`, `indexing`, `theme`), cached for 60 seconds per instance. Defaults: `{ mode: "holding", requireCode: true, testMode: false, landing: "a", indexing: false, theme: "page" }`.
    - If `?code=` is present: check it (§3). If it's valid, set `dc_tester` and send a 302 to `/` with the code removed. If not, send a 302 to `/?code_error=1`.
    - **`/take-part`** works the same way: `/take-part?code=<valid>` sets `dc_tester` and redirects to `/take-part`. Without a tester or owner session (or with an invalid code), serve the small code page (§8), never a 404, so participants who lose their cookie can type the code in.
    - At `/`: serve the guide when mode = guide, or the request has a tester or owner session. Otherwise serve the holding page. `/guide` always serves the guide.
@@ -145,10 +146,11 @@ All JSON. Reject any body over 64 KB.
 | `POST /api/signup` | Human | `{email, stage?, source, sid, hp}` | Checks the email, then sends `kind: "signup"`. Sources: `holding:<utm_source>`, `guide`, `guide-optin`, `help` (the help page's "Start your financial statement"). `stage` can be a `;` list. | 200, 400 or 403 |
 | `POST /api/email` | Same as `/api/answers` | `{email, link, sid}` | Sends the guide email (below) | 200, 400, 401 or 429 |
 | `GET /api/results` | Owner | `?test=&since=` | Passes the request to `action=results` | `{rows:[{sid,pid,test,step,price,landing,qid,qv,q,type,a,at,device}], signups}` |
-| `GET` and `POST /api/admin/site` | Owner | `{mode?: "guide"\|"holding", requireCode?: boolean, testMode?: boolean, landing?: "a"…"i"\|"random", indexing?: boolean}` | Reads or writes the Edge Config items through the Vercel REST API (`EDGE_CONFIG_ID`, `VERCEL_API_TOKEN`) | `{mode, requireCode, testMode, landing, indexing}` |
+| `GET` and `POST /api/admin/site` | Owner | `{mode?: "guide"\|"holding", requireCode?: boolean, testMode?: boolean, landing?: "a"…"i"\|"random", indexing?: boolean, theme?: "page"\|"studio"\|"flat"\|"lilac"\|"field"\|"service"}` | Reads or writes the Edge Config items through the Vercel REST API (`EDGE_CONFIG_ID`, `VERCEL_API_TOKEN`) | `{mode, requireCode, testMode, landing, indexing, theme}` |
+| `GET /api/look` (served at `/shared/dc-look.js`, §4) | Anyone | — | Reads `theme` from the site settings. The guide and the help page load it in `<head>`, before they paint. | `Content-Type: text/javascript`, `Cache-Control: public, max-age=60`. Exactly this, with `T` the JSON of `theme`, or `null` when it's `page` or missing: `(function(){var O=["studio","flat","lilac","field","service"],t=null;try{t=new URLSearchParams(location.search).get("theme")}catch(e){}if(O.indexOf(t)<0)t=T;if(O.indexOf(t)>=0)document.documentElement.setAttribute("data-site-theme",t)})();` |
 | `GET` and `POST /api/admin/codes` | Owner | POST: `{action: "create", codes:[{code, label, expires, test, track, mode}]}`, `{action: "update", code, active?, label?, expires?, test?, track?, mode?}` or `{action: "delete", code}` | Passes the change to the script's `kind: "codes"` (GET reads `action=codes`). On create, check the format `^[A-Z]{2,6}-[A-Z]{2,6}-\d{2}$`, labels of 40 characters at most, `track` matching `^(|full|mvp|[pm]\d{2}(,[pm]\d{2})*)$`, `mode` of `un` or `mod` (empty when there's no track), and at most 20 codes per request. The page makes the code strings. | `{codes:[{code,label,active,test,expires,created,uses,last_used,track,mode}]}` |
 | `POST /api/participant` | Tester (or owner) | `{sid, followup, voucher, email, hp}` | The participant hub's thank-you step. Checks `email` when given. Sends `kind: "participant"` to the script, which appends to `Participants` with the tester's label as `pid`. Test codes and test mode: 200 `{ok, test}`, nothing stored. At most 3 per `sid`. | 200, 400 or 401 |
-| `POST /api/claude` | Owner or tester | `{system, messages:[{role, content}], max_tokens}` | The AI proxy (below) | 200 `{text}`; 400 bad shape; 401 no session; 429 over the rate limit; 503 no key or over the monthly cap |
+| `POST /api/claude` | Owner or tester; with `kind: "help"`, also a visitor who has passed the person check (`human`) | `{system, messages:[{role, content}], max_tokens}`, or `{kind: "help", messages}` | The AI proxy (below) | 200 `{text}`; 400 bad shape; 401 no session; 429 over the rate limit; 503 no key or over the monthly cap |
 | `POST /api/admin/publish` | Owner | — | Calls `DEPLOY_HOOK_URL`, which rebuilds and so picks up edited questions and fresh help content (§5.2) | `{ok}` |
 | `GET /api/cron/rebuild` | Vercel Cron only: `Authorization: Bearer CRON_SECRET` | — | Calls `DEPLOY_HOOK_URL`, so the help content refreshes weekly. Schedule in `vercel.json`: `0 5 * * 1`. Anything else gets 401. | `{ok}` |
 
@@ -168,7 +170,13 @@ All JSON. Reject any body over 64 KB.
 - **Spend cap:** estimate cost from the usage the API returns, keep a running total per calendar month (Global Config item `aiSpend: {month, usd}`, written at most once a minute per instance), and return 503 once it passes `CLAUDE_MONTHLY_CAP_USD`.
 - **Never log content.** Log only time, route, session role, token counts and status.
 - Works in test mode too: it stores nothing.
-- For now the pages send their own system prompts, which is acceptable while only the owner and testers can reach it. **Before any AI feature is public**, move the prompts to the server (pages send `{mode, ctx, messages}`). That needs a page change from the design project first.
+- For now the other pages send their own system prompts, which is acceptable while only the owner and testers can reach them.
+- **The help assistant (`kind: "help"`) is public, so its prompt is built on the server.** The panel at the top of `/help` (and MVP 08) sends `{kind: "help", messages, max_tokens}`; the page also sends `system`, but the server ignores it. Instead:
+  - Load `site/help/help-prompt.js` as a module (`require(...).HELPPROMPT`; it's plain JS with no DOM and no network) and read the deployment's own `help/help-sources.json` and `help/help-content.json` (cache both per instance).
+  - `messages = HELPPROMPT.trim(messages)` (the last 8 turns; a user turn at most 1,000 characters, an assistant turn at most 2,000), then `system = HELPPROMPT.build(sources, content, messages)` (always under 8,000 characters). `max_tokens` at most 700.
+  - Who: owner, tester, or a session with `human` (the existing Turnstile check through `/api/human`). Anyone else gets 401. The page runs the check before the first question.
+  - Limits for `human` sessions: 15 calls per hour and 40 per day per session, plus 300 per hour across all visitors; 429 past any of them. The monthly spend cap covers it too. Owner and tester sessions keep their limits.
+  - Nothing is stored, and content is never logged (as above). Log `kind` with the rest.
 
 **The guide email (Resend):**
 - From `MAIL_FROM` (`Decouple <hello@decouple.uk>`), reply-to `hello@decouple.uk`.
@@ -226,7 +234,9 @@ The design project owns every other page. The client side of the API is `site/sh
 11. **`/api/claude`:** no session → 401. As a tester, MVP 07 · Ask answers a question. The 41st call in an hour → 429. The logs hold no message content.
 12. **Participant hub:** `/take-part` with no session shows the code page. In it: consent, screener (rows land on the `Screener` tab; the wellbeing answer never arrives), the session list, then the thank-you step (a row in `Participants`, nothing on the answer tabs, and `/api/results` never returns it).
 
-13. **Help:** logged out, `/help` loads with every request public, both JSON files included, and makes no `/api` request until someone submits its sign-up. Its GOV.UK text shows with "Source: GOV.UK, updated …". A made-up path added to `help-sources.json` fails the build by name. A tester with track `mvp` opens `/p/mvp08`. `/help` is in the sitemap, and loses the noindex header, only while `indexing` is on. `/api/cron/rebuild` without the secret → 401.
+13. **Help:** logged out, `/help` loads with every request public, both JSON files and `help/help-prompt.js` and `help/help-ai.js` included, and makes no `/api` request until someone submits its sign-up or asks the assistant a question. Its GOV.UK text shows with "Source: GOV.UK, updated …". A made-up path added to `help-sources.json` fails the build by name. A tester with track `mvp` opens `/p/mvp08`. `/help` is in the sitemap, and loses the noindex header, only while `indexing` is on. `/api/cron/rebuild` without the secret → 401.
+14. **Help assistant:** logged out on `/help`, the first question runs the person check, then gets an answer with "On this page" links that scroll to the topic. A changed `system` in the request makes no difference to the answer's rules (the server builds its own). `/api/claude` with `kind: "help"` and no `human` → 401; without `kind` from a `human` session → 401. The 16th help call in an hour → 429. The logs hold no message content.
+15. **Look and feel:** logged out, `/shared/dc-look.js` returns the script in §7 with `null`. In Site settings pick Field guide: within a minute `/` and `/help` render in it (`<html data-site-theme="field">`) with no flash of the old look, and `/help` still makes no `/api` request. `/help?theme=flat` shows Flat. Set it back to As designed.
 
 Then switch mode back to **holding** before the production deploy. The guide goes public only when the next export lands, with consent and the tester-code screen.
 

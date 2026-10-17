@@ -105,7 +105,7 @@ window.DC = (function () {
   /* AI: on the site, the pages' window.claude.complete goes to /api/claude (spec §7). In the design tool window.claude already exists. */
   if (!window.claude && /(^|\.)decouple\.uk$|\.vercel\.app$/.test(location.hostname)) window.claude = { complete: async (o) => {
     const b = typeof o === "string" ? { messages: [{ role: "user", content: o }] } : o || {};
-    const r = await api("/api/claude", { system: String(b.system || ""), messages: (b.messages || []).slice(-20), max_tokens: Math.min(+b.max_tokens || 700, 1200) });
+    const r = await api("/api/claude", { kind: b.kind === "help" ? "help" : undefined, system: String(b.system || ""), messages: (b.messages || []).slice(-20), max_tokens: Math.min(+b.max_tokens || 700, 1200) });
     if (!r.ok || !r.data) throw new Error(r.status === 401 || r.status === 404 || r.status === 503 ? "offline" : "ai");
     return r.data.text;
   } };

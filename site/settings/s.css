@@ -76,3 +76,6 @@ main{max-width:1120px;margin:0 auto;padding:36px 28px 96px}
 .lo b{display:block;font-size:13.5px;font-weight:600}.lo small{display:block;margin-top:2px;font-size:12px;line-height:1.4;color:var(--sub)}
 .lo a{align-self:flex-start;margin:0 14px 10px 42px;font-size:12px;font-weight:600;text-decoration:none}.lo a:hover{text-decoration:underline}
 .lo[data-l=random]{border-style:dashed}
+.lo[data-t=page]{border-style:dashed}
+.lo-l{display:flex;gap:14px;margin:0 14px 10px 42px}.lo-l a{margin:0!important}
+.lk-c{display:inline-block;width:10px;height:10px;border-radius:99px;margin-right:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
