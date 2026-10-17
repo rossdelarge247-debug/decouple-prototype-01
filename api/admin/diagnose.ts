@@ -105,6 +105,39 @@ export async function GET(request: Request): Promise<Response> {
     }
   } else if (e.VERCEL_API_TOKEN && !id) vercelApi.check = 'skipped: no store id (connect the store first)'
 
+  /* ?write=1: write a probe item the way the switches write, read it back both ways, then remove it */
+  let writeTest: Record<string, unknown> = { run: 'add ?write=1 to write a test item, read it back and remove it' }
+  if (new URL(request.url).searchParams.get('write') === '1' && e.VERCEL_API_TOKEN && id && conn) {
+    const value = 'probe ' + new Date().toISOString()
+    const iu = new URL(`https://api.vercel.com/v1/global-config/${encodeURIComponent(id)}/items`)
+    if (e.VERCEL_TEAM_ID) iu.searchParams.set('teamId', e.VERCEL_TEAM_ID)
+    const send = (items: unknown[]) => timed(8000, fetch(iu, { method: 'PATCH', headers: { authorization: `Bearer ${e.VERCEL_API_TOKEN}`, 'content-type': 'application/json' }, body: JSON.stringify({ items }) }))
+    writeTest = { store: id, url: iu.pathname }
+    try {
+      const w = await send([{ operation: 'upsert', key: 'diagnoseProbe', value }])
+      writeTest.write = { status: w.status, body: (await w.text()).slice(0, 300) }
+      await new Promise((r) => setTimeout(r, 1500))
+      try {
+        const viaConnection = await timed(8000, createClient(conn).get('diagnoseProbe', FRESH))
+        writeTest.readByConnection = viaConnection === value ? 'ok: the site reads what was written' : `different: ${JSON.stringify(viaConnection ?? null)}`
+      } catch (err) {
+        writeTest.readByConnection = 'failed: ' + message(err)
+      }
+      try {
+        const r = await timed(8000, fetch(iu, { headers: { authorization: `Bearer ${e.VERCEL_API_TOKEN}` } }))
+        const list = r.ok ? ((await r.json()) as unknown) : null
+        const found = Array.isArray(list) ? (list as { key?: unknown; value?: unknown }[]).find((it) => it.key === 'diagnoseProbe') : undefined
+        writeTest.readByApi = !r.ok ? `failed: Vercel returned ${r.status}` : found ? (found.value === value ? 'ok: the API holds what was written' : `different: ${JSON.stringify(found.value)}`) : 'missing: the API has no such item'
+      } catch (err) {
+        writeTest.readByApi = 'failed: ' + message(err)
+      }
+      const d = await send([{ operation: 'delete', key: 'diagnoseProbe' }])
+      writeTest.removed = d.ok ? 'ok' : `Vercel returned ${d.status}`
+    } catch (err) {
+      writeTest.error = message(err)
+    }
+  }
+
   /* the Google script */
   let script: Record<string, unknown> = { configured: scriptConfigured(e), check: 'skipped' }
   if (scriptConfigured(e)) {
@@ -176,6 +209,7 @@ export async function GET(request: Request): Promise<Response> {
     variables: { present, missing },
     store,
     vercelApi,
+    writeTest,
     script,
     email: { configured: !!e.RESEND_API_KEY, from: e.MAIL_FROM || 'Decouple <hello@decouple.uk> (default)', test: emailTest ?? 'add ?email=1 to send the guide email to the from address and see what Resend says' },
     turnstile: { siteKey: !!e.TURNSTILE_SITE_KEY, secret: !!e.TURNSTILE_SECRET_KEY },

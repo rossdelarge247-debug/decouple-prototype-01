@@ -401,4 +401,31 @@ describe('/api/admin/diagnose', () => {
     expect(d.vercelApi.itemsInStoreWrittenTo).toEqual({ store: 'ecfg_1', landing: 'd' })
     expect(d.vercelApi.itemsInStoreSetByHand).toEqual({ store: 'ecfg_other', landing: 'b', theme: 'field' })
   })
+
+  it('with ?write=1, writes a probe, reads it back both ways and removes it', async () => {
+    const { GET: diagnose } = await import('../api/admin/diagnose.js')
+    const items: Record<string, unknown> = { landing: 'd' }
+    const writes: unknown[] = []
+    mockFetch((url, init) => {
+      if (url.includes('api.vercel.com') && init?.method === 'PATCH') {
+        const body = JSON.parse(String(init.body)) as { items: { operation: string; key: string; value?: unknown }[] }
+        writes.push(...body.items.map((it) => it.operation + ' ' + it.key))
+        for (const it of body.items) if (it.operation === 'delete') delete items[it.key]
+        else items[it.key] = it.value
+        return { status: 'ok' }
+      }
+      if (url.includes('/global-config/ecfg_1/items')) return Object.entries(items).map(([key, value]) => ({ key, value }))
+      if (url.includes('api.vercel.com')) return { id: 'ecfg_1' }
+      if (url.includes('global-config.vercel.com/ecfg_1/item/diagnoseProbe')) return items.diagnoseProbe ?? null
+      if (url.includes('global-config.vercel.com')) return { ...items }
+      return { ok: true, codes: [] }
+    })
+    Object.assign(process.env, { GLOBAL_CONFIG: 'https://global-config.vercel.com/ecfg_1?token=secret-token', VERCEL_API_TOKEN: 'vcp_secret' })
+    const text = await (await diagnose(req('/api/admin/diagnose?write=1', { cookie: await cookieFor('owner') }))).text()
+    expect(text).not.toContain('vcp_secret')
+    const d = JSON.parse(text)
+    expect(d.writeTest).toMatchObject({ store: 'ecfg_1', write: { status: 200 }, readByApi: expect.stringMatching(/^ok/), removed: 'ok' })
+    expect(writes).toEqual(['upsert diagnoseProbe', 'delete diagnoseProbe'])
+    expect(items.diagnoseProbe).toBeUndefined()
+  }, 10_000)
 })
