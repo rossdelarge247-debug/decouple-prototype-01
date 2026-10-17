@@ -81,6 +81,11 @@ export function parsePatch(body: unknown): { ok: true; patch: Partial<Settings> 
 
 type Reader = () => Promise<unknown>
 
+/* Every read asks the store itself. Without this, inside Vercel functions the client reads a copy at
+   /opt/edge-config/<id>.json and keeps its first parse for the life of the instance, so the landing,
+   the look and the AI spend stayed at what they were when the deployment started. */
+export const FRESH = { consistentRead: true } as const
+
 let cache: { at: number; value: Settings } | null = null
 let reader: Reader | null = null
 
@@ -94,7 +99,7 @@ function defaultReader(e: Env = env()): Reader {
     const conn = connectionString(e)
     if (!conn) return null
     const client = createClient(conn)
-    return client.getAll([...SETTINGS_KEYS])
+    return client.getAll([...SETTINGS_KEYS], FRESH)
   }
 }
 
@@ -161,7 +166,7 @@ export async function upsertItems(items: Record<string, unknown>, e: Env = env()
 export async function readItem(key: string, e: Env = env()): Promise<unknown> {
   const conn = connectionString(e)
   if (!conn) return undefined
-  return createClient(conn).get(key)
+  return createClient(conn).get(key, FRESH)
 }
 
 /* Upsert the changed keys in the Edge Config store, then return the merged settings */

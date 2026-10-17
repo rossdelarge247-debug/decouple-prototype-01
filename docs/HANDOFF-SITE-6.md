@@ -38,6 +38,11 @@ Two readings of the spec:
   - **16b.** `/?landing=f` shows F, and the next `/` shows the Site settings design.
 - **The help build** in this pull request's CI got 24 of 24 GOV.UK pages and forms D81, A, E, E1, E2, with no warnings. `lib/generated/` wasn't stale.
 
+**Fixed after landing.** On decouple.uk, Site settings' landing and look didn't take: the guide stayed on D and the pages on Category norm.
+- Inside Vercel functions, the settings client read a copy of the store at `/opt/edge-config/<id>.json` and kept its first parse for the life of the instance. `/api/session`, which gives the guide its landing, and `/api/look` both kept serving what the settings were when the deployment started.
+- The middleware wasn't affected, which is why the mode switch kept working.
+- Every read now asks the store itself (`consistentRead`): the site settings, the AI spend and the diagnostics page. The site still keeps its own copy for 5 seconds in functions and 60 in the middleware.
+
 **Ross.**
 - **Look and feel:** set it in Site settings, or leave As designed. `?theme=studio|flat|lilac|field|service` previews any look on `/` and `/help`.
 - **Try the help assistant** with a few real questions, and check its answers stick to the page.
