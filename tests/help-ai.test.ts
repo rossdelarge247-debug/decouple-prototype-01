@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { POST as claude, spend } from '../api/claude.js'
 import { HELP_SOURCES, HELPPROMPT } from '../lib/generated/help-prompt.js'
+import { THINKING_ROOM } from '../lib/claude.js'
 import { cleanHelpRequest, helpContent, helpReady, helpVisitorAllowed, type HelpContent } from '../lib/help.js'
 import { cookieFor, post, setup } from './helpers.js'
 
@@ -67,7 +68,8 @@ describe('the help assistant (spec §7, kind "help")', () => {
     expect(String(body.system)).toMatch(/^You are the help assistant on Decouple's Help & support page/)
     expect(String(body.system)).not.toContain('POEM')
     expect(String(body.system)).toContain('/get-help-with-court-fees')
-    expect(body.max_tokens).toBe(700)
+    /* the answer's 700, and room for the thinking Opus 5.5 always does */
+    expect(body.max_tokens).toBe(700 + THINKING_ROOM)
     expect(body.messages).toEqual(messages)
   })
 

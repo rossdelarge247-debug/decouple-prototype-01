@@ -93,6 +93,12 @@ export function costUsd(usage: Usage | null | undefined, models: (string | null 
 
 /** models that take output_config.effort; the proxy asks for low effort, as the replies are short */
 export const EFFORT_MODELS: ReadonlySet<string> = new Set(['claude-fable-5-1', 'claude-fable-5', 'claude-opus-5-5', 'claude-opus-5', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-sonnet-5-5', 'claude-sonnet-5', 'claude-haiku-5-5'])
+/** models that think whenever `thinking` is left unset. Thinking counts toward max_tokens, so these are
+    sent the page's max_tokens plus THINKING_ROOM: otherwise a short allowance can go entirely on
+    thinking and leave no reply. How long the reply is stays with the page's prompt. */
+export const THINKING_MODELS: ReadonlySet<string> = new Set(['claude-fable-5-1', 'claude-fable-5', 'claude-opus-5-5', 'claude-opus-5', 'claude-sonnet-5-5', 'claude-sonnet-5', 'claude-haiku-5-5'])
+export const THINKING_ROOM = 4000
+export const apiMaxTokens = (model: string, max_tokens: number): number => (THINKING_MODELS.has(model) ? max_tokens + THINKING_ROOM : max_tokens)
 /** models with a server-side fallback when a safety classifier declines (fallbacks: "default") */
 export const FALLBACK_MODELS: ReadonlySet<string> = new Set(['claude-fable-5-1', 'claude-opus-5-5', 'claude-opus-5', 'claude-sonnet-5-5'])
 

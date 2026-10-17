@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { POST as claude, claudeConfig, spend } from '../api/claude.js'
-import { MAX_TOKENS, cleanClaudeRequest, costUsd, createSpendTracker, monthOf, priceOf, type Spend } from '../lib/claude.js'
+import { MAX_TOKENS, THINKING_ROOM, cleanClaudeRequest, costUsd, createSpendTracker, monthOf, priceOf, type Spend } from '../lib/claude.js'
 import { cookieFor, post, setup } from './helpers.js'
 
 const AI = { ANTHROPIC_API_KEY: 'sk-ant-test', CLAUDE_MODEL: 'claude-opus-5-5', CLAUDE_MONTHLY_CAP_USD: '50' }
@@ -123,7 +123,7 @@ describe('/api/claude', () => {
     for (const k of Object.keys(AI)) delete process.env[k]
   })
 
-  it('answers a tester with the reply text, asks for low effort with the default fallback, and logs no content', async () => {
+  it('answers a tester with the reply text, asks for low effort with the default fallback and room to think, and logs no content', async () => {
     Object.assign(process.env, AI)
     const fetch = mockAnthropic(() => reply())
     const logs: string[] = []
@@ -138,19 +138,36 @@ describe('/api/claude', () => {
     expect(headers.get('x-api-key')).toBe('sk-ant-test')
     expect(headers.get('anthropic-beta')).toBe('server-side-fallback-2026-07-01')
     const sent = JSON.parse(String(init.body))
-    expect(sent).toEqual({ model: 'claude-opus-5-5', max_tokens: 700, system: 'You are a sounding board.', messages: ask.messages, output_config: { effort: 'low' }, fallbacks: 'default' })
+    expect(sent).toEqual({ model: 'claude-opus-5-5', max_tokens: 700 + THINKING_ROOM, system: 'You are a sounding board.', messages: ask.messages, output_config: { effort: 'low' }, fallbacks: 'default' })
     expect(sent.tools).toBeUndefined()
     expect(sent.stream).toBeUndefined()
     const line = logs.join('\n')
     expect(line).toContain('"route":"/api/claude"')
     expect(line).toContain('"in":1000')
+    expect(line).toMatch(/"ms":\d+/)
     expect(line).not.toContain('house')
     expect(line).not.toContain('sounding board')
     expect(line).not.toContain('both agree')
     expect(spend.total()).toBeCloseTo(0.008)
   })
 
-  it('leaves out the fallback and effort for models that take neither', async () => {
+  it('gives a reply even when thinking used up the page’s whole allowance', async () => {
+    Object.assign(process.env, AI)
+    const lines: string[] = []
+    vi.spyOn(console, 'log').mockImplementation((s: unknown) => void lines.push(String(s)))
+    /* what came back on the live site with max_tokens 700: all of it thinking, no text */
+    mockAnthropic(() => reply({ content: [{ type: 'thinking', thinking: '', signature: 'x' }], stop_reason: 'max_tokens', usage: { input_tokens: 1494, output_tokens: 700 } }))
+    const tester = await cookieFor('tester', { l: 'P02', c: 'OAK-WREN-40' })
+    expect((await claude(post('/api/claude', ask, tester))).status).toBe(502)
+    expect(JSON.parse(lines[0])).toMatchObject({ status: 502, stop: 'max_tokens', out: 700 })
+    /* the same question with room to think */
+    const fetch = mockAnthropic(() => reply({ usage: { input_tokens: 1494, output_tokens: 1900 } }))
+    expect((await claude(post('/api/claude', ask, tester))).status).toBe(200)
+    expect(JSON.parse(String((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body)).max_tokens).toBe(4700)
+    vi.restoreAllMocks()
+  })
+
+  it('leaves out the fallback, effort and room to think for models that take none of them', async () => {
     Object.assign(process.env, AI, { CLAUDE_MODEL: 'claude-haiku-4-5' })
     const fetch = mockAnthropic(() => reply({ model: 'claude-haiku-4-5' }))
     vi.spyOn(console, 'log').mockImplementation(() => {})
@@ -158,6 +175,7 @@ describe('/api/claude', () => {
     const sent = JSON.parse(String((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body))
     expect(sent.fallbacks).toBeUndefined()
     expect(sent.output_config).toBeUndefined()
+    expect(sent.max_tokens).toBe(700)
     vi.restoreAllMocks()
   })
 
