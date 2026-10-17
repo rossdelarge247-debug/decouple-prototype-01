@@ -78,7 +78,7 @@ British spelling. Plain English. Warm, calm and brief. No emoji. Respond ONLY wi
       q = String(q || "").trim(); if (!q || busy) return;
       const safe = window.KitSafeRe.test(q), hist = [...msgs, { role: "user", content: q, safe }];
       setMsgs(hist); setTxt(""); setBusy(true); setErr(""); K.setStatus("ask", "started");
-      K.log("ask-q", MODES[mode].t, "ai", mode === "explain" || mode === "calm" || mode === "talk" ? "(private, not sent)" : q.slice(0, 200), { step: "Ask · " + mode });
+      K.log("ask-q", MODES[mode].t, "ai", mode === "meet" ? opt : (M.sug || []).includes(q) && !safe ? q : "(question not sent)", { step: "Ask · " + mode });
       const multi = mode === "ask" || mode === "talk", send = (multi ? hist.slice(-8) : hist.slice(-1)).map((x) => ({ role: x.role, content: x.role === "assistant" ? JSON.stringify(x.data) : x.content }));
       try { const raw = await window.KitAI(sysFor(mode), send, 900), d = parse(raw) || (mode === "talk" ? { reply: String(raw) } : mode === "ask" ? { answer: String(raw) } : null); if (!d) throw new Error("shape"); setMsgs([...hist, { role: "assistant", data: d }]); }
       catch (e) { setErr(e.message === "offline" ? "Ask works in the design preview for now. On the live site it needs a small server piece first." : "Something went wrong. Try asking again."); }

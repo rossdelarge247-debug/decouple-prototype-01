@@ -70,7 +70,7 @@ window.HELPAI = (function () {
       turn.appendChild(wait); log.appendChild(turn);
       log.querySelectorAll(".hpa-sug.fol").forEach((x) => x.remove());
       log.scrollTo({ top: log.scrollHeight, behavior: "smooth" });
-      ev("help-ai-q", "Asked the help assistant", SAFE.test(q) ? "(safety, not sent)" : q.slice(0, 200), "Assistant");
+      ev("help-ai-q", "Asked the help assistant", sug.includes(q) && !SAFE.test(q) ? q : "(question not sent)", "Assistant");
       const hist = P.trim([...msgs, { role: "user", content: q }]);
       try {
         const raw = await complete(P.build(S, C, hist), hist), d = parse(raw) || { answer: String(raw || "") };

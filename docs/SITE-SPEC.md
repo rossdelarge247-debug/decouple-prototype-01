@@ -164,7 +164,7 @@ All JSON. Reject any body over 64 KB.
 **Rate limits:** at most 120 answer batches per hour per session, and 3 emails per `sid` per day. In-memory is fine for now, because sessions already gate it.
 
 **The AI proxy (`/api/claude`):**
-- Used by Ask (MVP 07), the journal companion (MVP 03) and Protos 08 and 10. `shared/dc-site.js` defines `window.claude.complete` on the site and posts here; the pages are unchanged.
+- Used by Ask (MVP 07), the journal companion (MVP 03) and Protos 08 and 10. `shared/dc-site.js` defines `window.claude.complete` on the site and posts here, waiting up to 60 seconds (every other request: 9); the pages are unchanged.
 - Calls the Anthropic Messages API with `ANTHROPIC_API_KEY` and `CLAUDE_MODEL`. No tools, no web access, no streaming. Returns the reply text as `{text}`.
 - Limits: `max_tokens` at most 1,200; at most 20 messages; `system` at most 8,000 characters; body at most 64 KB. 40 calls per hour per session.
 - A model that thinks on every request (Opus 5.5 and 5, Fable 5.1 and 5, Sonnet 5.5 and 5, Haiku 5.5) is sent the page's `max_tokens` plus 4,000. Its thinking counts toward `max_tokens`, so without the extra room a short allowance can go entirely on thinking and leave no reply.
