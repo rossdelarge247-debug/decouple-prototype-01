@@ -8,7 +8,7 @@ import { helpReady } from '../../lib/help.js'
 import { env, siteOrigin } from '../../lib/env.js'
 import { securityHeaders } from '../../lib/http.js'
 import { scriptConfigured, scriptGet } from '../../lib/script.js'
-import { SETTINGS_KEYS, connectionString, normaliseSettings, storeId } from '../../lib/settings.js'
+import { FRESH, SETTINGS_KEYS, connectionString, normaliseSettings, storeId } from '../../lib/settings.js'
 
 const VARIABLES = [
   'SITE_ORIGIN',
@@ -54,7 +54,7 @@ export async function GET(request: Request): Promise<Response> {
   let store: Record<string, unknown> = { connected: !!conn, id, read: 'skipped: no connection string' }
   if (conn) {
     try {
-      const raw = await timed(8000, createClient(conn).getAll([...SETTINGS_KEYS]))
+      const raw = await timed(8000, createClient(conn).getAll([...SETTINGS_KEYS], FRESH))
       store = { connected: true, id, read: 'ok', raw, settings: normaliseSettings(raw) }
     } catch (err) {
       store = { connected: true, id, read: 'failed', error: message(err) }
@@ -95,7 +95,7 @@ export async function GET(request: Request): Promise<Response> {
   let aiSpend: unknown = 'skipped: no store'
   if (conn) {
     try {
-      const raw = readSpend(await timed(8000, createClient(conn).get('aiSpend')))
+      const raw = readSpend(await timed(8000, createClient(conn).get('aiSpend', FRESH)))
       aiSpend = raw && raw.month === monthOf(Date.now()) ? raw : { month: monthOf(Date.now()), usd: 0 }
     } catch (err) {
       aiSpend = { read: 'failed', error: message(err) }
