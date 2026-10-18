@@ -29,7 +29,25 @@
   - **The question sheet.** Paste `proto/ut/mvp-questions.csv` into it, then redo Results › Sheet setup.
   - **Search.** Keep Show in search engines off until a family solicitor or mediator has checked `/help`, including the assistant.
 
+**Fixed after landing: slow page loads.** Ross found pages slow to load on decouple.uk.
+- **What the pages weigh.** Size isn't the cause:
+  - the guide is 34 requests and about 550 KB before compression, React's 129 KB being the largest;
+  - `/help` is 17 requests and about 200 KB.
+- **What they wait for.** On `/` and `/help`, nothing paints until `shared/dc-look.js` comes back from `/api/look`, because it's a script in `<head>`. The guide then shows a blank page until `/api/session` answers. Both were server functions in Vercel's default region, `iad1` (Washington DC), each reading the settings store, and each could be paying for a cold start.
+- **Changed:**
+  - `vercel.json` sets `"regions": ["lhr1"]`, so the functions run in London, next to the visitors.
+  - `/api/look` also sends `Vercel-CDN-Cache-Control: max-age=60`, so Vercel's CDN keeps it for the same minute the browser does. Most visits then get it from the nearest edge without calling a function. `Cache-Control` stays as the spec gives it.
+  - `/api/admin/diagnose` shows how long the store read (`store.ms`) and the Google script (`script.ms`) took, and whether the request was this instance's first (`deployment.instance`).
+- **Every request also goes through the middleware**, fonts and React included, because it has no matcher.
+  - Leaving out the folders that are wholly public (`vendor/`, `fonts/`, `inline/`) would save a function call per file.
+  - It isn't done yet. The middleware is what keeps private files private, so a wrong matcher would expose them, and it needs checking on a preview first.
+
 **In `site/`, for the design project.**
 - Nothing failed.
+- **Proposals to speed pages up** (they need the design project, as they change pages or the spec):
+  - **The guide is blank until `/api/session` answers** (`Marketing 02 · Divorce Guide.html`, `if (phase === "landing" && site === undefined)`). It could keep the last answer in `sessionStorage` and show that straight away on later page loads in the same visit, checking it when the reply comes.
+  - **Private files are never cached.** Spec §4 gives every private response `Cache-Control: private, no-store`, so the owner and testers download every script of a proto again on each page. MVP 05 has 13 such files, 172 KB.
+    - The build already adds `?v=<content hash>` to every local script and stylesheet. So `private, max-age=31536000, immutable` for those would be safe to keep in the browser, and never in a shared cache.
+    - The pages themselves would stay `no-store`.
 
 **Next.** The parked items: the end-to-end tester-code run, the spreadsheet tabs per test, Results playback, analytics and session tools.

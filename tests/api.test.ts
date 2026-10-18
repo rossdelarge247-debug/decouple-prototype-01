@@ -383,6 +383,10 @@ describe('/api/admin/diagnose', () => {
     expect(d.store).toMatchObject({ connected: true, id: 'ecfg_1', read: 'ok', settings: { mode: 'guide', requireCode: false, testMode: false, landing: 'a', indexing: false, theme: 'page' } })
     expect(d.vercelApi.check).toMatch(/^ok/)
     expect(d.script).toMatchObject({ configured: true, check: 'ok', codes: 1 })
+    /* how long each service took, and whether this instance had just started */
+    expect(d.store.ms).toBeGreaterThanOrEqual(0)
+    expect(d.script.ms).toBeGreaterThanOrEqual(0)
+    expect(d.deployment.instance).toMatchObject({ firstRequest: expect.any(Boolean), upSeconds: expect.any(Number) })
   })
 
   it('shows where the site reads and writes, and what each store holds', async () => {
