@@ -49,7 +49,7 @@
             <h1 className="serif h-hero">Trying to work out<br/>what to do<br/><span className="em">next?</span></h1>
             <p className="serif lede">Separating comes with a hundred questions and no clear order. Answer a few gentle ones, and get a personalised guide: exactly what you need to do, in what order, and what to expect along the way.</p>
             <div className="hero-cta">
-              <div><button className="btn lg" onClick={onStart}>{resume ? "Carry on with my guide" : "Get my free guide"} <Ic.Arrow s={16}/></button><span className="note tab">~6 minutes · no account, no name needed</span></div>
+              <div><button className="btn lg" onClick={() => onStart()}>{resume ? "Carry on with my guide" : "Get my free guide"} <Ic.Arrow s={16}/></button><span className="note tab">~6 minutes · no account, no name needed</span></div>
             </div>
             <div className="trust">
               <span><Ic.Lock s={13} c="#78716C"/> Private. Your guide stays on this device</span>
@@ -65,7 +65,7 @@
           ))}
         </div>
         <div className="wrap" style={{ paddingBottom: 72 }}>
-          <div className="band g-band"><div><div className="t">Built for the start, when everything feels unclear.</div><div className="d">This is guidance, not legal advice, based on the law in England and Wales.</div></div><button className="btn" onClick={onStart}>Start now <Ic.Arrow s={14}/></button></div>
+          <div className="band g-band"><div><div className="t">Built for the start, when everything feels unclear.</div><div className="d">This is guidance, not legal advice, based on the law in England and Wales.</div></div><button className="btn" onClick={() => onStart()}>Start now <Ic.Arrow s={14}/></button></div>
         </div>
       </main>
     );
