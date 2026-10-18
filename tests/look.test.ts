@@ -38,12 +38,13 @@ describe('/api/look (spec §7)', () => {
     expect(await (await look()).text()).toBe(SPEC('null'))
   })
 
-  it('is public JavaScript, cached for a minute, and sets no cookie', async () => {
+  it('is public JavaScript, cached for a minute by the browser and by Vercel\'s CDN, and sets no cookie', async () => {
     stored({ theme: 'field' })
     const r = await look()
     expect(r.status).toBe(200)
     expect(r.headers.get('content-type')).toBe('text/javascript')
     expect(r.headers.get('cache-control')).toBe('public, max-age=60')
+    expect(r.headers.get('vercel-cdn-cache-control')).toBe('max-age=60')
     expect(r.headers.get('set-cookie')).toBeNull()
     expect(r.headers.get('x-content-type-options')).toBe('nosniff')
   })

@@ -41,7 +41,12 @@ async function timed<T>(ms: number, p: Promise<T>): Promise<T> {
   return Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`no answer within ${ms} ms`)), ms))])
 }
 
+/* when this instance started, so the report can say whether the request paid for a cold start */
+const STARTED = Date.now()
+let served = 0
+
 export async function GET(request: Request): Promise<Response> {
+  const firstRequest = served++ === 0
   const w = await who(request)
   if (!w.owner) return unauthorised()
   const e = env()
@@ -64,9 +69,10 @@ export async function GET(request: Request): Promise<Response> {
   }
   let store: Record<string, unknown> = { connected: !!conn, id, ...where, read: 'skipped: no connection string' }
   if (conn) {
+    const t0 = Date.now()
     try {
       const raw = await timed(8000, createClient(conn).getAll([...SETTINGS_KEYS], FRESH))
-      store = { connected: true, id, ...where, read: 'ok', raw, settings: normaliseSettings(raw) }
+      store = { connected: true, id, ...where, read: 'ok', ms: Date.now() - t0, raw, settings: normaliseSettings(raw) }
     } catch (err) {
       store = { connected: true, id, ...where, read: 'failed', error: message(err) }
     }
@@ -141,9 +147,10 @@ export async function GET(request: Request): Promise<Response> {
   /* the Google script */
   let script: Record<string, unknown> = { configured: scriptConfigured(e), check: 'skipped' }
   if (scriptConfigured(e)) {
+    const t0 = Date.now()
     try {
       const data = (await timed(12000, scriptGet('codes', {}, e))) as { codes?: unknown[] }
-      script = { configured: true, check: 'ok', codes: Array.isArray(data.codes) ? data.codes.length : 'unexpected shape' }
+      script = { configured: true, check: 'ok', ms: Date.now() - t0, codes: Array.isArray(data.codes) ? data.codes.length : 'unexpected shape' }
     } catch (err) {
       script = { configured: true, check: 'failed', error: message(err) }
     }
@@ -199,6 +206,7 @@ export async function GET(request: Request): Promise<Response> {
     deployment: {
       environment: e.VERCEL_ENV || null,
       region: e.VERCEL_REGION || null,
+      instance: { firstRequest, upSeconds: Math.round((Date.now() - STARTED) / 1000) },
       url: e.VERCEL_URL || null,
       commit: e.VERCEL_GIT_COMMIT_SHA ? e.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : null,
       branch: e.VERCEL_GIT_COMMIT_REF || null,

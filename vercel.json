@@ -2,6 +2,7 @@
   "framework": null,
   "buildCommand": "node scripts/build.mjs",
   "outputDirectory": "dist",
+  "regions": ["lhr1"],
   "cleanUrls": false,
   "trailingSlash": false,
   "rewrites": [
