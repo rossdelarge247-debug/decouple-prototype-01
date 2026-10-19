@@ -278,3 +278,5 @@
 [data-hpt=service] .site :is(.field input,.otext-l){border:2px solid #E3DDD0;border-radius:12px}
 [data-hpt=service] .mbox{background:#F6F1E7;border-radius:20px}
 [data-hpt=service] .pb-mcta{background:rgba(246,241,231,.95);border-top-color:#E3DDD0}
+
+[data-hpt=flat] .g-strap{background:transparent}[data-hpt=lilac] .g-strap{background:rgba(255,240,230,.6)}[data-hpt=field] .g-strap p{font-family:'Source Serif Pro',Georgia,serif;font-size:15px}[data-hpt=service] .g-strap{background:#F3F2F1;border-color:#B1B4B6}[data-hpt=service] .g-strap p,[data-hpt=service] .g-strap b{color:#0B0C0C}
