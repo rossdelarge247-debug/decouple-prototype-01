@@ -114,9 +114,10 @@ export default async function middleware(request: Request): Promise<Response> {
   if (path === loginPath()) return serve(FILES.login, url, closed)
   if (path === '/favicon.ico') return next({ headers: open })
   if (path === '/holding') return serve(FILES.holding, url, { ...open, 'cache-control': HTML })
-  if (path === '/privacy' || path === '/help') {
+  if (path === '/privacy' || path === '/about' || path === '/help') {
     const { indexing } = await settings()
-    return serve(path === '/help' ? FILES.help : FILES.privacy, url, { ...openHeaders(path, indexing), 'cache-control': HTML })
+    const file = path === '/help' ? FILES.help : path === '/about' ? FILES.about : FILES.privacy
+    return serve(file, url, { ...openHeaders(path, indexing), 'cache-control': HTML })
   }
   if (path === '/robots.txt' || path === '/sitemap.xml') {
     const { indexing } = await settings()

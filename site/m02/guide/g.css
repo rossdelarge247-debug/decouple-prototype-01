@@ -174,7 +174,7 @@
   .frow .oseg{width:100%}.frow .oseg button{flex:1}
   .pb-main>.iv-nav .btn{width:100%;justify-content:center;order:-1}
 }
-.g-help{display:inline-flex;align-items:center;min-height:44px;padding:0 6px;font:600 14px/1 Inter,sans-serif;color:#44403C;text-decoration:none;white-space:nowrap}.g-help-l{white-space:pre}.g-help:hover{color:#5B21B6;text-decoration:underline}.iv-top .r{display:flex;align-items:center;gap:8px}@media(max-width:560px){.g-help{font-size:13px;padding:0 2px}}@media(max-width:420px){.g-help-l{display:none}.g-help{padding:0 4px}}
+.g-help{display:inline-flex;align-items:center;min-height:44px;padding:0 6px;font:600 14px/1 Inter,sans-serif;color:#44403C;text-decoration:none;white-space:nowrap}.g-help-l{white-space:pre}.g-help:hover{color:#5B21B6;text-decoration:underline}.iv-top .r{display:flex;align-items:center;gap:8px}@media(max-width:560px){.g-help{font-size:13px;padding:0 2px}}@media(max-width:420px){.g-help-l{display:none}.g-help{padding:0 4px}}@media(max-width:520px){.g-about{display:none}}
 @media print{.g-help,.iv-top,.iv-prog,.pb-aside,.mnav,#__tw{display:none!important}.pb-grid{grid-template-columns:1fr}.site{background:#FFF!important}.card,.wcard{box-shadow:none;break-inside:avoid}}
 
 /* landings F–I (g-landings2.jsx) */

@@ -1,5 +1,5 @@
-/* The public allow-list (spec §5.6). The build writes every path the guide, the holding page and
-   the privacy page need; the middleware lets exactly those through. */
+/* The public allow-list (spec §5.6). The build writes every path the guide, the holding page, the
+   privacy page, the about page and the help page need; the middleware lets exactly those through. */
 export function normalisePath(pathname: string): string {
   let p = pathname
   try {

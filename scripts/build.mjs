@@ -54,7 +54,7 @@ const DIST = join(ROOT, 'dist')
 const GENERATED = join(ROOT, 'lib', 'generated')
 
 const HELP_PAGE = 'Marketing 03 · Help & Support.html'
-const PUBLIC_PAGES = ['Marketing 02 · Divorce Guide.html', 'Marketing 01 · Holding Page.html', 'privacy.html', HELP_PAGE]
+const PUBLIC_PAGES = ['Marketing 02 · Divorce Guide.html', 'Marketing 01 · Holding Page.html', 'privacy.html', 'about.html', HELP_PAGE]
 /* fetched by the help page's script, so the tag scan can't see them (spec §5.6) */
 const PUBLIC_DATA = ['help/help-sources.json', 'help/help-content.json', '_build.json']
 /* spec §5.9: the guide and the holding page are both served at /, so both point there */
@@ -63,6 +63,7 @@ const CANONICAL = {
   'Marketing 02 · Divorce Guide.html': CANONICAL_ORIGIN + '/',
   'Marketing 01 · Holding Page.html': CANONICAL_ORIGIN + '/',
   'privacy.html': CANONICAL_ORIGIN + '/privacy',
+  'about.html': CANONICAL_ORIGIN + '/about',
   [HELP_PAGE]: CANONICAL_ORIGIN + '/help',
 }
 const CSS_TARGET = ['chrome87', 'edge88', 'firefox78', 'safari14']

@@ -4,6 +4,7 @@ export const PUBLIC_PATHS: readonly string[] = [
   "/Marketing 02 · Divorce Guide.html",
   "/Marketing 03 · Help & Support.html",
   "/_build.json",
+  "/about.html",
   "/favicon.ico",
   "/fonts.css",
   "/fonts/caveat-latin-500-normal.woff2",

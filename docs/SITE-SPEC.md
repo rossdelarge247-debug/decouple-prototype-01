@@ -8,7 +8,7 @@ For Claude Code. Owned by the design project; last updated 16 Oct 2026 (export `
 
 | Area | Who | What |
 |---|---|---|
-| **Public** | Anyone | `/`: the M02 guide's landing page, or the M01 holding page (switchable). `/privacy`. `/help`, the help and support hub (Marketing 03). |
+| **Public** | Anyone | `/`: the M02 guide's landing page, or the M01 holding page (switchable). `/privacy`. `/about`. `/help`, the help and support hub (Marketing 03). |
 | **Testers** | Anyone with a tester code | Everything in the guide after the landing page. If their code has a `track`, also the participant hub (`/take-part`) and the prototypes in that track. Never the hubs. |
 | **Owner** | Ross, signed in | Prototype hub, Marketing hub, Results, Site settings, Protos 01–10, MVP 00–08, and every other file. |
 
@@ -26,6 +26,7 @@ The files in `site/` keep their names, spaces and `·` included, because the pag
 | `/guide` | `Marketing 02 · Divorce Guide.html` | Public, always |
 | `/holding` | `Marketing 01 · Holding Page.html` | Public |
 | `/privacy` | `privacy.html` | Public |
+| `/about` | `about.html` | Public |
 | `/help` | `Marketing 03 · Help & Support.html` (help and support; loads `help/`) | Public. Rewrite, like `/privacy`. |
 | `/studio` | Login page (you build it, §8) | Public, unlinked |
 | `/hub` | `Decouple · Prototype Hub.html` | Owner |
@@ -49,7 +50,7 @@ The files in `site/` keep their names, spaces and `·` included, because the pag
 For each request:
 1. **Allow straight through:**
    - `/api/*`: each function does its own checks.
-   - `LOGIN_PATH`, `/holding`, `/privacy`, `/help`, `/favicon.ico`, `/robots.txt`, `/sitemap.xml`.
+   - `LOGIN_PATH`, `/holding`, `/privacy`, `/about`, `/help`, `/favicon.ico`, `/robots.txt`, `/sitemap.xml`.
    - Every path in `dist/_public.json`, which the build generates (§5). It includes `help/help-sources.json` and `help/help-content.json`, which the help page fetches by script.
    - **`/shared/dc-look.js` is served by `/api/look`, never the file** (a rewrite in `vercel.json`, ahead of the static file, with or without `?v=`). The file in `site/` is the design project's preview and reads the browser's storage.
 2. **`/` or `/guide`:**
@@ -61,7 +62,7 @@ For each request:
 3. **Aliases:** rewrite or redirect the addresses in §2 to their files, as §2 says. The destinations need encoding, e.g. `/Decouple%20%C2%B7%20Results.html`.
 4. **Everything else:** owner session required. **Testers and tracks.** Each tester code has a `track` (§3). A tester whose track is not empty may open `/take-part`, the prototype pages in their track, and everything under `proto/`, `mvp/`, `shared/` and `take-part/`. Track tokens map to files: `p01`…`p10` → `Proto 01 · …` … `Proto 10 · …`; `m00`…`m08` → `MVP 00 · …` … `MVP 08 · …`; `full` = all ten Protos; `mvp` = all nine MVPs. Read the track from the cached codes list using the session's `c`. An empty track means the guide only, as before. **`TESTERS_CAN_OPEN_PROTOS` is retired**: remove it. The hubs (`/hub`, `/hub/*`, and their files) are always owner-only. Without a session, return 404 with the 404 page.
 5. **Headers on every response:**
-   - `X-Robots-Tag: noindex, nofollow` on everything, except: when `indexing` is true, `/`, `/privacy` and `/help` get no robots header. `/guide` always keeps it (it duplicates `/`). The pages carry no robots meta tag of their own, so this header decides.
+   - `X-Robots-Tag: noindex, nofollow` on everything, except: when `indexing` is true, `/`, `/privacy`, `/about` and `/help` get no robots header. `/guide` always keeps it (it duplicates `/`). The pages carry no robots meta tag of their own, so this header decides.
    - `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera, mic, geolocation off) and `X-Frame-Options: DENY`.
    - Private responses also get `Cache-Control: private, no-store`.
 
@@ -77,10 +78,10 @@ For each request:
 3. **React:** swap the unpkg development builds of React and ReactDOM 18.3.1 for the production builds. Serve them from the site, not unpkg: copy them from `node_modules` into `dist/vendor/`.
 4. **Fonts:** self-host them instead of Google Fonts. That keeps visitor IPs away from Google, which matters for the privacy notice. Families and weights in use: Inter 400–700, Source Serif Pro 400/600/700 with italics, JetBrains Mono 400–600, plus the signature fonts on Protos 08 and 09: Caveat, Mrs Saint Delafield and Homemade Apple. A new family in an export is flagged in its `CHANGES.md`. Rewrite each `<link href="https://fonts.googleapis.com/...">` to a local `fonts.css`.
 5. **Cache-busting:** add `?v=<content hash>` to every local JS and CSS reference, including `<link rel="prefetch">` (the help page names `shared/dc-site.js` that way and loads it only when someone signs up). Serve `dist/**/*.{js,css,woff2,png}` with `Cache-Control: public, max-age=31536000, immutable`, and HTML and `help/*.json` with `no-cache`.
-6. **Public allow-list:** scan the guide, the holding page, the privacy page and the help page (`Marketing 03 · Help & Support.html`), after rewriting, for every local `src` and `href`, and every `url()` in their CSS. Add `help/help-sources.json` and `help/help-content.json`. Write the list to `dist/_public.json`. The middleware imports it, so nothing else is public.
+6. **Public allow-list:** scan the guide, the holding page, the privacy page, the about page and the help page (`Marketing 03 · Help & Support.html`), after rewriting, for every local `src` and `href`, and every `url()` in their CSS. Add `help/help-sources.json` and `help/help-content.json`. Write the list to `dist/_public.json`. The middleware imports it, so nothing else is public.
 7. **Questions:** if `APPS_SCRIPT_URL` is set, fetch `?action=questions` and write `dist/m02/guide/questions.json` (an array of row objects keyed by the tab's column names). If the fetch fails or the tab is empty, write an empty list. The page then uses its built-in questions, with no failed request. Then fetch the help content (§5.2).
 8. **Minify all JS and CSS**, not just compiled JSX, and strip comments. Comments in the public files describe the prototypes and how things work.
-9. **Canonical:** add `<link rel="canonical" href="https://decouple.uk/">` to the guide and the holding page, `https://decouple.uk/privacy` to the privacy page, and `https://decouple.uk/help` to the help page.
+9. **Canonical:** add `<link rel="canonical" href="https://decouple.uk/">` to the guide and the holding page, `https://decouple.uk/privacy` to the privacy page, `https://decouple.uk/about` to the about page, and `https://decouple.uk/help` to the help page.
 10. **Fail the build** if any HTML still contains `text/babel`, `unpkg.com` or `fonts.googleapis.com`, if a local reference doesn't resolve, or if a help path doesn't exist (§5.2).
 
 Target: a Lighthouse mobile performance score of 90 or more for `/`.
@@ -89,8 +90,8 @@ Target: a Lighthouse mobile performance score of 90 or more for `/`.
 
 Both files are served by a function, from the `indexing` setting.
 - **`/robots.txt`**, `indexing` false: `User-agent: *` and `Disallow: /`.
-- **`/robots.txt`**, `indexing` true: `User-agent: *`, `Allow: /$`, `Allow: /privacy$`, `Allow: /help$`, one `Allow:` line for each path in `_public.json` (so crawlers can render the page), then `Disallow: /` and `Sitemap: https://decouple.uk/sitemap.xml`. **Never name a private path** (the hubs, the protos, `LOGIN_PATH`): robots.txt is public, and listing them would point people to them.
-- **`/sitemap.xml`**: `/`, `/privacy` and `/help` when `indexing` is true, each with `lastmod` (for `/help`, the help content's `built` date). 404 otherwise.
+- **`/robots.txt`**, `indexing` true: `User-agent: *`, `Allow: /$`, `Allow: /privacy$`, `Allow: /about$`, `Allow: /help$`, one `Allow:` line for each path in `_public.json` (so crawlers can render the page), then `Disallow: /` and `Sitemap: https://decouple.uk/sitemap.xml`. **Never name a private path** (the hubs, the protos, `LOGIN_PATH`): robots.txt is public, and listing them would point people to them.
+- **`/sitemap.xml`**: `/`, `/privacy`, `/about` and `/help` when `indexing` is true, each with `lastmod` (for `/help`, the help content's `built` date). 404 otherwise.
 - Private pages keep `noindex, nofollow` and return 404 without a session (§1), so nothing private can be indexed even if it's linked from elsewhere.
 
 ### 5.2 Help content (`help/help-content.json`)
