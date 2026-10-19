@@ -33,4 +33,39 @@ describe('reading the settings store', () => {
     expect(await readItem('aiSpend')).toEqual({ month: '2026-10', usd: 1 })
     expect(calls[1]).toEqual(['get', 'aiSpend', { consistentRead: true }])
   })
+
+  it('past the cache time, gives the last copy at once and reads a fresh one in the background, when asked to', async () => {
+    let landing = 'b'
+    let release: () => void = () => {}
+    let slow = false
+    const reader = vi.fn(async () => {
+      if (slow) await new Promise<void>((r) => (release = r))
+      return { landing }
+    })
+    useSettingsReader(reader)
+    expect((await readSettings(0)).landing).toBe('b')
+    landing = 'f'
+    slow = true
+    /* 2 minutes on, the middleware asks with staleMs: no waiting for the store */
+    expect((await readSettings(120_000, 60_000, 600_000)).landing).toBe('b')
+    expect((await readSettings(120_001, 60_000, 600_000)).landing).toBe('b')
+    expect(reader).toHaveBeenCalledTimes(2)
+    release()
+    await new Promise((r) => setTimeout(r, 0))
+    expect((await readSettings(120_002, 60_000, 600_000)).landing).toBe('f')
+    expect(reader).toHaveBeenCalledTimes(2)
+  })
+
+  it('waits for the store with no staleMs, and when the copy is older than staleMs', async () => {
+    let landing = 'b'
+    const reader = vi.fn(async () => ({ landing }))
+    useSettingsReader(reader)
+    await readSettings(0)
+    landing = 'c'
+    expect((await readSettings(6_000, 5_000)).landing, 'the functions read fresh').toBe('c')
+    landing = 'd'
+    expect((await readSettings(6_000 + 11 * 60_000, 60_000, 600_000)).landing, 'eleven minutes old').toBe('d')
+    expect(reader).toHaveBeenCalledTimes(3)
+    useSettingsReader(null)
+  })
 })

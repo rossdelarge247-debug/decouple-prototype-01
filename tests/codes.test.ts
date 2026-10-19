@@ -95,4 +95,44 @@ describe('tester codes', () => {
     now = 120_000
     expect((await store.check('A-B-01')).row).toMatchObject({ code: 'A-B-01' })
   })
+
+  it('past the minute, answers from the last list and refreshes it in the background, when asked to', async () => {
+    let now = 0
+    let active = true
+    let release: () => void = () => {}
+    const fetchCodes = vi.fn(async () => {
+      if (now > 0) await new Promise<void>((r) => (release = r))
+      return [{ code: 'A-B-01', label: 'one', active, test: false, expires: '', track: '', mode: '' as const }]
+    })
+    const background = vi.fn()
+    const store = createCodeStore({ fetchCodes, fallback: () => [], now: () => now, background })
+    expect((await store.check('A-B-01')).row).not.toBeNull()
+    /* Ross turns the code off; two minutes later the middleware asks with staleMs */
+    active = false
+    now = 120_000
+    expect((await store.check('A-B-01', undefined, 600_000)).row, 'the last list, at once').not.toBeNull()
+    expect(fetchCodes).toHaveBeenCalledTimes(2)
+    expect(background).toHaveBeenCalledTimes(1)
+    /* a second request while the refresh is out doesn't start another */
+    expect((await store.check('A-B-01', undefined, 600_000)).row).not.toBeNull()
+    expect(fetchCodes).toHaveBeenCalledTimes(2)
+    release()
+    await background.mock.calls[0][0]
+    expect((await store.check('A-B-01', undefined, 600_000)).row, 'the refreshed list').toBeNull()
+  })
+
+  it('waits for the script when the list is older than staleMs, or when no staleMs is given', async () => {
+    let now = 0
+    let active = true
+    const fetchCodes = vi.fn(async () => [{ code: 'A-B-01', label: 'one', active, test: false, expires: '', track: '', mode: '' as const }])
+    const store = createCodeStore({ fetchCodes, fallback: () => [], now: () => now })
+    await store.check('A-B-01')
+    active = false
+    now = 120_000
+    expect((await store.check('A-B-01')).row, 'no staleMs: the functions read fresh').toBeNull()
+    active = true
+    now = 120_000 + 11 * 60_000
+    expect((await store.check('A-B-01', undefined, 600_000)).row, 'eleven minutes old: read fresh').not.toBeNull()
+    expect(fetchCodes).toHaveBeenCalledTimes(3)
+  })
 })

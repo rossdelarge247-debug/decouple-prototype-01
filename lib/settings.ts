@@ -1,6 +1,7 @@
 /* Site settings (spec §4): mode, requireCode, testMode, landing, indexing and theme, read from the Global
    Config store (Vercel renamed Edge Config in 2026; the old names still work) and cached for 60 seconds per
    instance. Written through the Vercel REST API (spec §7, /api/admin/site). */
+import { waitUntil } from '@vercel/functions'
 import { createClient } from '@vercel/global-config'
 import { env, type Env } from './env.js'
 
@@ -33,6 +34,9 @@ export const SETTINGS_KEYS = ['mode', 'requireCode', 'testMode', 'landing', 'ind
 const isLanding = (v: unknown): v is Landing => typeof v === 'string' && (LANDINGS as readonly string[]).includes(v)
 const isTheme = (v: unknown): v is Theme => typeof v === 'string' && (THEMES as readonly string[]).includes(v)
 export const SETTINGS_TTL_MS = 60_000
+/** the middleware reads a fresh copy in the background once its copy is this old, so it rarely waits for
+    the store and never uses a copy older than the spec's 60 s */
+export const SETTINGS_REFRESH_MS = 30_000
 
 export function normaliseSettings(raw: unknown): Settings {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
@@ -113,8 +117,25 @@ export function clearSettingsCache(): void {
   cache = null
 }
 
-export async function readSettings(now: number = Date.now(), ttlMs: number = SETTINGS_TTL_MS): Promise<Settings> {
+/* staleMs: a copy older than ttlMs but younger than this is returned at once, and a fresh one is read
+   in the background (kept alive after the reply with waitUntil), so the caller doesn't wait for the store */
+export async function readSettings(now: number = Date.now(), ttlMs: number = SETTINGS_TTL_MS, staleMs = 0): Promise<Settings> {
   if (cache && now - cache.at < ttlMs) return cache.value
+  if (cache && now - cache.at < staleMs) {
+    if (!refreshing) {
+      refreshing = fetchSettings(now).finally(() => {
+        refreshing = null
+      })
+      waitUntil(refreshing)
+    }
+    return cache.value
+  }
+  return fetchSettings(now)
+}
+
+let refreshing: Promise<Settings> | null = null
+
+async function fetchSettings(now: number): Promise<Settings> {
   const read = reader || defaultReader()
   let value: Settings
   try {

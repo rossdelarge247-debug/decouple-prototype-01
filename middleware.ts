@@ -4,8 +4,8 @@
    owner's session, or a tester whose track includes it, or returns a plain 404.
    Web APIs only (fetch, crypto.subtle), so it runs on the Node runtime or the edge alike. */
 import { next, rewrite } from '@vercel/functions/middleware'
-import { ALIASES, FILES, RENAMED, decodePath, encodePath } from './lib/aliases.js'
-import { noteCodeUsed, redeemable, whoami } from './lib/auth.js'
+import { ALIASES, FILES, PRIVATE_SHORT, RENAMED, SHORT, decodePath, encodePath } from './lib/aliases.js'
+import { CODES_STALE_MS, noteCodeUsed, redeemable, whoami } from './lib/auth.js'
 import { loginPath, sessionSecret, siteOrigin } from './lib/env.js'
 import { NOT_FOUND_HTML } from './lib/generated/not-found.js'
 import { PUBLIC_PATHS } from './lib/generated/public.js'
@@ -14,12 +14,17 @@ import { LOOK_PATH } from './lib/look.js'
 import { isPublicPath, loadPublicList, normalisePath } from './lib/public.js'
 import { indexable, lastmodFor, robotsTxt, sitemapXml, type BuildDates } from './lib/search.js'
 import { testerCookie } from './lib/session.js'
-import { readSettings } from './lib/settings.js'
+import { SETTINGS_REFRESH_MS, SETTINGS_TTL_MS, readSettings } from './lib/settings.js'
 import { trackAllows } from './lib/tracks.js'
 
 export const config = { runtime: 'nodejs' }
 
 const PUBLIC = loadPublicList(PUBLIC_PATHS)
+/* Pages don't wait for the store or the Google script while there are visitors: the settings are read
+   again in the background from 30 s, and never used past the spec's 60 s; past the minute, the codes
+   list is used while a fresh one is fetched. Redeeming a code still reads fresh. */
+const WHO = { settingsTtlMs: SETTINGS_REFRESH_MS, settingsStaleMs: SETTINGS_TTL_MS, codesStaleMs: CODES_STALE_MS }
+const settings = () => readSettings(Date.now(), SETTINGS_REFRESH_MS, SETTINGS_TTL_MS)
 const IMMUTABLE = 'public, max-age=31536000, immutable'
 const HTML = 'no-cache'
 
@@ -110,11 +115,11 @@ export default async function middleware(request: Request): Promise<Response> {
   if (path === '/favicon.ico') return next({ headers: open })
   if (path === '/holding') return serve(FILES.holding, url, { ...open, 'cache-control': HTML })
   if (path === '/privacy' || path === '/help') {
-    const { indexing } = await readSettings()
+    const { indexing } = await settings()
     return serve(path === '/help' ? FILES.help : FILES.privacy, url, { ...openHeaders(path, indexing), 'cache-control': HTML })
   }
   if (path === '/robots.txt' || path === '/sitemap.xml') {
-    const { indexing } = await readSettings()
+    const { indexing } = await settings()
     const body = path === '/robots.txt' ? robotsTxt(indexing, PUBLIC, origin) : sitemapXml(indexing, origin, indexing ? lastmodFor(await buildDates(url)) : {})
     if (body === null) return notFound()
     const type = path === '/robots.txt' ? 'text/plain; charset=utf-8' : 'application/xml; charset=utf-8'
@@ -122,12 +127,15 @@ export default async function middleware(request: Request): Promise<Response> {
   }
   /* the look is the live setting from /api/look, never the design project's preview file (spec §4) */
   if (normalisePath(path) === LOOK_PATH) return rewrite(new URL('/api/look' + url.search, url))
+  /* a public page's file address goes to its short one, with its query (the browser keeps any #) */
+  const publicShort = SHORT[normalisePath(path).slice(1)]
+  if (publicShort) return redirect(publicShort + url.search, {}, 308)
   if (isPublicPath(path, PUBLIC)) return next({ headers: { ...open, 'cache-control': cacheFor(decoded) } })
 
   /* 2. the front door */
   if (path === '/' || path === '/guide') {
     if (url.searchParams.has('code')) return redeemFromLink(url, '/')
-    const who = await whoami(request, clientIp(request))
+    const who = await whoami(request, clientIp(request), Date.now(), WHO)
     let file: string = FILES.guide
     if (path === '/') {
       const view = url.searchParams.get('view')
@@ -142,24 +150,27 @@ export default async function middleware(request: Request): Promise<Response> {
      A tester whose code has no track has nothing here and goes to the guide. */
   if (path === '/take-part') {
     if (url.searchParams.has('code')) return redeemFromLink(url, '/take-part')
-    const who = await whoami(request, clientIp(request))
+    const who = await whoami(request, clientIp(request), Date.now(), WHO)
     if (who.owner || (who.tester && who.track)) return serve(FILES.takePart, url, closed)
     if (who.tester) return redirect('/')
     return serve(FILES.codePage, url, closed)
   }
 
   /* 3 and 4. aliases and every other file: the owner, or a tester whose track includes it */
-  const who = await whoami(request, clientIp(request))
+  const who = await whoami(request, clientIp(request), Date.now(), WHO)
   const alias = ALIASES[path]
   let target = alias ? alias.file : decoded.replace(/^\/+/, '')
   const renamed = RENAMED[target]
   if (renamed) target = renamed
   const testerMayOpen = who.tester && trackAllows(who.track, target)
   if (!who.owner && !testerMayOpen) return notFound()
-  if (renamed) return redirect(encodePath(renamed) + url.search)
+  /* a page's file address and its older aliases go to its short address */
+  const short = PRIVATE_SHORT[target]
+  if (renamed) return redirect((short ?? encodePath(renamed)) + url.search)
   if (alias) {
-    if (alias.via === 'redirect') return redirect(encodePath(alias.file) + url.search)
+    if (alias.via === 'redirect') return redirect((short ?? encodePath(alias.file)) + url.search)
     return serve(alias.file, url, closed)
   }
+  if (short) return redirect(short + url.search)
   return next({ headers: closed })
 }
