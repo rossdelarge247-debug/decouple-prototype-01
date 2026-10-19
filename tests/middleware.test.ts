@@ -251,3 +251,17 @@ describe('middleware: private paths', () => {
     expect((await middleware(req('/?code=FERN-LARK-27'))).headers.get('location')).toBe('/?code_error=1')
   })
 })
+
+describe('middleware: no page waits for the Google script', () => {
+  it('lets the middleware use the last codes list while the functions read it fresh', async () => {
+    const { CODES_STALE_MS, codeStore, useCodeStore } = await import('../lib/auth.js')
+    const { who } = await import('../lib/api.js')
+    const base = codeStore()
+    const asked: Array<number | undefined> = []
+    useCodeStore({ ...base, check: (code, today, staleMs) => (asked.push(staleMs), base.check(code, today, staleMs)) })
+    const tester = await cookieFor('tester', { l: 'P02', c: 'OAK-WREN-40' })
+    expect((await middleware(req('/p/mvp05', { cookie: tester }))).status).not.toBe(404)
+    await who(req('/api/session', { cookie: tester }))
+    expect(asked).toEqual([CODES_STALE_MS, undefined])
+  })
+})

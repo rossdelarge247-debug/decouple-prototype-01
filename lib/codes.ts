@@ -107,6 +107,8 @@ export interface CodeStoreDeps {
   ttlMs?: number
   /** a code that is not in the cached list triggers one fresh read, if the cache is older than this */
   missRefreshMs?: number
+  /** keeps a refresh started for a stale read alive after the reply (waitUntil on Vercel) */
+  background?: (p: Promise<unknown>) => void
 }
 
 export interface CodeLookup {
@@ -115,9 +117,11 @@ export interface CodeLookup {
 }
 
 export interface CodeStore {
-  list(force?: boolean): Promise<CodeRow[]>
+  /** staleMs: a list older than the cache time but younger than this is returned at once, and a fresh
+      one is fetched in the background, so the caller doesn't wait for the script */
+  list(force?: boolean, staleMs?: number): Promise<CodeRow[]>
   /** whether `code` works now, or 'unknown' when neither the script nor the fallback answered */
-  check(code: unknown, today?: string): Promise<CodeLookup>
+  check(code: unknown, today?: string, staleMs?: number): Promise<CodeLookup>
   clear(): void
 }
 
@@ -134,27 +138,36 @@ export function createCodeStore(deps: CodeStoreDeps): CodeStore {
     return rows
   }
 
+  function refresh(): Promise<CodeRow[]> {
+    if (!pending) {
+      pending = fetchFresh().finally(() => {
+        pending = null
+      })
+    }
+    return pending
+  }
+
   return {
-    async list(force = false) {
-      if (!force && cache && now() - cache.at < ttl) return cache.rows
-      if (!pending) {
-        pending = fetchFresh().finally(() => {
-          pending = null
-        })
+    async list(force = false, staleMs = 0) {
+      const age = cache ? now() - cache.at : Infinity
+      if (!force && cache && age < ttl) return cache.rows
+      if (!force && cache && age < staleMs) {
+        deps.background?.(refresh().catch(() => undefined))
+        return cache.rows
       }
       try {
-        return await pending
+        return await refresh()
       } catch {
         if (cache) return cache.rows
         throw new Error('codes unavailable')
       }
     },
-    async check(code, today = isoDate()) {
+    async check(code, today = isoDate(), staleMs = 0) {
       const c = normaliseCode(code)
       if (!c) return { row: null }
       let rows: CodeRow[]
       try {
-        rows = await this.list()
+        rows = await this.list(false, staleMs)
       } catch {
         const fb = deps.fallback()
         if (!fb.length) return { row: 'unknown' }

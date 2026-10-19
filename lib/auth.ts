@@ -1,5 +1,6 @@
 /* Who is asking (spec §3): the sessions from the cookies, the tester code re-checked against the
    codes list, and whether this request is in test mode. Used by the middleware and every function. */
+import { waitUntil } from '@vercel/functions'
 import { env, sessionSecret, type Env } from './env.js'
 import { createCodeStore, normaliseRows, parseFallback, type CodeRow, type CodeStore } from './codes.js'
 import { scriptConfigured, scriptGet, scriptPost } from './script.js'
@@ -18,6 +19,7 @@ export function codeStore(e: Env = env()): CodeStore {
         return normaliseRows(Array.isArray(data) ? data : (data as { codes?: unknown }).codes)
       },
       fallback: () => parseFallback(e.TESTER_CODES),
+      background: (p) => waitUntil(p),
     })
   }
   return store
@@ -56,15 +58,24 @@ export interface Who {
 }
 
 export interface WhoOptions {
-  /** how old a cached settings read may be; the middleware keeps the spec's 60 s, the functions read fresher */
+  /** how old a cached settings read may be before it is read again: 5 s in the functions, 30 s in the middleware */
   settingsTtlMs?: number
+  /** a settings copy older than settingsTtlMs but younger than this is used while a fresh one is read */
+  settingsStaleMs?: number
+  /** the middleware only: past the minute, use the last codes list (up to this old) and refresh it in the
+      background, so a page doesn't wait for the Google script */
+  codesStaleMs?: number
 }
+
+/** how old a codes list the middleware may use while it fetches a fresh one. A code turned off still
+    opens one more page after the minute; the functions (answers, session) always read fresh. */
+export const CODES_STALE_MS = 10 * 60_000
 
 export async function whoami(request: Request, ip = 'unknown', now: number = Date.now(), opts: WhoOptions = {}): Promise<Who> {
   const cookie = request.headers.get('cookie')
   const [sessions, settings, key] = await Promise.all([
     readSessions(cookie, sessionSecret(), now),
-    opts.settingsTtlMs === undefined ? readSettings(now) : readSettings(now, opts.settingsTtlMs),
+    readSettings(now, opts.settingsTtlMs, opts.settingsStaleMs),
     sessionKey(cookie, ip),
   ])
   const owner = !!sessions.owner
@@ -77,7 +88,7 @@ export async function whoami(request: Request, ip = 'unknown', now: number = Dat
   if (sessions.tester) {
     const t = sessions.tester
     if (t.c) {
-      const found = await codeStore().check(t.c)
+      const found = await codeStore().check(t.c, undefined, opts.codesStaleMs)
       /* 'unknown' means nothing could be read: an existing session stays valid rather than throwing
          testers out, but with no track, so it opens the guide only until the list can be read */
       if (found.row === 'unknown') tester = true

@@ -38,12 +38,28 @@
   - `vercel.json` sets `"regions": ["lhr1"]`, so the functions run in London, next to the visitors.
   - `/api/look` also sends `Vercel-CDN-Cache-Control: max-age=60`, so Vercel's CDN keeps it for the same minute the browser does. Most visits then get it from the nearest edge without calling a function. `Cache-Control` stays as the spec gives it.
   - `/api/admin/diagnose` shows how long the store read (`store.ms`) and the Google script (`script.ms`) took, and whether the request was this instance's first (`deployment.instance`).
+- **Measured on decouple.uk after the move** (`/api/admin/diagnose`):
+  - the region is `lhr1`;
+  - the settings store read took 154 ms;
+  - the Google script took 2,296 ms;
+  - the request was a new instance's first.
+- **Then, so no page waits for the Google script:**
+  - **Tester codes.** Once the middleware's copy of the codes list is over a minute old, it uses that copy and fetches a fresh one in the background (`waitUntil`). It stops doing so once its copy is 10 minutes old.
+    - Ross agreed the trade-off: a code turned off can still open one more page after the minute.
+    - The functions (`/api/answers`, `/api/session`) and redeeming a code still read the list fresh, so §11 check 8 holds.
+  - **Settings.** The middleware reads them again in the background once its copy is 30 seconds old, and never uses a copy older than the spec's 60 seconds. So §11 checks 9 and 15 ("within a minute") hold, and while there are visitors no page waits for the store.
+  - On the dev server all 75 §11 request checks pass, and every page opens clean.
 - **Every request also goes through the middleware**, fonts and React included, because it has no matcher.
   - Leaving out the folders that are wholly public (`vendor/`, `fonts/`, `inline/`) would save a function call per file.
   - It isn't done yet. The middleware is what keeps private files private, so a wrong matcher would expose them, and it needs checking on a preview first.
 
 **In `site/`, for the design project.**
 - Nothing failed.
+- **Site settings drops quietly into preview mode when the site is slow.**
+  - `settings/s.js` uses the API only if `DC.session()` answers, and `shared/dc-site.js` gives `/api/session` 3.5 seconds.
+  - A slower answer, such as a cold start while the functions were in Washington, puts the page in preview mode. Picks are then saved in the browser only, and they look as if they worked.
+  - This is the likely cause of "the landing and look don't stick". After the move to London, the store holds the latest picks (`landing: "e"`, `theme: "studio"`).
+  - Proposed fix: on decouple.uk and `*.vercel.app`, if the session check fails or times out, say so ("Couldn't reach the site. Reload to try again.") instead of switching to preview, and give `/api/session` longer there.
 - **Proposals to speed pages up** (they need the design project, as they change pages or the spec):
   - **The guide is blank until `/api/session` answers** (`Marketing 02 · Divorce Guide.html`, `if (phase === "landing" && site === undefined)`). It could keep the last answer in `sessionStorage` and show that straight away on later page loads in the same visit, checking it when the reply comes.
   - **Private files are never cached.** Spec §4 gives every private response `Cache-Control: private, no-store`, so the owner and testers download every script of a proto again on each page. MVP 05 has 13 such files, 172 KB.
