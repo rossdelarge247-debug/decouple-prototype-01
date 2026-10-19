@@ -12,6 +12,7 @@ export const FILES = {
   results: 'Decouple · Results.html',
   settings: 'Decouple · Site Settings.html',
   takePart: 'Decouple · Take Part.html',
+  freeTool: 'Marketing 02 · Free Tool.html',
   login: 'studio.html',
   codePage: 'take-part-code.html',
   notFound: '404.html',
@@ -61,6 +62,20 @@ export type Alias = { file: string; level: 'public' | 'owner'; via: 'rewrite' | 
 
 const two = (n: number): string => String(n).padStart(2, '0')
 
+/** Each private page's short address. One segment, so a rewrite keeps the address and the page's
+    relative paths still resolve from the root. The file's own address, and the older two-segment
+    aliases, are redirected here once the session check has passed. */
+export const PRIVATE_SHORT: Readonly<Record<string, string>> = {
+  [FILES.hub]: '/hub',
+  [FILES.marketing]: '/marketing',
+  [FILES.results]: '/results',
+  [FILES.settings]: '/settings',
+  [FILES.takePart]: '/take-part',
+  [FILES.freeTool]: '/free-tool',
+  ...Object.fromEntries(PROTOS.map((file, i) => [file, `/p${two(i + 1)}`])),
+  ...Object.fromEntries(MVPS.map((file, i) => [file, `/mvp${two(i)}`])),
+}
+
 export const ALIASES: Readonly<Record<string, Alias>> = {
   '/guide': { file: FILES.guide, level: 'public', via: 'rewrite' },
   '/holding': { file: FILES.holding, level: 'public', via: 'rewrite' },
@@ -72,6 +87,12 @@ export const ALIASES: Readonly<Record<string, Alias>> = {
   '/hub/site': { file: FILES.settings, level: 'owner', via: 'redirect' },
   ...Object.fromEntries(PROTOS.map((file, i) => [`/p/${two(i + 1)}`, { file, level: 'owner', via: 'redirect' }])),
   ...Object.fromEntries(MVPS.map((file, i) => [`/p/mvp${two(i)}`, { file, level: 'owner', via: 'redirect' }])),
+  /* the short addresses; /take-part has its own rules in the middleware */
+  ...Object.fromEntries(
+    Object.entries(PRIVATE_SHORT)
+      .filter(([, short]) => short !== '/hub' && short !== '/take-part')
+      .map(([file, short]) => [short, { file, level: 'owner' as const, via: 'rewrite' as const }]),
+  ),
 }
 
 /* "/Decouple · Results.html" → "/Decouple%20%C2%B7%20Results.html". encodeURIComponent also turns

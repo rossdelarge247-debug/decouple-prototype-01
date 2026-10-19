@@ -6,6 +6,29 @@ const GUIDE = '/Marketing%2002%20%C2%B7%20Divorce%20Guide.html'
 const HOLDING = '/Marketing%2001%20%C2%B7%20Holding%20Page.html'
 const rewriteOf = (r: Response) => new URL(r.headers.get('x-middleware-rewrite') as string).pathname
 const isNext = (r: Response) => r.headers.get('x-middleware-next') === '1'
+/* what a request comes to: a 404, a redirect, the file a rewrite serves, or straight through */
+const whereTo = async (path: string, cookie?: string): Promise<string> => {
+  const r = await middleware(req(path, cookie ? { cookie } : {}))
+  if (r.status === 404) return '404'
+  if (r.headers.get('location')) return `${r.status} ${r.headers.get('location')}`
+  if (r.headers.get('x-middleware-rewrite')) return 'serves ' + rewriteOf(r)
+  return isNext(r) ? 'next' : String(r.status)
+}
+const F = {
+  marketing: '/Decouple%20%C2%B7%20Marketing%20Hub.html',
+  results: '/Decouple%20%C2%B7%20Results.html',
+  settings: '/Decouple%20%C2%B7%20Site%20Settings.html',
+  hub: '/Decouple%20%C2%B7%20Prototype%20Hub.html',
+  takePart: '/Decouple%20%C2%B7%20Take%20Part.html',
+  freeTool: '/Marketing%2002%20%C2%B7%20Free%20Tool.html',
+  p01: '/Proto%2001%20%C2%B7%20Discover.html',
+  p03: '/Proto%2003%20%C2%B7%20Playback.html',
+  p10: '/Proto%2010%20%C2%B7%20Dashboard.html',
+  m00: '/MVP%2000%20%C2%B7%20Public%20Site.html',
+  m03: '/MVP%2003%20%C2%B7%20To-do%20%26%20Journal.html',
+  m05: '/MVP%2005%20%C2%B7%20Financial%20Statement.html',
+  m08: '/MVP%2008%20%C2%B7%20Help%20%26%20Support.html',
+}
 
 beforeEach(() => {
   setup()
@@ -201,16 +224,28 @@ describe('middleware: private paths', () => {
     }
   })
 
-  it('rewrites single-segment aliases and redirects the ones with a path segment for the owner', async () => {
+  it('serves each private page at its short address, and sends its file address and older alias there, for the owner', async () => {
     const owner = await cookieFor('owner')
     const hub = await middleware(req('/hub', { cookie: owner }))
-    expect(rewriteOf(hub)).toBe('/Decouple%20%C2%B7%20Prototype%20Hub.html')
+    expect(rewriteOf(hub)).toBe(F.hub)
     expect(hub.headers.get('cache-control')).toBe('private, no-store')
-    const results = await middleware(req('/hub/results', { cookie: owner }))
-    expect(results.status).toBe(302)
-    expect(results.headers.get('location')).toBe('/Decouple%20%C2%B7%20Results.html')
-    expect((await middleware(req('/hub/site', { cookie: owner }))).headers.get('location')).toBe('/Decouple%20%C2%B7%20Site%20Settings.html')
-    expect((await middleware(req('/p/10?demo=1', { cookie: owner }))).headers.get('location')).toBe('/Proto%2010%20%C2%B7%20Dashboard.html?demo=1')
+    const short: Array<[string, string]> = [['/marketing', F.marketing], ['/results', F.results], ['/settings', F.settings], ['/free-tool', F.freeTool], ['/p01', F.p01], ['/p10', F.p10], ['/mvp00', F.m00], ['/mvp08', F.m08]]
+    for (const [a, file] of short) expect(await whereTo(a, owner), a).toBe('serves ' + file)
+    expect((await middleware(req('/results', { cookie: owner }))).headers.get('cache-control')).toBe('private, no-store')
+    /* the older aliases */
+    expect(await whereTo('/hub/results', owner)).toBe('302 /results')
+    expect(await whereTo('/hub/site', owner)).toBe('302 /settings')
+    expect(await whereTo('/hub/marketing', owner)).toBe('302 /marketing')
+    expect(await whereTo('/p/10?demo=1', owner)).toBe('302 /p10?demo=1')
+    /* the file addresses the pages link to */
+    expect(await whereTo(F.results + '?tab=sheet', owner)).toBe('302 /results?tab=sheet')
+    expect(await whereTo(F.hub, owner)).toBe('302 /hub')
+    expect(await whereTo(F.takePart, owner)).toBe('302 /take-part')
+    expect(await whereTo(F.freeTool, owner)).toBe('302 /free-tool')
+    expect(await whereTo(F.p03, owner)).toBe('302 /p03')
+    expect(await whereTo(F.m03, owner)).toBe('302 /mvp03')
+    /* logged out, every one of them is a plain 404, never a redirect */
+    for (const a of ['/marketing', '/results', '/settings', '/free-tool', '/p01', '/mvp05', '/hub/results', F.results, F.freeTool]) expect(await whereTo(a), a).toBe('404')
     const file = await middleware(req('/proto/ut/ut.js', { cookie: owner }))
     expect(isNext(file)).toBe(true)
     expect(file.headers.get('cache-control')).toBe('private, no-store')
@@ -222,23 +257,26 @@ describe('middleware: private paths', () => {
     const M03 = '/MVP%2003%20%C2%B7%20To-do%20%26%20Journal.html'
     const M05 = '/MVP%2005%20%C2%B7%20Financial%20Statement.html'
     const guideOnly = await cookieFor('tester', { l: 'P01', c: 'FERN-LARK-27' })
-    for (const p of [P01, M05, '/proto/ut/ut.js', '/mvp/kit/kit.js', '/take-part/tp.js', '/p/03']) expect((await middleware(req(p, { cookie: guideOnly }))).status, p).toBe(404)
+    for (const p of [P01, M05, '/proto/ut/ut.js', '/mvp/kit/kit.js', '/take-part/tp.js', '/p/03', '/p03', '/mvp05']) expect((await middleware(req(p, { cookie: guideOnly }))).status, p).toBe(404)
 
     const mvp = await cookieFor('tester', { l: 'P02', c: 'OAK-WREN-40' })
-    for (const p of [M03, M05, '/MVP%2000%20%C2%B7%20Public%20Site.html', '/mvp/kit/kit.js', '/proto/ut/ut.js', '/shared/dc-site.js', '/take-part/tp.js', '/inline/mvp-05-financial-statement-1.js', '/inline/decouple-take-part-1.js', '/Decouple%20%C2%B7%20Take%20Part.html']) expect(isNext(await middleware(req(p, { cookie: mvp }))), p).toBe(true)
-    expect((await middleware(req('/p/mvp05', { cookie: mvp }))).headers.get('location')).toBe(M05)
-    expect((await middleware(req('/p/mvp08', { cookie: mvp }))).status).toBe(302)
-    expect(isNext(await middleware(req('/MVP%2008%20%C2%B7%20Help%20%26%20Support.html', { cookie: mvp })))).toBe(true)
-    for (const p of [P01, '/p/01', '/hub', '/hub/results', '/Decouple%20%C2%B7%20Prototype%20Hub.html', '/results/r-app.js', '/hub/hub-switch.js', '/inline/proto-01-discover-1.js', '/inline/decouple-prototype-hub-1.js']) expect((await middleware(req(p, { cookie: mvp }))).status, p).toBe(404)
+    for (const p of ['/mvp/kit/kit.js', '/proto/ut/ut.js', '/shared/dc-site.js', '/take-part/tp.js', '/inline/mvp-05-financial-statement-1.js', '/inline/decouple-take-part-1.js']) expect(isNext(await middleware(req(p, { cookie: mvp }))), p).toBe(true)
+    for (const [file, short] of [[M03, '/mvp03'], [M05, '/mvp05'], [F.m00, '/mvp00'], [F.m08, '/mvp08'], [F.takePart, '/take-part']]) expect(await whereTo(file, mvp), file).toBe('302 ' + short)
+    expect(await whereTo('/mvp05', mvp)).toBe('serves ' + M05)
+    expect(await whereTo('/p/mvp05', mvp)).toBe('302 /mvp05')
+    expect(await whereTo('/p/mvp08', mvp)).toBe('302 /mvp08')
+    for (const p of [P01, '/p/01', '/p01', '/hub', '/hub/results', '/results', '/settings', '/marketing', '/free-tool', F.hub, '/results/r-app.js', '/hub/hub-switch.js', '/inline/proto-01-discover-1.js', '/inline/decouple-prototype-hub-1.js']) expect((await middleware(req(p, { cookie: mvp }))).status, p).toBe(404)
 
     const chosen = await cookieFor('tester', { l: 'P03', c: 'ASH-FINCH-55' })
-    expect(isNext(await middleware(req(P03, { cookie: chosen })))).toBe(true)
-    expect(isNext(await middleware(req(M05, { cookie: chosen })))).toBe(true)
-    expect((await middleware(req('/p/03', { cookie: chosen }))).status).toBe(302)
-    for (const p of [P01, M03, '/p/mvp00']) expect((await middleware(req(p, { cookie: chosen }))).status, p).toBe(404)
+    expect(await whereTo(P03, chosen)).toBe('302 /p03')
+    expect(await whereTo('/p03', chosen)).toBe('serves ' + P03)
+    expect(await whereTo('/mvp05', chosen)).toBe('serves ' + M05)
+    expect(await whereTo('/p/03', chosen)).toBe('302 /p03')
+    for (const p of [P01, M03, '/p/mvp00', '/p01', '/mvp03']) expect((await middleware(req(p, { cookie: chosen }))).status, p).toBe(404)
 
     const full = await cookieFor('tester', { l: 'P04', c: 'ELM-TERN-60' })
-    expect(isNext(await middleware(req('/Proto%2010%20%C2%B7%20Dashboard.html', { cookie: full })))).toBe(true)
+    expect(await whereTo('/p10', full)).toBe('serves ' + F.p10)
+    expect(await whereTo(F.p10, full)).toBe('302 /p10')
     expect((await middleware(req(M05, { cookie: full }))).status).toBe(404)
 
     for (const p of ['/proto%2F..%2FDecouple%20%C2%B7%20Results.html', '/mvp/%2e%2e/Decouple%20%C2%B7%20Site%20Settings.html']) expect((await middleware(req(p, { cookie: mvp }))).status, p).toBe(404)
@@ -248,15 +286,13 @@ describe('middleware: private paths', () => {
     expect((await middleware(req(M05, { cookie: off }))).status).toBe(404)
   })
 
-  it('redirects the MVP aliases and the old MVP 01 address for the owner', async () => {
+  it('sends the MVP aliases and the old MVP 01 address to the short addresses for the owner', async () => {
     const owner = await cookieFor('owner')
-    expect((await middleware(req('/p/mvp00', { cookie: owner }))).headers.get('location')).toBe('/MVP%2000%20%C2%B7%20Public%20Site.html')
-    expect((await middleware(req('/p/mvp03', { cookie: owner }))).headers.get('location')).toBe('/MVP%2003%20%C2%B7%20To-do%20%26%20Journal.html')
-    expect((await middleware(req('/p/mvp07?test=1', { cookie: owner }))).headers.get('location')).toBe('/MVP%2007%20%C2%B7%20Ask.html?test=1')
-    expect((await middleware(req('/p/mvp08', { cookie: owner }))).headers.get('location')).toBe('/MVP%2008%20%C2%B7%20Help%20%26%20Support.html')
-    const old = await middleware(req('/MVP%2001%20%C2%B7%20Shared%20Statement.html#doc', { cookie: owner }))
-    expect(old.status).toBe(302)
-    expect(old.headers.get('location')).toBe('/MVP%2005%20%C2%B7%20Financial%20Statement.html')
+    expect(await whereTo('/p/mvp00', owner)).toBe('302 /mvp00')
+    expect(await whereTo('/p/mvp03', owner)).toBe('302 /mvp03')
+    expect(await whereTo('/p/mvp07?test=1', owner)).toBe('302 /mvp07?test=1')
+    expect(await whereTo('/p/mvp08', owner)).toBe('302 /mvp08')
+    expect(await whereTo('/MVP%2001%20%C2%B7%20Shared%20Statement.html', owner)).toBe('302 /mvp05')
     for (const p of ['/p/mvp00', '/MVP%2000%20%C2%B7%20Public%20Site.html', '/MVP%2001%20%C2%B7%20Shared%20Statement.html', '/take-part/tp.js']) expect((await middleware(req(p))).status, p).toBe(404)
   })
 

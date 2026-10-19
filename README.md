@@ -46,5 +46,10 @@ variables from spec §9 in `.env.local` (never committed).
    without a session. `?code=` works there too.
 4. The aliases in spec §2 map to files. Everything else needs the owner's session, or a tester
    whose track includes it (`lib/tracks.ts`), or returns a plain 404.
+5. Every page has a short address of one segment (`lib/aliases.ts`): `/guide`, `/holding`, `/help`,
+   `/privacy`; `/hub`, `/marketing`, `/results`, `/settings`, `/take-part`, `/free-tool`, `/p01`–`/p10`,
+   `/mvp00`–`/mvp08`. One segment, so a rewrite keeps the address and the page's relative paths still
+   resolve. A page's file address, and the older `/hub/…` and `/p/…` aliases, redirect there; for a
+   private page only after the session check, so anyone else still gets a 404.
 
 Two things differ from the spec, and why, are in `docs/HANDOFF-SITE-1.md`.

@@ -64,10 +64,33 @@
   - every "Help & support" and "Privacy" link on the nine landings opens `/help` and `/privacy`;
   - the Marketing Hub opens `/holding`, `/guide` (with `?demo=1&phase=guide` kept) and `/help`;
   - the holding page's privacy link opens `/privacy`.
-- Private pages keep their file addresses: the hubs, the protos, the MVPs and `Marketing 02 · Free Tool.html`.
+- **Then the private pages too**, at Ross's request:
+
+| Page | Short address | Was |
+|---|---|---|
+| Prototype hub | `/hub` | `/hub` |
+| Marketing hub | `/marketing` | `/hub/marketing`, which redirected to the file |
+| Results | `/results` | `/hub/results`, likewise |
+| Site settings | `/settings` | `/hub/site`, likewise |
+| Take part | `/take-part` | `/take-part` |
+| Free tool | `/free-tool` | the file only |
+| Proto 01–10 | `/p01` … `/p10` | `/p/01` … `/p/10`, likewise |
+| MVP 00–08 | `/mvp00` … `/mvp08` | `/p/mvp00` … `/p/mvp08`, likewise |
+
+  - **Why one segment.** Each is served by a rewrite, so the address stays. The two-segment aliases redirected to the file because a page at `/hub/results` would look for `results/r-app.js` under `/hub/`. At `/results` it finds it at the root, as from the file.
+  - **The old addresses.** Each page's file address, the old `/hub/…` and `/p/…` aliases, and the renamed MVP 01 redirect (302) to the short address, keeping the query. They do so only after the session check, so anyone not allowed still gets a plain 404.
+  - **No page reads its own file name.** The protos know their stage from a data attribute or their stage list, and the rest read their address only to copy a link or return to a hub. Proto hash routing works at `/p05#…`.
+  - **Checked in headless Chromium:**
+    - as the owner, all 24 private short addresses open with no errors and keep their address;
+    - every same-site link on `/hub` (53) and `/marketing` (12) lands on a short address;
+    - a tester's proto link lands on `/p03?test=1`, and `/results` is a 404 for them;
+    - logged out, every private short address is a 404.
+  - All 76 §11 request checks pass on the dev server, including a new one for `/mvp03`. The page sweep and every landing link pass too.
 
 **In `site/`, for the design project.**
-- **Spec §2, to add:** "The public pages' own file addresses (`Marketing 01 · Holding Page.html`, `Marketing 02 · Divorce Guide.html`, `Marketing 03 · Help & Support.html`, `privacy.html`) redirect (308) to `/holding`, `/guide`, `/help` and `/privacy`, keeping the query." Today §2 says each file's own path keeps working; it still does, by way of the redirect.
+- **Spec §2, to update:** the table above is the new set of addresses. The sentence to add is: "Every page has a one-segment short address. Its file address, and the older `/hub/…` and `/p/…` aliases, redirect there, keeping the query: public pages with a 308 before any session is read, private pages with a 302 after the session check."
+  - Today §2 says each file's own path keeps working. It still does, by way of the redirect.
+  - Links between pages can stay as file names, which the design tool needs.
 - Nothing failed.
 - **Site settings drops quietly into preview mode when the site is slow.**
   - `settings/s.js` uses the API only if `DC.session()` answers, and `shared/dc-site.js` gives `/api/session` 3.5 seconds.
