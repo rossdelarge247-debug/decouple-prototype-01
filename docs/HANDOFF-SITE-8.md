@@ -53,7 +53,21 @@
   - Leaving out the folders that are wholly public (`vendor/`, `fonts/`, `inline/`) would save a function call per file.
   - It isn't done yet. The middleware is what keeps private files private, so a wrong matcher would expose them, and it needs checking on a preview first.
 
+**Short addresses for the public pages.** The pages link to each other by file name, so clicking "Help & support" or "Privacy" left the file name in the address bar (`/Marketing%2003%20·%20Help%20%26%20Support.html`, `/privacy.html`).
+- The middleware now sends each public page's file address to its short one with a 308, keeping the query; the browser keeps any `#`:
+  - `Marketing 02 · Divorce Guide.html` → `/guide`;
+  - `Marketing 01 · Holding Page.html` → `/holding`;
+  - `Marketing 03 · Help & Support.html` → `/help`;
+  - `privacy.html` → `/privacy`.
+- The redirect is `private, no-store`, like every redirect here, so no browser keeps it.
+- Checked in headless Chromium:
+  - every "Help & support" and "Privacy" link on the nine landings opens `/help` and `/privacy`;
+  - the Marketing Hub opens `/holding`, `/guide` (with `?demo=1&phase=guide` kept) and `/help`;
+  - the holding page's privacy link opens `/privacy`.
+- Private pages keep their file addresses: the hubs, the protos, the MVPs and `Marketing 02 · Free Tool.html`.
+
 **In `site/`, for the design project.**
+- **Spec §2, to add:** "The public pages' own file addresses (`Marketing 01 · Holding Page.html`, `Marketing 02 · Divorce Guide.html`, `Marketing 03 · Help & Support.html`, `privacy.html`) redirect (308) to `/holding`, `/guide`, `/help` and `/privacy`, keeping the query." Today §2 says each file's own path keeps working; it still does, by way of the redirect.
 - Nothing failed.
 - **Site settings drops quietly into preview mode when the site is slow.**
   - `settings/s.js` uses the API only if `DC.session()` answers, and `shared/dc-site.js` gives `/api/session` 3.5 seconds.

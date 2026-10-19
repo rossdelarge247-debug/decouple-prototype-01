@@ -4,7 +4,7 @@
    owner's session, or a tester whose track includes it, or returns a plain 404.
    Web APIs only (fetch, crypto.subtle), so it runs on the Node runtime or the edge alike. */
 import { next, rewrite } from '@vercel/functions/middleware'
-import { ALIASES, FILES, RENAMED, decodePath, encodePath } from './lib/aliases.js'
+import { ALIASES, FILES, RENAMED, SHORT, decodePath, encodePath } from './lib/aliases.js'
 import { CODES_STALE_MS, noteCodeUsed, redeemable, whoami } from './lib/auth.js'
 import { loginPath, sessionSecret, siteOrigin } from './lib/env.js'
 import { NOT_FOUND_HTML } from './lib/generated/not-found.js'
@@ -127,6 +127,9 @@ export default async function middleware(request: Request): Promise<Response> {
   }
   /* the look is the live setting from /api/look, never the design project's preview file (spec §4) */
   if (normalisePath(path) === LOOK_PATH) return rewrite(new URL('/api/look' + url.search, url))
+  /* a public page's file address goes to its short one, with its query (the browser keeps any #) */
+  const short = SHORT[normalisePath(path).slice(1)]
+  if (short) return redirect(short + url.search, {}, 308)
   if (isPublicPath(path, PUBLIC)) return next({ headers: { ...open, 'cache-control': cacheFor(decoded) } })
 
   /* 2. the front door */

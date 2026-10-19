@@ -17,6 +17,15 @@ export const FILES = {
   notFound: '404.html',
 } as const
 
+/** The public pages' own file addresses and the short address each is sent to. The pages link to each
+    other by file name, which the design tool needs; on the site the address bar shows the short one. */
+export const SHORT: Readonly<Record<string, string>> = {
+  [FILES.guide]: '/guide',
+  [FILES.holding]: '/holding',
+  [FILES.help]: '/help',
+  [FILES.privacy]: '/privacy',
+}
+
 export const PROTOS: readonly string[] = [
   'Proto 01 · Discover.html',
   'Proto 02 · Interview.html',

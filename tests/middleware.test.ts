@@ -25,14 +25,30 @@ describe('middleware: straight through', () => {
     const help = await middleware(req('/help'))
     expect(rewriteOf(help)).toBe('/Marketing%2003%20%C2%B7%20Help%20%26%20Support.html')
     expect(help.headers.get('cache-control')).toBe('no-cache')
-    for (const p of ['/help/help.js', '/help/help.css', '/help/help-sources.json', '/help/help-content.json', '/_build.json', '/Marketing%2003%20%C2%B7%20Help%20%26%20Support.html']) expect(isNext(await middleware(req(p))), p).toBe(true)
+    for (const p of ['/help/help.js', '/help/help.css', '/help/help-sources.json', '/help/help-content.json', '/_build.json']) expect(isNext(await middleware(req(p))), p).toBe(true)
     expect((await middleware(req('/help/help-content.json'))).headers.get('cache-control')).toBe('no-cache')
     const css = await middleware(req('/fonts.css'))
     expect(isNext(css)).toBe(true)
     expect(css.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
-    const page = await middleware(req(GUIDE))
-    expect(isNext(page)).toBe(true)
-    expect(page.headers.get('cache-control')).toBe('no-cache')
+  })
+
+  it('sends the public pages\' file addresses to their short ones, with the query', async () => {
+    const to = async (p: string) => {
+      const r = await middleware(req(p))
+      return `${r.status} ${r.headers.get('location')}`
+    }
+    expect(await to(GUIDE)).toBe('308 /guide')
+    expect(await to(GUIDE + '?landing=f&demo=1')).toBe('308 /guide?landing=f&demo=1')
+    expect(await to(HOLDING)).toBe('308 /holding')
+    expect(await to('/Marketing%2003%20%C2%B7%20Help%20%26%20Support.html')).toBe('308 /help')
+    expect(await to('/privacy.html')).toBe('308 /privacy')
+    expect(await to('//privacy.html')).toBe('308 /privacy')
+    /* the short addresses still serve the files, and / still picks by mode */
+    expect(rewriteOf(await middleware(req('/guide')))).toBe(GUIDE)
+    expect(rewriteOf(await middleware(req('/help')))).toBe('/Marketing%2003%20%C2%B7%20Help%20%26%20Support.html')
+    expect(rewriteOf(await middleware(req('/')))).toBe(HOLDING)
+    /* private pages keep their file addresses, behind the same rules */
+    expect((await middleware(req('/Marketing%2002%20%C2%B7%20Free%20Tool.html'))).status).toBe(404)
   })
 
   it('moves the login path with LOGIN_PATH', async () => {
