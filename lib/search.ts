@@ -1,10 +1,10 @@
 /* Search engines (spec §4.5 and §5.1). The indexing setting decides: off, nothing may be listed; on,
-   only /, /privacy and /help, and robots.txt lets crawlers fetch the files those pages need.
+   only /, /privacy, /about and /help, and robots.txt lets crawlers fetch the files those pages need.
    robots.txt is public, so it never names a private path: only the public allow-list goes in it. */
 import { encodePath } from './aliases.js'
 
 /** the only addresses that may ever be indexed */
-export const INDEXABLE: readonly string[] = ['/', '/privacy', '/help']
+export const INDEXABLE: readonly string[] = ['/', '/privacy', '/about', '/help']
 
 /* Does this response go out without the noindex header? Only the indexable addresses, only when
    indexing is on. /guide keeps it, because it serves the same page as /. */
@@ -33,7 +33,7 @@ export function sitemapXml(indexing: boolean, origin: string, lastmod: Readonly<
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`
 }
 
-/* The two dates the sitemap carries: the deployment's build (for / and /privacy) and the help
+/* The two dates the sitemap carries: the deployment's build (for /, /privacy and /about) and the help
    content's last GOV.UK fetch (for /help). Both are public files of the deployment itself. */
 export interface BuildDates {
   built: string | null
@@ -41,5 +41,5 @@ export interface BuildDates {
 }
 
 export function lastmodFor(dates: BuildDates): Record<string, string | null> {
-  return { '/': dates.built, '/privacy': dates.built, '/help': dates.help }
+  return { '/': dates.built, '/privacy': dates.built, '/about': dates.built, '/help': dates.help }
 }

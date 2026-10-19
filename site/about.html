@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — Decouple</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17141F;--sub:#57534E;--mute:#78716C;--line:#E7E3DC;--paper:#FAFAF7;--v:#5B21B6;--vl:#7C3AED;--vs:#F3EEFE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--v);text-decoration:underline;text-underline-offset:3px}a:hover{color:var(--vl)}
+.w{max-width:720px;margin:0 auto;padding:0 28px}
+header{padding:22px 0;border-bottom:1px solid var(--line)}header .w{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.wm{font-weight:700;font-size:21px;letter-spacing:-.025em;color:var(--ink);text-decoration:none}.wm i{font-style:normal;color:var(--vl)}.wm:hover{color:var(--ink)}
+.exit{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:99px;border:1px solid #FECACA;background:#FFF;color:#B91C1C;font:600 13px Inter,sans-serif;cursor:pointer}.exit:hover{background:#FEF2F2}
+main{padding:64px 0 88px}
+.kick{font:600 11px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v)}
+h1{font:400 clamp(38px,6vw,60px)/1.04 'Source Serif Pro',Georgia,serif;letter-spacing:-.025em;margin:14px 0 0;text-wrap:balance}h1 em{color:var(--v)}
+.story{margin-top:32px;display:grid;gap:18px}
+.story p{margin:0;font:400 19px/1.6 'Source Serif Pro',Georgia,serif;color:#2E2A33;text-wrap:pretty}
+.story p:first-child{font-size:22px;line-height:1.5;color:var(--ink)}
+h2{font:600 13px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:56px 0 0;padding-top:28px;border-top:1px solid var(--line)}
+.prom{margin:18px 0 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 32px}
+.prom div{display:grid;gap:6px}
+.prom b{font:600 20px/1.25 'Source Serif Pro',Georgia,serif}
+.prom p{margin:0;font-size:15px;line-height:1.6;color:#3F3A36;text-wrap:pretty}
+.cta{margin-top:56px;display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:52px;padding:0 24px;border-radius:99px;background:var(--v);color:#FFF;font:600 16px Inter,sans-serif;text-decoration:none}.btn:hover{background:var(--vl);color:#FFF}
+.cta small{font-size:14px;color:var(--sub)}
+footer{border-top:1px solid var(--line);padding:24px 0 36px;font-size:12.5px;line-height:1.6;color:var(--mute)}footer p{margin:0}footer a{color:var(--sub)}
+@media (max-width:600px){.w{padding:0 20px}main{padding:40px 0 64px}.prom{grid-template-columns:minmax(0,1fr)}.story p{font-size:18px}.story p:first-child{font-size:20px}.btn{width:100%;justify-content:center}}
+</style>
+</head>
+<body>
+<header><div class="w"><a class="wm" href="Marketing 02 · Divorce Guide.html" data-site-href="/">Decouple<i>.</i></a><button type="button" class="exit" id="exit">Quick exit</button></div></header>
+<main data-screen-label="About"><div class="w">
+<div class="kick">About Decouple</div>
+<h1>Made with people who’ve <em>been through it.</em></h1>
+<div class="story">
+<p>Separating is hard enough. Working out what to do next, and in what order, shouldn’t make it harder.</p>
+<p>Most people find out the hard way. Forms nobody explains. Advice that pulls in different directions. Weeks spent working out what comes first, while the rest of life carries on around you.</p>
+<p>Decouple is a small team, working with a group of people who’ve been through separation and divorce themselves. They tell us what was hardest, what they wish they’d known, and where they got stuck. Everything we make is shaped by them, and tested with them first.</p>
+<p>We’re building the help they wish they’d had: clear steps, in the right order, for England and Wales.</p>
+</div>
+<h2>What we’re not</h2>
+<div class="prom">
+<div><b>Not solicitors</b><p>We don’t give legal advice. We’ll tell you plainly when it’s worth talking to someone who does.</p></div>
+<div><b>Not taking sides</b><p>Decouple is for either of you, or both of you together.</p></div>
+<div><b>Not charging for the guide</b><p>The guide is free, and you don’t need an account to use it.</p></div>
+<div><b>Not selling your data</b><p>We never sell your information or use it for advertising. <a href="privacy.html">Privacy notice</a></p></div>
+</div>
+<div class="cta"><a class="btn" href="Marketing 02 · Divorce Guide.html" data-site-href="/">Get my free guide</a><small>Free, and made on your device.</small></div>
+</div></main>
+<footer><div class="w"><p>Decouple is not a law firm and does not give legal advice. If you’re worried about your safety, call the National Domestic Abuse Helpline free on 0808 2000 247, any time. In an emergency, call 999.</p><p><a href="privacy.html">Privacy</a> · <a href="mailto:hello@decouple.uk">hello@decouple.uk</a></p></div></footer>
+<script>
+if(/(^|\.)decouple\.uk$|\.vercel\.app$/.test(location.hostname))document.querySelectorAll("a[data-site-href]").forEach(function(a){a.setAttribute("href",a.getAttribute("data-site-href"))});
+document.getElementById("exit").addEventListener("click",function(){location.replace("https://www.bbc.co.uk/weather")});
+</script>
+</body>
+</html>

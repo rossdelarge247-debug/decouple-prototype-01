@@ -20,7 +20,7 @@ export interface Settings {
   testMode: boolean
   /** which of the guide's landing designs visitors see, or one of the nine at random */
   landing: Landing
-  /** search engines may list / and /privacy (spec §5.1). Nothing else, ever. */
+  /** search engines may list /, /privacy, /about and /help (spec §5.1). Nothing else, ever. */
   indexing: boolean
   /** the look the guide and the help page open in, served by /api/look (spec §4, §7) */
   theme: Theme

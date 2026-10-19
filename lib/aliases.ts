@@ -6,6 +6,7 @@ export const FILES = {
   guide: 'Marketing 02 · Divorce Guide.html',
   holding: 'Marketing 01 · Holding Page.html',
   privacy: 'privacy.html',
+  about: 'about.html',
   help: 'Marketing 03 · Help & Support.html',
   hub: 'Decouple · Prototype Hub.html',
   marketing: 'Decouple · Marketing Hub.html',
@@ -25,6 +26,7 @@ export const SHORT: Readonly<Record<string, string>> = {
   [FILES.holding]: '/holding',
   [FILES.help]: '/help',
   [FILES.privacy]: '/privacy',
+  [FILES.about]: '/about',
 }
 
 export const PROTOS: readonly string[] = [
@@ -80,6 +82,7 @@ export const ALIASES: Readonly<Record<string, Alias>> = {
   '/guide': { file: FILES.guide, level: 'public', via: 'rewrite' },
   '/holding': { file: FILES.holding, level: 'public', via: 'rewrite' },
   '/privacy': { file: FILES.privacy, level: 'public', via: 'rewrite' },
+  '/about': { file: FILES.about, level: 'public', via: 'rewrite' },
   '/help': { file: FILES.help, level: 'public', via: 'rewrite' },
   '/hub': { file: FILES.hub, level: 'owner', via: 'rewrite' },
   '/hub/marketing': { file: FILES.marketing, level: 'owner', via: 'redirect' },
