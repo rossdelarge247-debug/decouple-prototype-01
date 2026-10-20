@@ -2,7 +2,8 @@ import { createCodeStore, parseFallback, type CodeRow } from '../lib/codes.js'
 import { useCodeStore } from '../lib/auth.js'
 import { clearSettingsCache, useSettingsReader, type Settings } from '../lib/settings.js'
 import { COOKIE, sign } from '../lib/session.js'
-import { answersLimiter, claudeLimiter, emailLimiter, loginLimiter, participantLimiter } from '../lib/ratelimit.js'
+import { answersLimiter, claudeLimiter, emailLimiter, loginLimiter, participantLimiter, pdfLimiter } from '../lib/ratelimit.js'
+import { usePdfMaker } from '../lib/pdf.js'
 import { clearHelpContent, resetHelpLimits } from '../lib/help.js'
 
 export const SECRET = 'test-secret-for-the-site-cookies'
@@ -28,6 +29,8 @@ export function setup(settings: Partial<Settings> = {}, codes: CodeRow[] = CODES
   useCodeStore(createCodeStore({ fetchCodes: async () => codes, fallback: () => parseFallback(process.env.TESTER_CODES) }))
   answersLimiter.reset()
   emailLimiter.reset()
+  pdfLimiter.reset()
+  usePdfMaker()
   loginLimiter.reset()
   participantLimiter.reset()
   claudeLimiter.reset()

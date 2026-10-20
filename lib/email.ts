@@ -1,8 +1,10 @@
-/* The guide email (spec §7), sent through Resend. The body is a fixed template: only the link varies. */
+/* The guide email (spec §7), sent through Resend. The body is a fixed template: only the link varies,
+   and the only attachment it can carry is the guide's own PDF. */
 import { env, siteOrigin, type Env } from './env.js'
 
 export const SUBJECT = 'Your guide'
 export const MAX_LINK = 8 * 1024
+export const PDF_NAME = 'Your guide.pdf'
 
 export function validGuideLink(link: unknown, origin: string = siteOrigin()): link is string {
   if (typeof link !== 'string') return false
@@ -14,7 +16,21 @@ export function validGuideLink(link: unknown, origin: string = siteOrigin()): li
 
 const escapeHtml = (s: string): string => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string)
 
-export function guideEmail(link: string): { subject: string; html: string; text: string } {
+export interface Attachment {
+  filename: string
+  content: Uint8Array
+}
+
+export interface Message {
+  subject: string
+  html: string
+  text: string
+  attachments?: Attachment[]
+}
+
+export const PDF_LINE = 'A PDF copy of your guide is attached.'
+
+export function guideEmail(link: string, pdf?: Uint8Array): Message {
   const safe = escapeHtml(link)
   const html = `<!doctype html>
 <html lang="en">
@@ -32,7 +48,7 @@ export function guideEmail(link: string): { subject: string; html: string; text:
 <tr><td style="padding:24px 32px 8px;">
 <a href="${safe}" style="display:inline-block;padding:14px 22px;border-radius:12px;background:#7C3AED;color:#FFFFFF;font-weight:600;font-size:15px;text-decoration:none;">Open your guide</a>
 </td></tr>
-<tr><td style="padding:16px 32px 0;font-size:14px;line-height:1.55;color:#5C5668;">If someone else reads your email, you can delete this message. The guide isn&#8217;t stored by us.</td></tr>
+${pdf ? `<tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.55;color:#5C5668;">${PDF_LINE}</td></tr>\n` : ''}<tr><td style="padding:16px 32px 0;font-size:14px;line-height:1.55;color:#5C5668;">If someone else reads your email, you can delete this message. The guide isn&#8217;t stored by us.</td></tr>
 <tr><td style="padding:28px 32px 32px;font-size:12px;line-height:1.5;color:#8A8495;border-top:1px solid #ECE9F1;">Decouple is not a law firm. This guide is not legal advice.</td></tr>
 </table>
 </td></tr>
@@ -47,12 +63,13 @@ export function guideEmail(link: string): { subject: string; html: string; text:
     '',
     `Open your guide: ${link}`,
     '',
+    ...(pdf ? [PDF_LINE, ''] : []),
     "If someone else reads your email, you can delete this message. The guide isn't stored by us.",
     '',
     'Decouple is not a law firm. This guide is not legal advice.',
     '',
   ].join('\n')
-  return { subject: SUBJECT, html, text }
+  return pdf ? { subject: SUBJECT, html, text, attachments: [{ filename: PDF_NAME, content: pdf }] } : { subject: SUBJECT, html, text }
 }
 
 export interface SendResult {
@@ -61,7 +78,7 @@ export interface SendResult {
   error?: string
 }
 
-export async function sendEmail(to: string, msg: { subject: string; html: string; text: string }, e: Env = env()): Promise<SendResult> {
+export async function sendEmail(to: string, msg: Message, e: Env = env()): Promise<SendResult> {
   const key = e.RESEND_API_KEY
   if (!key) return { ok: false, status: 503, error: 'Email is not configured.' }
   const from = e.MAIL_FROM || 'Decouple <hello@decouple.uk>'
@@ -71,7 +88,15 @@ export async function sendEmail(to: string, msg: { subject: string; html: string
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ from, to: [to], reply_to: 'hello@decouple.uk', subject: msg.subject, html: msg.html, text: msg.text }),
+      body: JSON.stringify({
+        from,
+        to: [to],
+        reply_to: 'hello@decouple.uk',
+        subject: msg.subject,
+        html: msg.html,
+        text: msg.text,
+        ...(msg.attachments ? { attachments: msg.attachments.map((a) => ({ filename: a.filename, content: Buffer.from(a.content).toString('base64') })) } : {}),
+      }),
       signal: ctl.signal,
     })
     if (!res.ok) {

@@ -36,6 +36,8 @@ export function createLimiter(limit: number, windowMs: number): Limiter {
 export const answersLimiter = createLimiter(120, 60 * 60 * 1000)
 /** at most 3 guide emails per sid per day */
 export const emailLimiter = createLimiter(3, 24 * 60 * 60 * 1000)
+/** at most 20 guide PDFs an hour across all visitors (spec §7); past that the email goes without one */
+export const pdfLimiter = createLimiter(20, 60 * 60 * 1000)
 /** at most 3 thank-you sends per sid (spec §7, /api/participant) */
 export const participantLimiter = createLimiter(3, 30 * 24 * 60 * 60 * 1000)
 /** at most 40 AI calls per hour per session (spec §7, /api/claude) */

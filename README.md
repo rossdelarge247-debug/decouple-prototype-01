@@ -31,6 +31,12 @@ npm run dev            # http://localhost:3000, services mocked, owner password 
 prints the value for `OWNER_PASSWORD_HASH`. To run against the real services, put the
 variables from spec §9 in `.env.local` (never committed).
 
+The guide PDF (`lib/pdf.ts`) prints our own `/guide?print=pdf` page in a headless Chromium. On
+Vercel that is `@sparticuz/chromium`, which `vercel.json` ships with `api/email.ts` and
+`api/admin/diagnose.ts`. Locally, set `CHROMIUM_PATH` to any Chrome or Chromium 131 or later. Without it,
+`@sparticuz/chromium` is tried, which runs on Linux only; when no browser starts, the email goes with
+the link only and says `pdf: false`.
+
 ## How a request is served
 
 1. The middleware lets `/api/*`, the login path, `/holding`, `/privacy`, `/help` and every path in
