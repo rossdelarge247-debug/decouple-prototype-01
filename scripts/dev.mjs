@@ -176,6 +176,8 @@ await esbuild.build({
   outbase: ROOT,
   sourcemap: 'inline',
   logLevel: 'warning',
+  /* as on Vercel, where they stay in node_modules: Chromium finds its files next to its own code */
+  external: ['puppeteer-core', '@sparticuz/chromium'],
   banner: { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" },
 })
 const load = (rel) => import(pathToFileURL(join(OUT, rel)).href + '?t=' + Date.now())
