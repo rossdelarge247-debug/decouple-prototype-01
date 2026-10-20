@@ -73,7 +73,9 @@
 - The regression runs, each on a fresh dev server:
   - **All 76 §11 request checks pass.**
   - **Every hub, proto and MVP opens clean**, as the owner and as each tester. With mode = guide, the guide makes 39 requests, none outside `dist/_public.json`. That's two more than before, the print layout's two files.
-  - Still running: landings A to I, the short addresses, the strapline and About.
+  - **Every link and button on landings A to I works.**
+  - **All 30 short-address checks pass.**
+  - **The strapline and About checks from HANDOFF-SITE-9 and 10 pass.**
 - **Not checked here: the Vercel preview,** which this environment can't reach. The PDF can't be checked on a preview anyway, for two reasons:
   - It prints the page at `SITE_ORIGIN`, which is decouple.uk, and that page has no print layout until this merges. So the reply would be `pdf: false` after 20 seconds.
   - The guide on a preview builds its links on the preview's address, which `/api/email` refuses.
