@@ -38,6 +38,8 @@ export const PUBLIC_PATHS: readonly string[] = [
   "/m02/guide/g-intake.js",
   "/m02/guide/g-landings.js",
   "/m02/guide/g-landings2.js",
+  "/m02/guide/g-print.css",
+  "/m02/guide/g-print.js",
   "/m02/guide/g-sheet.js",
   "/m02/guide/g-store.js",
   "/m02/guide/g-themes.css",

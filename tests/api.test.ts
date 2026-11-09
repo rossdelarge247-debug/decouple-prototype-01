@@ -13,6 +13,7 @@ import { POST as publish } from '../api/admin/publish.js'
 import { GET as rebuild } from '../api/cron/rebuild.js'
 import { GET as siteGet, POST as sitePost } from '../api/admin/site.js'
 import { hashPassword } from '../lib/password.js'
+import { usePdfMaker } from '../lib/pdf.js'
 import { useSettingsReader } from '../lib/settings.js'
 import { cookieFor, post, req, setup } from './helpers.js'
 
@@ -187,6 +188,61 @@ describe('/api/signup and /api/email', () => {
     await email(post('/api/email', body, tester))
     await email(post('/api/email', body, tester))
     expect((await email(post('/api/email', body, tester))).status).toBe(429)
+  })
+
+  it('attaches the guide as a PDF only when asked, and sends the link email anyway when it fails (spec §7)', async () => {
+    const fetch = mockFetch(() => ({ id: 'e1' }))
+    process.env.RESEND_API_KEY = 're_test'
+    const tester = await cookieFor('tester', { l: 'P01', c: 'FERN-LARK-27' })
+    const link = 'https://decouple.uk/guide#g=eyJzdGFnZSI6ImRlY2lkZWQifQ'
+    const bytes = new Uint8Array([37, 80, 68, 70, 45])
+    const maker = vi.fn(async () => ({ ok: true as const, pdf: bytes }))
+    usePdfMaker(maker)
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    const sentBody = (i: number) => JSON.parse(String(fetch.mock.calls[i][1]?.body))
+
+    const r = await email(post('/api/email', { email: 'you@example.com', link, sid: 'm02-p1', pdf: true }, tester))
+    expect(await r.json()).toEqual({ ok: true, pdf: true })
+    expect(maker).toHaveBeenCalledWith(link, expect.any(Number))
+    expect(sentBody(0).attachments).toEqual([{ filename: 'Your guide.pdf', content: Buffer.from(bytes).toString('base64') }])
+    expect(sentBody(0).subject).toBe('Your guide')
+    expect(sentBody(0).html).toContain('A PDF copy of your guide is attached.')
+    expect(sentBody(0).text).toContain('A PDF copy of your guide is attached.')
+    /* logs whether it was attached and how long it took, never the link or the address */
+    const line = JSON.parse(String(log.mock.calls.at(-1)?.[0]))
+    expect(line).toMatchObject({ route: '/api/email', pdf: true, bytes: 5, ms: expect.any(Number) })
+    expect(JSON.stringify(log.mock.calls)).not.toMatch(/eyJ|you@example/)
+
+    maker.mockImplementationOnce(async () => ({ ok: false, reason: 'timeout' }) as never)
+    const failed = await email(post('/api/email', { email: 'you@example.com', link, sid: 'm02-p2', pdf: true }, tester))
+    expect(await failed.json()).toEqual({ ok: true, pdf: false })
+    expect(sentBody(1).attachments).toBeUndefined()
+    expect(sentBody(1).html).not.toContain('A PDF copy')
+    expect(sentBody(1).text).not.toContain('A PDF copy')
+    expect(JSON.parse(String(log.mock.calls.at(-1)?.[0]))).toMatchObject({ pdf: false, reason: 'timeout' })
+
+    for (const pdf of [undefined, false, 'yes']) {
+      const plain = await email(post('/api/email', { email: 'you@example.com', link, sid: 'm02-p3-' + String(pdf), pdf }, tester))
+      expect(await plain.json()).toEqual({ ok: true })
+    }
+    expect(maker).toHaveBeenCalledTimes(2)
+    expect(sentBody(4).attachments).toBeUndefined()
+    log.mockRestore()
+  })
+
+  it('makes at most 20 PDFs an hour across all visitors, then sends without one', async () => {
+    mockFetch(() => ({ id: 'e1' }))
+    process.env.RESEND_API_KEY = 're_test'
+    const owner = await cookieFor('owner')
+    const maker = vi.fn(async () => ({ ok: true as const, pdf: new Uint8Array(3) }))
+    usePdfMaker(maker)
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    const link = 'https://decouple.uk/guide#g=eyJzdGFnZSI6ImRlY2lkZWQifQ'
+    for (let i = 0; i < 20; i++) expect(await (await email(post('/api/email', { email: 'you@example.com', link, sid: 'm02-l' + i, pdf: true }, owner))).json()).toEqual({ ok: true, pdf: true })
+    expect(await (await email(post('/api/email', { email: 'you@example.com', link, sid: 'm02-l20', pdf: true }, owner))).json()).toEqual({ ok: true, pdf: false })
+    expect(maker).toHaveBeenCalledTimes(20)
+    expect(JSON.parse(String(log.mock.calls.at(-1)?.[0]))).toMatchObject({ pdf: false, reason: 'limit' })
+    log.mockRestore()
   })
 })
 
@@ -387,6 +443,28 @@ describe('/api/admin/diagnose', () => {
     expect(d.store.ms).toBeGreaterThanOrEqual(0)
     expect(d.script.ms).toBeGreaterThanOrEqual(0)
     expect(d.deployment.instance).toMatchObject({ firstRequest: expect.any(Boolean), upSeconds: expect.any(Number) })
+  })
+
+  it('with ?pdf=1, makes the PDF of a test guide and says how it went; with ?email=1 too, attaches it', async () => {
+    const { GET: diagnose } = await import('../api/admin/diagnose.js')
+    const fetch = mockFetch(() => ({ id: 'e1' }))
+    process.env.RESEND_API_KEY = 're_test'
+    const owner = await cookieFor('owner')
+    const maker = vi.fn(async (_link: string, _started: number) => ({ ok: true as const, pdf: new Uint8Array(1234) }))
+    usePdfMaker(maker)
+    const d = await (await diagnose(req('/api/admin/diagnose?pdf=1&email=1', { cookie: owner }))).json()
+    expect(d.guidePdf.test).toMatchObject({ ok: true, bytes: 1234, ms: expect.any(Number) })
+    const link = maker.mock.calls[0][0]
+    expect(link.startsWith('https://decouple.uk/guide#g=')).toBe(true)
+    const answers = JSON.parse(Buffer.from(link.split('#g=')[1], 'base64url').toString('utf8'))
+    expect(answers.stage).toBe('decided')
+    expect(Object.keys(answers)).not.toContain('safe')
+    expect(d.email.test).toMatchObject({ ok: true, pdf: true })
+    const sent = JSON.parse(String(fetch.mock.calls.find((c) => String(c[0]).includes('resend'))?.[1]?.body))
+    expect(sent.attachments).toEqual([{ filename: 'Your guide.pdf', content: expect.any(String) }])
+    maker.mockImplementationOnce(async () => ({ ok: false, reason: 'not-ready' }) as never)
+    expect((await (await diagnose(req('/api/admin/diagnose?pdf=1', { cookie: owner }))).json()).guidePdf.test).toMatchObject({ ok: false, reason: 'not-ready' })
+    expect((await (await diagnose(req('/api/admin/diagnose', { cookie: owner }))).json()).guidePdf.test).toMatch(/pdf=1/)
   })
 
   it('shows where the site reads and writes, and what each store holds', async () => {

@@ -114,7 +114,7 @@ window.DC = (function () {
     session, onSite: () => session().then((s) => !!s), blocked, send, flush, pending: () => rd().length, human, testing, secret,
     redeem: async (code) => { const r = await api("/api/tester", { code: String(code || "").trim() }); if (r.ok) session(true); return r; },
     signup: async (b) => ((await testing()) ? { ok: true, status: 200, data: { test: true } } : api("/api/signup", b)),
-    email: (b) => api("/api/email", b),
+    email: (b) => api("/api/email", b, null, b && b.pdf ? 45000 : 9000),
     participant: async (b) => ((await testing()) ? { ok: true, status: 200, data: { test: true } } : api("/api/participant", b)),
     results: (q) => api("/api/results?" + new URLSearchParams(q || {}), null, "GET"),
     logout: async () => { await api("/api/logout", {}); session(true); },

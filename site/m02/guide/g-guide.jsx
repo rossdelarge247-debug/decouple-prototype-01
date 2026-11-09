@@ -123,12 +123,12 @@
   }
 
   function EmailGuide({ name, onSend, onClose }) {
-    const [email, setEmail] = useState(""), [sent, setSent] = useState(false), [err, setErr] = useState(""), [busy, setBusy] = useState(false);
+    const [email, setEmail] = useState(""), [sent, setSent] = useState(false), [err, setErr] = useState(""), [busy, setBusy] = useState(false), [pdf, setPdf] = useState(false), [noPdf, setNoPdf] = useState(false);
     useEffect(() => { const k = (e) => e.key === "Escape" && onClose(); addEventListener("keydown", k); return () => removeEventListener("keydown", k); }, []);
     const send = async () => {
       if (busy) return; if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) return setErr("That doesn’t look like an email address");
-      setBusy(true); const r = await onSend(email.trim()); setBusy(false);
-      if (r && r.ok === false) setErr(r.status === 429 ? "You’ve sent this a few times today. Try again tomorrow, or save it as a PDF." : "We couldn’t send it just now. Please try again, or save it as a PDF."); else setSent(true);
+      setBusy(true); const r = await onSend(email.trim(), pdf); setBusy(false);
+      if (r && r.ok === false) setErr(r.status === 429 ? "You’ve sent this a few times today. Try again tomorrow, or save it as a PDF." : "We couldn’t send it just now. Please try again, or save it as a PDF."); else { setNoPdf(pdf && !!(r && r.data && r.data.pdf === false)); setSent(true); }
     };
     return (
       <div className="mscrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -139,12 +139,14 @@
             <h3>Keep it for later.</h3>
             <p>We’ll email you a link that opens your guide on any device. The subject line just says “Your guide”. Nothing about separation. We don’t keep your email address or your guide.</p>
             <label className="field">Email address<input type="email" autoFocus value={email} placeholder="you@example.com" onChange={(e) => { setEmail(e.target.value); setErr(""); }} onKeyDown={(e) => e.key === "Enter" && send()}/>{err && <span className="err">{err}</span>}</label>
+            <label className="g-pdf"><input type="checkbox" checked={pdf} onChange={(e) => setPdf(e.target.checked)}/><span><b>Attach a PDF copy</b><small>Our server makes it from your guide link as it sends, and keeps nothing. It never includes your safety answers.</small></span></label>
             <div className="mwarn"><Ic.Shield s={14} style={{ flexShrink: 0, marginTop: 2 }}/><span>Use an email address your partner can’t see.</span></div>
-            <div style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}><button className="btn lg" onClick={send} disabled={busy}>{busy ? "Sending…" : "Send it"} <Ic.Arrow s={15}/></button><button className="btn lg ghost" onClick={onClose}>Not now</button></div>
+            <div style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}><button className="btn lg" onClick={send} disabled={busy}>{busy ? (pdf ? "Making your PDF…" : "Sending…") : "Send it"} <Ic.Arrow s={15}/></button><button className="btn lg ghost" onClick={onClose}>Not now</button></div>
           </> : <>
             <div className="safe-ic"><Ic.Check s={22} w={2.4} c="#166534"/></div>
             <h3>On its way{name ? ", " + name : ""}.</h3>
-            <p>Check <b style={{ color: "#1A1A1A" }}>{email}</b>. If it hasn’t arrived in a few minutes, look in your spam folder.</p>
+            <p>Check <b style={{ color: "#1A1A1A" }}>{email}</b>. {pdf && !noPdf ? "A PDF copy is attached. " : ""}If it hasn’t arrived in a few minutes, look in your spam folder.</p>
+            {noPdf && <div className="mwarn"><Ic.Help s={14} style={{ flexShrink: 0, marginTop: 2 }}/><span>We sent the link, but couldn’t attach the PDF this time. Use “Download or print” to save one.</span></div>}
             <div style={{ marginTop: 20 }}><button className="btn lg" onClick={onClose}>Back to my guide</button></div>
           </>}
         </div>
@@ -213,9 +215,10 @@
           </aside>
         </div>
         {mail && <EmailGuide name={N.hasMe ? N.Me : ""} onSend={onEmail} onClose={() => setMail(false)}/>}
+        {window.GPrintCopy && <window.GPrintCopy a={a}/>}
       </main>
     );
   }
 
-  Object.assign(window, { GWalk: Walk, GFull: Full });
+  Object.assign(window, { GWalk: Walk, GFull: Full, GHeadline: headline });
 })();

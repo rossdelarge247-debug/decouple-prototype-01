@@ -7,8 +7,12 @@ import { guideEmail, sendEmail } from '../../lib/email.js'
 import { helpReady } from '../../lib/help.js'
 import { env, siteOrigin } from '../../lib/env.js'
 import { securityHeaders } from '../../lib/http.js'
+import { guidePdf } from '../../lib/pdf.js'
 import { scriptConfigured, scriptGet } from '../../lib/script.js'
 import { FRESH, SETTINGS_KEYS, configuredStoreId, connectionStoreId, connectionString, normaliseSettings, storeId } from '../../lib/settings.js'
+
+/* a test guide: the example answers the guide's own demo uses, without the safety answer or names */
+const TEST_ANSWERS = { stage: 'decided', status: 'married', years: '10_20', kids: 'with', ages: ['5_11', '11_16'], kids_live: 'me', home: 'own_together', home_value: '500_1m', mortgage: '100_250', work: 'employed', inc_me: '25_50', inc_them: '50_100', savings: '10_50', complex: ['none'], pen_me: 'u50', pen_them: '50_200', pen_type: ['work', 'public'], debt_kinds: ['cards', 'car'], debt_total: '5_20', debt_names: 'joint', stand: 'mine', comms: 'tense', goals: ['home', 'kids', 'pension'], where_uk: 'ew' }
 
 const VARIABLES = [
   'SITE_ORIGIN',
@@ -190,15 +194,26 @@ export async function GET(request: Request): Promise<Response> {
     help = { read: 'failed', error: message(err) }
   }
 
-  /* ?email=1 sends the guide email, with a dummy link, to the from address, and reports what Resend said */
+  /* ?pdf=1 makes the guide PDF of a test guide, the way /api/email does (lib/pdf.ts), and says how it went */
   const url = new URL(request.url)
+  let pdfTest: Record<string, unknown> | undefined
+  let pdf: Uint8Array | undefined
+  if (url.searchParams.get('pdf') === '1') {
+    const started = Date.now()
+    const made = await guidePdf(`${siteOrigin(e)}/guide#g=${Buffer.from(JSON.stringify(TEST_ANSWERS), 'utf8').toString('base64url')}`, started)
+    if (made.ok) pdf = made.pdf
+    pdfTest = made.ok ? { ok: true, bytes: made.pdf.byteLength, ms: Date.now() - started } : { ok: false, reason: made.reason, ms: Date.now() - started }
+  }
+
+  /* ?email=1 sends the guide email, with a dummy link, to the from address, and reports what Resend said;
+     with ?pdf=1 too, the test guide's PDF is attached */
   let emailTest: Record<string, unknown> | undefined
   if (url.searchParams.get('email') === '1') {
     const from = e.MAIL_FROM || 'Decouple <hello@decouple.uk>'
     const m = from.match(/<([^>]+)>/)
     const to = (m ? m[1] : from).trim()
-    const sent = await sendEmail(to, guideEmail(`${siteOrigin(e)}/guide#g=test`), e)
-    emailTest = { to, ...sent }
+    const sent = await sendEmail(to, guideEmail(`${siteOrigin(e)}/guide#g=test`, pdf), e)
+    emailTest = { to, pdf: !!pdf, ...sent }
   }
 
   const report = {
@@ -220,6 +235,11 @@ export async function GET(request: Request): Promise<Response> {
     writeTest,
     script,
     email: { configured: !!e.RESEND_API_KEY, from: e.MAIL_FROM || 'Decouple <hello@decouple.uk> (default)', test: emailTest ?? 'add ?email=1 to send the guide email to the from address and see what Resend says' },
+    guidePdf: {
+      prints: `${siteOrigin(e)}/guide?print=pdf`,
+      test: pdfTest ?? 'add ?pdf=1 to make the PDF of a test guide (and ?email=1&pdf=1 to send it to the from address)',
+      reasons: 'page <status>: the guide page did not load · not-ready: it never said it was ready (20 s) · no-guide or no-chapters: it found no guide · timeout: over 25 s · failed: …: Chromium did not start or stopped, and why · too-big: 5 MB or more',
+    },
     turnstile: { siteKey: !!e.TURNSTILE_SITE_KEY, secret: !!e.TURNSTILE_SECRET_KEY },
     ai,
     deployHook: { configured: !!e.DEPLOY_HOOK_URL, looksRight: /^https:\/\/api\.vercel\.com\//.test(e.DEPLOY_HOOK_URL || '') },

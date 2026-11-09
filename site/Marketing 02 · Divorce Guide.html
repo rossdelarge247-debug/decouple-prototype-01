@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="proto/playback/pb.css">
 <link rel="stylesheet" href="m02/guide/g.css">
 <link rel="stylesheet" href="m02/guide/g-themes.css">
+<link rel="stylesheet" href="m02/guide/g-print.css">
 <script src="shared/dc-look.js"></script>
 <style>html,body{margin:0;background:#F5F5F4}a{color:#5B21B6}a:hover{color:#7C3AED}</style>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -37,6 +38,7 @@
 <script type="text/babel" src="m02/guide/tweaks-panel.jsx"></script>
 <script type="text/babel" src="m02/guide/g-chapters.jsx"></script>
 <script type="text/babel" src="m02/guide/g-guide.jsx"></script>
+<script type="text/babel" src="m02/guide/g-print.jsx"></script>
 <script type="text/babel">
 /* M02 · Your personalised divorce guide. State in decouple.m02.v2; unsent batches in decouple.outbox.v1 (shared/dc-site.js).
    ?pid=NAME tags a participant · ?v=A|B forces the price set · ?landing=a–i|random picks the landing for this visit only ·
@@ -124,12 +126,12 @@ function App() {
     if (c === "yes") (n.held || []).forEach((e) => GS.post(n, e.step, e.rows, e.lv));
     up({ consent: c, health: h, held: [], phase: "iv" });
   };
-  const onEmail = async (email) => {
+  const onEmail = async (email, pdf) => {
     if (GS.DEMO) return { ok: true };
     if (!site) return { ok: true };
     if (!site.owner && !site.tester) await DC.human();
-    const r = await DC.email({ email, link: GS.link(ref.current), sid: ref.current.sid });
-    if (r.ok) { track("Guide · Email", [["guide_email", "Emailed themselves the guide", "event", "sent"]]); up({ emailed: true }); }
+    const r = await DC.email({ email, link: GS.link(ref.current), sid: ref.current.sid, pdf: !!pdf });
+    if (r.ok) { track("Guide · Email", [["guide_email", "Emailed themselves the guide", "event", pdf ? (r.data && r.data.pdf === false ? "sent, PDF failed" : "sent with PDF") : "sent"]]); up({ emailed: true }); }
     return r;
   };
   const tweaks = (
@@ -183,7 +185,7 @@ function App() {
     </div>
   );
 }
-G.ready.finally(() => ReactDOM.createRoot(document.getElementById("root")).render(<App/>));
+G.ready.finally(() => ReactDOM.createRoot(document.getElementById("root")).render(window.GPRINT ? <GPrintPage/> : <App/>));
 </script>
 </body>
 </html>

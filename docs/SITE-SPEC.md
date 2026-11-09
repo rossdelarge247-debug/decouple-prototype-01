@@ -145,7 +145,7 @@ All JSON. Reject any body over 64 KB.
 | `POST /api/human` | Anyone | `{token}` | Verifies the Turnstile token | 200 and sets `dc_human`, or 403 |
 | `POST /api/answers` | Owner or tester; or human, when `requireCode` is off | `{batchKey, sid, pid?, test, step, price?, landing?, device, hp, rows:[{qid, qv, q, type, a}]}` | Validates and cleans (below), then sends to the Google script | 200 `{ok}` only after the script confirms. 400 bad shape, 401 no session, 502 script failed. |
 | `POST /api/signup` | Human | `{email, stage?, source, sid, hp}` | Checks the email, then sends `kind: "signup"`. Sources: `holding:<utm_source>`, `guide`, `guide-optin`, `help` (the help page's "Start your financial statement"). `stage` can be a `;` list. | 200, 400 or 403 |
-| `POST /api/email` | Same as `/api/answers` | `{email, link, sid}` | Sends the guide email (below) | 200, 400, 401 or 429 |
+| `POST /api/email` | Same as `/api/answers` | `{email, link, sid, pdf?}` | Sends the guide email (below). `pdf: true` attaches a PDF of the guide. Responds `{pdf: true\|false}` when it was asked for | 200, 400, 401 or 429 |
 | `GET /api/results` | Owner | `?test=&since=` | Passes the request to `action=results` | `{rows:[{sid,pid,test,step,price,landing,qid,qv,q,type,a,at,device}], signups}` |
 | `GET` and `POST /api/admin/site` | Owner | `{mode?: "guide"\|"holding", requireCode?: boolean, testMode?: boolean, landing?: "a"…"i"\|"random", indexing?: boolean, theme?: "page"\|"studio"\|"flat"\|"lilac"\|"field"\|"service"}` | Reads or writes the Edge Config items through the Vercel REST API (`EDGE_CONFIG_ID`, `VERCEL_API_TOKEN`) | `{mode, requireCode, testMode, landing, indexing, theme}` |
 | `GET /api/look` (served at `/shared/dc-look.js`, §4) | Anyone | — | Reads `theme` from the site settings. The guide and the help page load it in `<head>`, before they paint. | `Content-Type: text/javascript`, `Cache-Control: public, max-age=60`. Exactly this, with `T` the JSON of `theme`, or `null` when it's `page` or missing: `(function(){var O=["studio","flat","lilac","field","service"],t=null;try{t=new URLSearchParams(location.search).get("theme")}catch(e){}if(O.indexOf(t)<0)t=T;if(O.indexOf(t)>=0)document.documentElement.setAttribute("data-site-theme",t)})();` |
@@ -188,9 +188,20 @@ All JSON. Reject any body over 64 KB.
   - the wordmark;
   - "Here's the guide you made. It opens on this device or any other.";
   - one button, "Open your guide";
+  - only when the PDF is attached: "A PDF copy of your guide is attached.";
   - a line: "If someone else reads your email, you can delete this message. The guide isn't stored by us.";
   - the footer: "Decouple is not a law firm. This guide is not legal advice."
 - Plain, accessible HTML plus a text version.
+
+**The guide PDF (opt-in, `pdf: true`):**
+- Off by default. The person ticks "Attach a PDF copy" next to the email field.
+- Make it from the same `link`, by printing our own page. Open `link` in a headless Chromium (131 or later, for the CSS page margins) with `?print=pdf` added before the `#`, e.g. `https://decouple.uk/guide?print=pdf#g=…`. Wait for `window.__printReady === true` (20 s at most). If `window.__printError` is set, or no `.gp-ch` element is on the page, there's no PDF.
+- Print with `format: "A4"`, `printBackground: true` and `preferCSSPageSize: true`, with no browser header or footer. The page's own CSS sets the margins and page numbers.
+- The page loads no outside hosts (fonts are self-hosted), and it must render the guide whatever the site mode (guide or holding) and without a session. Block every request from the headless page except `SITE_ORIGIN`.
+- File name `Your guide.pdf`, under 5 MB (otherwise no PDF). It goes through the same fixed template, so no other content can be attached.
+- If the PDF fails or times out, send the link email anyway, without the attachment line, and respond `{pdf: false}`. Allow 40 s for the whole request when `pdf` is true.
+- Nothing is stored: no file on disk past the request, and no caching. The answers go only to our own server and the email provider, and never to any other company. Don't log the link. Log `pdf` (true or false) and the time it took.
+- Limits: the existing email limits, plus 20 PDFs an hour across all visitors (past that, send without the PDF).
 
 ## 8. The only UI you build
 

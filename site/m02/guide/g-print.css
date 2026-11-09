@@ -1,0 +1,30 @@
+/* M02 · print layout (g-print.jsx). A4, one chapter per page, page numbers in the footer. */
+.gp-print{display:none}
+html.gp-mode .gp-print{display:block}
+html.gp-mode body{background:#E7E5E4}
+html.gp-mode #root,html.gp-mode #__tw,html.gp-mode .twk-panel{display:none!important}
+@page{size:A4;margin:22mm 22mm 24mm;@bottom-left{content:"Your guide · decouple.uk";font:500 8pt Inter,sans-serif;color:#78716C}@bottom-right{content:counter(page);font:600 8pt Inter,sans-serif;color:#78716C}}
+@page:first{@bottom-left{content:none}@bottom-right{content:none}}
+.gp{--ink:#17141F;--sub:#57534E;--mute:#78716C;--line:#E7E3DC;background:#FFF!important;color:var(--ink);font-family:Inter,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.gp-kick,.gp-chk{font:600 9pt Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#5B21B6}
+.gp-cover{height:250mm;display:grid;grid-template-rows:auto 1fr auto;break-after:page}
+.gp-wm{font:700 15pt Inter,sans-serif;letter-spacing:-.025em}.gp-wm i{font-style:normal;color:#7C3AED}
+.gp-cv{align-self:center;display:grid;gap:5mm}
+.gp-cv h1{margin:0;font:400 54pt/1 'Source Serif Pro',Georgia,serif;letter-spacing:-.025em}
+.gp-for{margin:0;font:400 italic 16pt 'Source Serif Pro',Georgia,serif;color:var(--sub)}
+.gp-cfoot{border-top:1px solid var(--line);padding-top:5mm;display:grid;gap:1.5mm}.gp-cfoot p{margin:0;font:400 9.5pt/1.5 Inter,sans-serif;color:var(--sub)}
+.gp-toc{break-after:page}
+.gp-head{margin:5mm 0 0;font:400 19pt/1.3 'Source Serif Pro',Georgia,serif;letter-spacing:-.01em;text-wrap:pretty}.gp-head .em{color:#5B21B6}
+.gp-toc ol{list-style:none;margin:11mm 0 0;padding:0;border-top:1px solid var(--line)}
+.gp-toc li{display:grid;grid-template-columns:14mm minmax(0,1fr);align-items:baseline;padding:3.6mm 0;border-bottom:1px solid var(--line)}
+.gp-toc li .n{font:600 10pt 'JetBrains Mono',monospace;color:#5B21B6}.gp-toc li .t{font:400 13pt/1.35 'Source Serif Pro',Georgia,serif}
+.gp-disc{margin:11mm 0 0;font:400 8.5pt/1.55 Inter,sans-serif;color:var(--mute);max-width:150mm}
+.gp-ch{break-before:page;padding:0!important;margin:0!important;border:0!important}
+.gp-ch h2{margin:3mm 0 8mm;font:400 26pt/1.12 'Source Serif Pro',Georgia,serif;letter-spacing:-.02em;text-wrap:balance}
+.gp .pb-main{max-width:none;width:100%}
+.gp .card,.gp .wcard{box-shadow:none!important;border:1px solid var(--line)!important;break-inside:avoid}
+.gp p,.gp li{orphans:3;widows:3}.gp h3,.gp .card-t{break-after:avoid}
+.gp button.link,.gp .reveal,.gp .wif-row,.gp .wif-h,.gp .pp-g,.gp .pp-acts,.gp .ed,.gp .hopts,.gp .iv-nav,.gp .skipsec{display:none!important}
+.gp button{cursor:default}
+@media screen{html.gp-mode .gp{max-width:166mm;margin:24px auto;padding:22mm;box-shadow:0 1px 3px rgba(0,0,0,.12)}html.gp-mode .gp-cover{height:auto;min-height:250mm}html.gp-mode .gp-ch,html.gp-mode .gp-toc{border-top:1px dashed #D6D3D1!important;padding-top:16mm!important;margin-top:16mm!important}}
+@media print{html,body{background:#FFF!important}body>:not(.gp-print){display:none!important}.gp-print{display:block!important}.gp{padding:0;margin:0}}

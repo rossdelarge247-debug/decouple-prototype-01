@@ -117,6 +117,12 @@ describe('middleware: the front door', () => {
     expect(rewriteOf(await middleware(req('/guide')))).toBe(GUIDE)
   })
 
+  it('serves the guide for the PDF in holding mode, without a session (spec §7)', async () => {
+    const r = await middleware(req('/guide?print=pdf'))
+    expect(rewriteOf(r)).toBe(GUIDE)
+    expect(r.headers.get('cache-control')).toBe('private, no-cache')
+  })
+
   it('lets the owner preview either page', async () => {
     const owner = await cookieFor('owner')
     expect(rewriteOf(await middleware(req('/?view=holding', { cookie: owner })))).toBe(HOLDING)
